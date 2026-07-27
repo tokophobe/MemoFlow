@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>MemoFlow</title>
+
+<link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.json">
+
+<link rel="manifest" href="manifest.json">
+
+<meta name="theme-color" content="#007aff">
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>MemoFlow</h1>
+
+<div id="home">
+
+<hr>
+
+<h2>Mes questions</h2>
+
+<hr>
+
+<h2>Statistiques</h2>
+
+<div id="stats">
+
+<p id="totalCards"></p>
+
+<p id="dueCards"></p>
+
+<p id="successRate"></p>
+
+<p id="masteredCards"></p>
+
+<p id="difficultCards"></p>
+
+</div>
+
+<input id="search"
+placeholder="Rechercher une question">
+
+<div id="questionList"></div>
+
+<h2>Révision</h2>
+
+<p id="counter"></p>
+
+<button id="startReview">
+Commencer
+</button>
+
+<hr>
+
+<h2>Ajouter une question</h2>
+
+<input id="category"
+placeholder="Catégorie">
+
+<textarea id="question"
+placeholder="Question"></textarea>
+
+<textarea id="answer"
+placeholder="Réponse"></textarea>
+
+<button id="add">
+Ajouter
+</button>
+
+<hr>
+
+<button id="exportExcel">
+Exporter Excel
+</button>
+
+<button id="exportCSV">
+Exporter CSV
+</button>
+
+<input type="file" id="importExcel" accept=".xlsx,.xls">
+
+</div>
+
+
+<div id="review" class="hidden">
+
+<h2 id="categoryReview"></h2>
+
+<div class="card">
+
+<p id="questionReview"></p>
+
+<button id="showAnswer">
+Voir la réponse
+</button>
+
+<p id="answerReview"
+class="hidden">
+</p>
+
+</div>
+
+
+<button id="wrong">
+❌ Faux
+</button>
+
+<button id="correct">
+✅ Correct
+</button>
+
+</div>
+
+
+</div>
+
+
+<script src="app.js"></script>
+
+<script>
+
+if ("serviceWorker" in navigator) {
+
+    navigator.serviceWorker.register(
+        "service-worker.js"
+    );
+
+}
+
+</script>
+
+</body>
+</html>
