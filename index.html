@@ -1,143 +1,549 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Fiches — révision espacée</title>
+<meta name="description" content="Crée des fiches question / réponse et révise-les avec la répétition espacée." />
 
-<title>MemoFlow</title>
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#1A2D26" />
+<link rel="icon" href="icons/icon-192.png" />
+<link rel="apple-touch-icon" href="icons/icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Fiches" />
 
-<link rel="stylesheet" href="style.css">
-<link rel="manifest" href="manifest.json">
-
-<link rel="manifest" href="manifest.json">
-
-<meta name="theme-color" content="#007aff">
-
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-
-</head>
-
-<body>
-
-<div class="container">
-
-<h1>MemoFlow</h1>
-
-<div id="home">
-
-<hr>
-
-<h2>Mes questions</h2>
-
-<hr>
-
-<h2>Statistiques</h2>
-
-<div id="stats">
-
-<p id="totalCards"></p>
-
-<p id="dueCards"></p>
-
-<p id="successRate"></p>
-
-<p id="masteredCards"></p>
-
-<p id="difficultCards"></p>
-
-</div>
-
-<input id="search"
-placeholder="Rechercher une question">
-
-<div id="questionList"></div>
-
-<h2>Révision</h2>
-
-<p id="counter"></p>
-
-<button id="startReview">
-Commencer
-</button>
-
-<hr>
-
-<h2>Ajouter une question</h2>
-
-<input id="category"
-placeholder="Catégorie">
-
-<textarea id="question"
-placeholder="Question"></textarea>
-
-<textarea id="answer"
-placeholder="Réponse"></textarea>
-
-<button id="add">
-Ajouter
-</button>
-
-<hr>
-
-<button id="exportExcel">
-Exporter Excel
-</button>
-
-<button id="exportCSV">
-Exporter CSV
-</button>
-
-<input type="file" id="importExcel" accept=".xlsx,.xls">
-
-</div>
-
-
-<div id="review" class="hidden">
-
-<h2 id="categoryReview"></h2>
-
-<div class="card">
-
-<p id="questionReview"></p>
-
-<button id="showAnswer">
-Voir la réponse
-</button>
-
-<p id="answerReview"
-class="hidden">
-</p>
-
-</div>
-
-
-<button id="wrong">
-❌ Faux
-</button>
-
-<button id="correct">
-✅ Correct
-</button>
-
-</div>
-
-
-</div>
-
-
-<script src="app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet" />
 
 <script>
-
-if ("serviceWorker" in navigator) {
-
-    navigator.serviceWorker.register(
-        "service-worker.js"
-    );
-
-}
-
+  /* Filet de sécurité anti-écran-blanc : posé tout en haut, avant tout
+     autre script, sans dépendance à rien du reste de l'appli. Si une
+     erreur JS survient N'IMPORTE OÙ pendant le chargement (dans app.js,
+     sync.js, etc.), elle plantait le script silencieusement — l'appli
+     restait juste bloquée sur l'écran de chargement vide, sans aucun
+     indice pour comprendre pourquoi. On affiche maintenant l'erreur
+     réelle, avec un bouton pour réessayer et un bouton pour repartir
+     d'une base saine (vide le cache + désinscrit le service worker),
+     utile si c'est LUI qui est resté coincé sur une version cassée. */
+  (function () {
+    var shown = false;
+    function showBootError(message) {
+      if (shown) return;
+      shown = true;
+      var box = document.createElement("div");
+      box.setAttribute(
+        "style",
+        "position:fixed;inset:0;z-index:999999;background:#1a2d26;color:#f7f1e1;" +
+          "font-family:ui-monospace,Menlo,Consolas,monospace;padding:24px;" +
+          "display:flex;flex-direction:column;gap:14px;overflow:auto;"
+      );
+      box.innerHTML =
+        '<h1 style="font-size:16px;margin:0 0 4px;">L\u2019appli n\u2019a pas pu d\u00e9marrer</h1>' +
+        '<p style="font-size:13px;line-height:1.5;margin:0;opacity:0.85;">Voici l\u2019erreur technique (utile \u00e0 transmettre) :</p>' +
+        '<pre style="font-size:11.5px;line-height:1.4;background:rgba(0,0,0,0.25);padding:10px;border-radius:8px;white-space:pre-wrap;word-break:break-word;margin:0;">' +
+        String(message).replace(/[&<>]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]; }) +
+        "</pre>" +
+        '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+        '<button id="boot-err-reload" style="padding:10px 16px;border-radius:8px;border:none;background:#6f8b5c;color:#fff;font:inherit;font-size:13px;">Recharger</button>' +
+        '<button id="boot-err-reset" style="padding:10px 16px;border-radius:8px;border:none;background:#b6604a;color:#fff;font:inherit;font-size:13px;">R\u00e9initialiser (cache + service worker) et recharger</button>' +
+        "</div>";
+      document.documentElement.appendChild(box);
+      document.getElementById("boot-err-reload").addEventListener("click", function () {
+        location.reload();
+      });
+      document.getElementById("boot-err-reset").addEventListener("click", function () {
+        var jobs = [];
+        if (window.caches && caches.keys) {
+          jobs.push(caches.keys().then(function (keys) {
+            return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+          }));
+        }
+        if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) {
+          jobs.push(navigator.serviceWorker.getRegistrations().then(function (regs) {
+            return Promise.all(regs.map(function (r) { return r.unregister(); }));
+          }));
+        }
+        Promise.all(jobs).finally(function () {
+          location.reload();
+        });
+      });
+    }
+    // Si rien n'est visiblement rendu 12s après le chargement du HTML (ex. :
+    // promesse jamais résolue, dépendance externe qui ne répond jamais),
+    // on affiche un message plutôt que de laisser un écran vide sans fin.
+    var watchdog = setTimeout(function () {
+      showBootError(
+        "L'appli met anormalement longtemps à démarrer (plus de 12s) et " +
+          "aucune erreur explicite n'a été détectée — probablement une requête " +
+          "réseau qui ne répond pas (ex. Supabase indisponible)."
+      );
+    }, 12000);
+    window.__clearBootWatchdog = function () { clearTimeout(watchdog); };
+    window.addEventListener("error", function (e) {
+      var msg = (e && e.message) || String(e);
+      // "Script error." sans aucun détail (ni fichier, ni ligne) est le
+      // symptôme d'un script qui n'a pas pu se charger correctement (accroc
+      // réseau ponctuel le plus souvent) plutôt qu'une vraie erreur de code
+      // — dans ce cas précis, un simple rechargement suffit presque
+      // toujours. On en tente donc UN, silencieusement, avant d'afficher
+      // quoi que ce soit ; s'il replante pareil juste après, on considère
+      // que ce n'est pas transitoire et on montre l'écran d'erreur.
+      if (msg === "Script error." && !e.filename && !sessionStorage.getItem("fiches_boot_retry")) {
+        sessionStorage.setItem("fiches_boot_retry", "1");
+        location.reload();
+        return;
+      }
+      showBootError(msg);
+    });
+    window.addEventListener("unhandledrejection", function (e) {
+      var r = e && e.reason;
+      showBootError(r && r.stack ? r.stack : String(r));
+    });
+    window.__clearBootRetryFlag = function () {
+      try { sessionStorage.removeItem("fiches_boot_retry"); } catch (err) {}
+    };
+  })();
 </script>
 
+<link rel="stylesheet" href="css/style.css" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+</head>
+<body>
+
+<div class="desk">
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark-wrap">
+        <span class="brand-mark" aria-hidden="true">✎</span>
+      </span>
+      <h1>Fiches</h1>
+    </div>
+    <div class="header-right">
+      <button class="sync-status" id="sync-status" type="button" title="État de la synchronisation">
+        <span class="sync-dot" id="sync-dot"></span>
+        <span id="sync-status-text">Local</span>
+      </button>
+      <div class="due-pill" id="due-pill" title="Fiches à revoir aujourd'hui">
+        <span id="due-count">0</span> à revoir
+      </div>
+    </div>
+  </header>
+
+  <div class="subject-bar">
+    <select class="subject-select" id="subject-select" aria-label="Matière active"></select>
+    <span class="subject-algo-badge" id="subject-algo-badge" title="Mode d'apprentissage de cette matière"></span>
+    <button class="subject-add-btn" id="add-subject-btn" type="button" title="Nouvelle matière">+</button>
+  </div>
+
+  <nav class="tabs" role="tablist" aria-label="Navigation">
+    <button class="tab is-active" role="tab" aria-selected="true" data-view="review">Réviser</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="manage">Gérer</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="stats">Stats</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="sync" hidden>Sync</button>
+    <button class="tab tab--icon" role="tab" aria-selected="false" data-view="tamagotchi" id="tab-tamagotchi" title="Tamagotchi" aria-label="Tamagotchi"><span id="tab-tamagotchi-icon">🥚</span></button>
+    <button class="tab tab--icon" role="tab" aria-selected="false" data-view="settings" title="Réglages" aria-label="Réglages">⚙</button>
+  </nav>
+
+  <main>
+    <!-- VUE RÉVISION -->
+    <section id="view-review" class="view is-active" aria-labelledby="tab-review">
+      <p class="review-progress sr-only" id="review-progress" aria-live="polite"></p>
+
+      <div class="stage" id="stage">
+        <!-- empty state -->
+        <div class="empty-state" id="empty-state" hidden>
+          <p class="empty-title">Rien à réviser pour l'instant.</p>
+          <p class="empty-sub">Reviens plus tard, ou ajoute des fiches dans l'onglet « Gérer ».</p>
+        </div>
+
+        <!-- card stack -->
+        <div class="card-stack" id="card-stack" hidden>
+          <div class="stack-card stack-card--back-2" aria-hidden="true"></div>
+          <div class="stack-card stack-card--back-1" aria-hidden="true"></div>
+          <button class="stack-card stack-card--front" id="flip-card" type="button" aria-label="Retourner la fiche">
+            <div class="rule-line"></div>
+            <div class="card-face card-face--question">
+              <span class="card-label">Question</span>
+              <p class="card-text" id="question-text"></p>
+              <span class="tap-hint">Touche la fiche pour voir la réponse</span>
+            </div>
+            <div class="card-face card-face--answer">
+              <span class="card-label card-label--answer">Réponse</span>
+              <p class="card-text" id="answer-text"></p>
+            </div>
+          </button>
+          <button class="card-icon-btn card-hibernate-btn" id="hibernate-current-btn" type="button" hidden title="Mettre cette fiche en hibernation" aria-label="Mettre cette fiche en hibernation">💤</button>
+          <button class="card-icon-btn card-edit-btn" id="edit-current-btn" type="button" hidden title="Modifier cette fiche" aria-label="Modifier cette fiche">✎</button>
+        </div>
+      </div>
+
+      <div class="rating-row" id="rating-row" hidden>
+        <button class="stamp stamp--again" data-rating="again" type="button">
+          <span class="stamp-label">Encore</span>
+          <span class="stamp-sub" id="sub-again">&lt; 1 j</span>
+        </button>
+        <button class="stamp stamp--hard" data-rating="hard" type="button">
+          <span class="stamp-label">Difficile</span>
+          <span class="stamp-sub" id="sub-hard">—</span>
+        </button>
+        <button class="stamp stamp--good" data-rating="good" type="button">
+          <span class="stamp-label">Bien</span>
+          <span class="stamp-sub" id="sub-good">—</span>
+        </button>
+        <button class="stamp stamp--easy" data-rating="easy" type="button">
+          <span class="stamp-label">Facile</span>
+          <span class="stamp-sub" id="sub-easy">—</span>
+        </button>
+      </div>
+
+      <div class="review-chart-section" id="review-chart-section">
+        <div class="chart-wrap chart-wrap--mini" id="review-chart-wrap">
+          <div class="chart chart--mini" id="review-due-chart"></div>
+        </div>
+        <p class="chart-empty" id="review-chart-empty" hidden>Rien à revoir sur cette période.</p>
+      </div>
+    </section>
+
+    <!-- VUE GESTION -->
+    <section id="view-manage" class="view" aria-labelledby="tab-manage">
+      <div class="subjects-panel">
+        <div class="list-header">
+          <h2 class="section-title">Matières</h2>
+          <button class="btn btn--small" id="manage-add-subject-btn" type="button">+ Nouvelle matière</button>
+        </div>
+        <ul class="subject-list" id="subject-list"></ul>
+      </div>
+
+      <form class="card-form" id="card-form">
+        <h2 class="section-title">Nouvelle fiche</h2>
+        <label class="field">
+          <span>Question</span>
+          <textarea id="input-question" rows="3" required placeholder="Ex. Capitale de l'Islande ?"></textarea>
+        </label>
+        <label class="field">
+          <span>Réponse</span>
+          <textarea id="input-answer" rows="6" required placeholder="Ex. Reykjavik"></textarea>
+        </label>
+        <div class="form-actions">
+          <button type="submit" class="btn btn--primary" id="submit-btn">Ajouter à la pile</button>
+          <button type="button" class="btn btn--ghost" id="cancel-edit" hidden>Annuler</button>
+        </div>
+      </form>
+
+      <div class="list-header">
+        <h2 class="section-title">Fiches de cette matière (<span id="total-count">0</span>)</h2>
+        <div class="io-buttons">
+          <button class="btn btn--small" id="export-btn" type="button">Exporter</button>
+          <label class="btn btn--small btn--file">
+            Importer
+            <input type="file" id="import-input" accept="application/json" hidden />
+          </label>
+        </div>
+      </div>
+      <div class="import-target-row">
+        <label class="import-target-label" for="import-target-select">Importer dans :</label>
+        <select class="import-target-select" id="import-target-select" aria-label="Matière cible pour l'import"></select>
+      </div>
+      <p class="import-note">Un import ajoute toujours de nouvelles fiches — il ne modifie ni ne supprime jamais celles déjà présentes.</p>
+
+      <ul class="card-list" id="card-list"></ul>
+    </section>
+
+    <!-- VUE STATS -->
+    <section id="view-stats" class="view" aria-labelledby="tab-stats">
+      <h2 class="section-title">Où en es-tu</h2>
+
+      <div class="stats-controls">
+        <select class="stats-select" id="stats-subject-select" aria-label="Matière pour les statistiques"></select>
+        <select class="stats-select" id="stats-range-select" aria-label="Période affichée">
+          <option value="15">15 jours</option>
+          <option value="30">1 mois</option>
+          <option value="90">3 mois</option>
+          <option value="182">6 mois</option>
+          <option value="365">1 an</option>
+        </select>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-box">
+          <span class="stat-number" id="stat-total">0</span>
+          <span class="stat-label">fiches au total</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-number" id="stat-reviewed-today">0</span>
+          <span class="stat-label">revues aujourd'hui</span>
+        </div>
+      </div>
+
+      <h3 class="chart-title">Fiches à revoir par jour</h3>
+      <div class="chart-wrap" id="chart-wrap">
+        <div class="chart" id="due-chart"></div>
+      </div>
+      <p class="chart-empty" id="chart-empty" hidden>Rien à revoir sur cette période.</p>
+    </section>
+
+    <!-- VUE TAMAGOTCHI -->
+    <section id="view-tamagotchi" class="view" aria-labelledby="tab-tamagotchi">
+      <div class="tama-gifts-tray" id="tama-gifts-tray" hidden></div>
+
+      <div class="tama-pets-list" id="tama-pets-list"></div>
+      <p class="field-hint tama-empty-hint" id="tama-empty-hint" hidden>
+        Le foyer est vide pour l'instant — ouvre un cadeau depuis
+        l'histogramme de la page Réviser pour faire arriver un premier œuf.
+      </p>
+
+      <div class="tama-pen-color-picker" id="tama-pen-color-picker">
+        <span class="tama-pen-color-label">Couleur du pré</span>
+        <div class="tama-pen-color-swatches" id="tama-pen-color-swatches"></div>
+      </div>
+
+      <p class="field-hint tama-hint">
+        Chaque compagnon n'a qu'une seule jauge de vie, qui baisse tout
+        seule avec le temps : l'anneau autour de lui va du rouge (basse) au
+        vert (pleine), et il grossit avec elle. À zéro, il redescend d'un
+        stade (œuf → œuf au plat). Au maximum, il grandit encore, jusqu'à
+        devenir un bel animal, dont le nom et l'âge sont alors révélés. Les
+        cadeaux de l'histogramme de la page Réviser atterrissent ici, à
+        ouvrir toi-même.
+      </p>
+
+      <div class="tama-memorial" id="tama-memorial" hidden>
+        <h3 class="settings-block-title">Ils nous ont quittés</h3>
+        <div class="tama-memorial-list" id="tama-memorial-list"></div>
+      </div>
+    </section>
+
+    <!-- VUE SYNC -->
+    <section id="view-sync" class="view" aria-labelledby="tab-sync">
+
+      <div id="sync-unconfigured">
+        <h2 class="section-title">Synchroniser tes fiches</h2>
+        <p class="sync-intro">
+          Relie l'appli à un projet Supabase gratuit pour retrouver les mêmes
+          fiches sur tous tes appareils. Marche à suivre complète dans le
+          <code>README.md</code> du projet (créer un projet, exécuter
+          <code>supabase-schema.sql</code>, puis coller les infos ci-dessous).
+        </p>
+
+        <form class="card-form" id="sync-form">
+          <label class="field">
+            <span>URL du projet Supabase</span>
+            <input type="url" id="sync-url" required placeholder="https://xxxx.supabase.co" />
+          </label>
+          <label class="field">
+            <span>Clé publique (anon/public)</span>
+            <input type="text" id="sync-key" required placeholder="eyJhbGciOi..." />
+          </label>
+          <label class="field">
+            <span>Code de synchronisation</span>
+            <div class="code-row">
+              <input type="text" id="sync-code" required placeholder="XXXX-XXXX" />
+              <button type="button" class="btn btn--small" id="generate-code-btn">Générer</button>
+            </div>
+          </label>
+          <p class="field-hint">
+            Nouveau ? Clique « Générer » puis note le code. Sur ton autre
+            appareil, entre exactement le même code pour rejoindre le même
+            espace.
+          </p>
+          <div class="form-actions">
+            <button type="submit" class="btn btn--primary">Connecter</button>
+          </div>
+        </form>
+      </div>
+
+      <div id="sync-configured" hidden>
+        <h2 class="section-title">Connecté</h2>
+        <div class="sync-card">
+          <span class="card-label">Ton code de synchronisation</span>
+          <p class="sync-code-display" id="current-sync-code">—</p>
+          <button class="btn btn--small" id="copy-code-btn" type="button">Copier le code</button>
+        </div>
+        <p class="sync-intro">
+          Entre ce même code sur tes autres appareils, dans cet onglet, pour
+          qu'ils partagent les mêmes fiches.
+        </p>
+        <p class="sync-pending" id="sync-pending-note" hidden></p>
+        <p class="sync-error" id="sync-error-note" hidden></p>
+        <div class="form-actions">
+          <button class="btn btn--small" id="retry-sync-btn" type="button">Réessayer maintenant</button>
+          <button class="btn btn--ghost" id="disconnect-btn" type="button">Se déconnecter de cet espace</button>
+        </div>
+      </div>
+
+      <div class="card-form">
+        <h3 class="settings-block-title">Dépannage</h3>
+        <p class="field-hint settings-block-hint">
+          Si l'appli affiche un comportement bizarre ou obsolète après une
+          mise à jour (page blanche, ancienne version qui persiste...), ce
+          bouton vide le cache de l'appli et force le rechargement des
+          derniers fichiers, sans toucher à tes fiches (stockées à part,
+          en base de données locale).
+        </p>
+        <button type="button" class="btn btn--ghost" id="setting-hard-reset">
+          Vider le cache et recharger
+        </button>
+      </div>
+    </section>
+
+    <!-- VUE RÉGLAGES -->
+    <section id="view-settings" class="view" aria-labelledby="tab-settings">
+      <h2 class="section-title">Réglages</h2>
+
+      <div class="card-form">
+        <h3 class="settings-block-title">Mode bonus — recul des fiches (en jours)</h3>
+        <p class="field-hint settings-block-hint">
+          Une fois les fiches du jour terminées, tu peux continuer en révision
+          libre. Chaque réponse recule alors la fiche du nombre de jours
+          choisi ci-dessous, sans passer par l'algorithme SM-2.
+        </p>
+        <div class="settings-bonus-row">
+          <label class="field settings-bonus-field">
+            <span>Difficile</span>
+            <input type="number" id="setting-bonus-hard" min="1" max="365" step="1" inputmode="numeric" />
+          </label>
+          <label class="field settings-bonus-field">
+            <span>Bien</span>
+            <input type="number" id="setting-bonus-good" min="1" max="365" step="1" inputmode="numeric" />
+          </label>
+          <label class="field settings-bonus-field">
+            <span>Facile</span>
+            <input type="number" id="setting-bonus-easy" min="1" max="365" step="1" inputmode="numeric" />
+          </label>
+        </div>
+      </div>
+
+      <div class="card-form">
+        <h3 class="settings-block-title">Mode bonus — bouton « Encore »</h3>
+        <p class="field-hint settings-block-hint">
+          Que se passe-t-il quand tu réponds « Encore » à une fiche en
+          révision libre ?
+        </p>
+        <label class="field">
+          <span>Comportement</span>
+          <select id="setting-bonus-again-mode">
+            <option value="fixed">Repousse au lendemain (date fixe)</option>
+            <option value="increment">Ajoute un jour à chaque fois</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="card-form">
+        <h3 class="settings-block-title">Hibernation 💤</h3>
+        <p class="field-hint settings-block-hint">
+          Le bouton hibernation, à côté du crayon sur une fiche, repousse sa
+          prochaine interrogation de ce nombre de jours — sans que ça compte
+          comme une révision.
+        </p>
+        <label class="field settings-bonus-field">
+          <span>Nombre de jours</span>
+          <input type="number" id="setting-hibernate-days" min="1" max="365" step="1" inputmode="numeric" />
+        </label>
+      </div>
+
+      <div class="card-form">
+        <h3 class="settings-block-title">Cadeaux du Tamagotchi 🎁</h3>
+        <p class="field-hint settings-block-hint">
+          Chaque aliment donne toujours le même nombre de points de vie (pour
+          qu'on puisse voir d'un coup d'œil si un aliment est nourrissant).
+          Un cadeau de nourriture dépose en revanche une quantité aléatoire
+          d'aliments dans le pré, entre ces deux bornes.
+        </p>
+        <label class="field settings-bonus-field">
+          <span>Valeur nutritive d'un aliment (points de vie)</span>
+          <input type="number" id="setting-tama-food-value" min="1" max="200" step="1" inputmode="numeric" />
+        </label>
+        <label class="field settings-bonus-field">
+          <span>Quantité minimum par cadeau</span>
+          <input type="number" id="setting-tama-gift-qty-min" min="1" max="20" step="1" inputmode="numeric" />
+        </label>
+        <label class="field settings-bonus-field">
+          <span>Quantité maximum par cadeau</span>
+          <input type="number" id="setting-tama-gift-qty-max" min="1" max="20" step="1" inputmode="numeric" />
+        </label>
+      </div>
+    </section>
+
+    <!-- VUE MODE D'APPRENTISSAGE (par matière, ouverte depuis la page Gérer) -->
+    <section id="view-subject-algo" class="view">
+      <button class="btn btn--ghost btn--small" id="algo-back-btn" type="button">← Retour à Gérer</button>
+      <h2 class="view-title" id="algo-subject-title">Mode d'apprentissage</h2>
+      <p class="field-hint settings-block-hint">
+        Ces réglages ne s'appliquent qu'à cette matière. Au début, l'échéance
+        d'une fiche est de 1 jour. À chaque réponse, la nouvelle échéance est
+        le minimum entre le maximum réglé pour ce bouton et l'échéance
+        actuelle multipliée par son coefficient.
+      </p>
+
+      <div class="algo-mode-label" id="algo-mode-label">Mode actuel : —</div>
+
+      <div class="algo-preset-row">
+        <button class="btn btn--small" id="algo-preset-cool" type="button">Apprentissage cool</button>
+        <button class="btn btn--small" id="algo-preset-normal" type="button">Apprentissage normal</button>
+        <button class="btn btn--small" id="algo-preset-renforce" type="button">Apprentissage renforcé</button>
+      </div>
+
+      <h3 class="settings-block-title">Coefficients multiplicateurs (× 0,1, de 1 à 10)</h3>
+      <div class="algo-grid">
+        <label class="field settings-bonus-field">
+          <span>Encore (Ka)</span>
+          <input type="number" id="algo-ka" min="1" max="10" step="0.1" inputmode="decimal" />
+        </label>
+        <label class="field settings-bonus-field">
+          <span>Difficile (Kh)</span>
+          <input type="number" id="algo-kh" min="1" max="10" step="0.1" inputmode="decimal" />
+        </label>
+        <label class="field settings-bonus-field">
+          <span>Bien (Kg)</span>
+          <input type="number" id="algo-kg" min="1" max="10" step="0.1" inputmode="decimal" />
+        </label>
+        <label class="field settings-bonus-field">
+          <span>Facile (Ke)</span>
+          <input type="number" id="algo-ke" min="1" max="10" step="0.1" inputmode="decimal" />
+        </label>
+      </div>
+
+      <h3 class="settings-block-title">Maximums en jours (par unité, de 1 à 365)</h3>
+      <div class="algo-grid">
+        <label class="field settings-bonus-field">
+          <span>Encore (Ma)</span>
+          <input type="number" id="algo-ma" min="1" max="365" step="1" inputmode="numeric" />
+        </label>
+        <label class="field settings-bonus-field">
+          <span>Difficile (Mh)</span>
+          <input type="number" id="algo-mh" min="1" max="365" step="1" inputmode="numeric" />
+        </label>
+        <label class="field settings-bonus-field">
+          <span>Bien (Mg)</span>
+          <input type="number" id="algo-mg" min="1" max="365" step="1" inputmode="numeric" />
+        </label>
+        <label class="field settings-bonus-field">
+          <span>Facile (Me)</span>
+          <input type="number" id="algo-me" min="1" max="365" step="1" inputmode="numeric" />
+        </label>
+      </div>
+
+      <div class="card-form">
+        <h3 class="settings-block-title">Revoir les vieilles fiches</h3>
+        <p class="field-hint settings-block-hint">
+          Ramène l'échéance (et la date de prochaine interrogation) à 10
+          jours pour toutes les fiches de cette matière dont la prochaine
+          interrogation est prévue dans plus de 10 jours.
+        </p>
+        <button type="button" class="btn btn--ghost" id="algo-review-old-btn">
+          Revoir les vieilles fiches
+        </button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="js/sm2.js"></script>
+<script src="js/db.js"></script>
+<script src="js/sync.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>

@@ -1,0 +1,393 @@
+/**
+ * Synchronisation multi-appareils via Supabase.
+ *
+ * Principe : pas de compte utilisateur. Un "code de synchronisation"
+ * choisi par la personne fait office de mot de passe partagé — le même
+ * code entré sur deux appareils fait apparaître les mêmes fiches.
+ *
+ * L'app reste 100% utilisable sans configuration : tant que Sync n'est
+ * pas configuré, tout continue à fonctionner uniquement en local
+ * (voir db.js).
+ */
+
+const LS_KEYS = {
+  url: "fiches_sb_url",
+  key: "fiches_sb_key",
+  code: "fiches_sync_code",
+  pending: "fiches_sb_pending",
+};
+
+const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // sans 0/O/1/I/L
+
+function generateSyncCode() {
+  const bytes = new Uint8Array(8);
+  crypto.getRandomValues(bytes);
+  const chars = Array.from(bytes, (b) => CODE_ALPHABET[b % CODE_ALPHABET.length]);
+  return `${chars.slice(0, 4).join("")}-${chars.slice(4, 8).join("")}`;
+}
+
+function getConfig() {
+  return {
+    url: localStorage.getItem(LS_KEYS.url) || "",
+    key: localStorage.getItem(LS_KEYS.key) || "",
+    code: localStorage.getItem(LS_KEYS.code) || "",
+  };
+}
+
+function isConfigured() {
+  const { url, key, code } = getConfig();
+  return Boolean(url && key && code);
+}
+
+function saveConfig({ url, key, code }) {
+  localStorage.setItem(LS_KEYS.url, url.trim());
+  localStorage.setItem(LS_KEYS.key, key.trim());
+  localStorage.setItem(LS_KEYS.code, code.trim());
+  client = null; // force la recréation du client au prochain appel
+}
+
+function clearConfig() {
+  Object.values(LS_KEYS).forEach((k) => localStorage.removeItem(k));
+  client = null;
+}
+
+let client = null;
+function getClient() {
+  if (client) return client;
+  const { url, key } = getConfig();
+  if (!url || !key || typeof window.supabase === "undefined") return null;
+  client = window.supabase.createClient(url, key);
+  return client;
+}
+
+/* ---------------------------------------------------------
+   Conversion carte locale <-> ligne Supabase (snake_case)
+--------------------------------------------------------- */
+function cardToRow(card, syncCode) {
+  return {
+    id: card.id,
+    sync_code: syncCode,
+    subject: card.subject || null,
+    subject_name:
+      typeof window.getSubjectName === "function" ? window.getSubjectName(card.subject) : null,
+    question: card.question,
+    answer: card.answer,
+    created_at: card.createdAt,
+    due_date: card.dueDate,
+    last_reviewed: card.lastReviewed,
+    review_count: card.reviewCount || 0,
+    easiness: card.easiness,
+    interval: card.interval,
+    repetitions: card.repetitions,
+    max_interval_reached: card.maxIntervalReached || 0,
+    updated_at: card.updatedAt || card.createdAt,
+    deleted: Boolean(card.deleted),
+  };
+}
+
+function rowToCard(row) {
+  return {
+    id: row.id,
+    subject: row.subject || null,
+    subjectName: row.subject_name || null,
+    question: row.question,
+    answer: row.answer,
+    createdAt: row.created_at,
+    dueDate: row.due_date,
+    lastReviewed: row.last_reviewed,
+    reviewCount: row.review_count,
+    easiness: Number(row.easiness),
+    interval: row.interval,
+    repetitions: row.repetitions,
+    maxIntervalReached: row.max_interval_reached || 0,
+    updatedAt: row.updated_at,
+    deleted: Boolean(row.deleted),
+  };
+}
+
+/* ---------------------------------------------------------
+   File d'attente pour les écritures faites hors-ligne
+--------------------------------------------------------- */
+function getPending() {
+  try {
+    return JSON.parse(localStorage.getItem(LS_KEYS.pending) || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function setPending(ids) {
+  localStorage.setItem(LS_KEYS.pending, JSON.stringify([...new Set(ids)]));
+}
+
+function addPending(id) {
+  const ids = getPending();
+  ids.push(id);
+  setPending(ids);
+}
+
+function removePending(id) {
+  setPending(getPending().filter((x) => x !== id));
+}
+
+/* ---------------------------------------------------------
+   API publique
+--------------------------------------------------------- */
+const PULL_PAGE_SIZE = 1000; // limite par défaut de PostgREST par requête
+
+async function pullAll() {
+  const c = getClient();
+  const { code } = getConfig();
+  if (!c || !code) return [];
+
+  const all = [];
+  let from = 0;
+
+  while (true) {
+    const to = from + PULL_PAGE_SIZE - 1;
+    const { data, error } = await c
+      .from("cards")
+      .select("*")
+      .eq("sync_code", code)
+      .range(from, to);
+
+    if (error) {
+      console.warn("Sync: échec du chargement distant", error.message);
+      lastError = error.message;
+      // On garde ce qui a déjà été récupéré plutôt que de tout jeter :
+      // mieux vaut une synchro partielle que rien du tout.
+      return all.map(rowToCard);
+    }
+
+    all.push(...data);
+    if (data.length < PULL_PAGE_SIZE) break; // dernière page atteinte
+    from += PULL_PAGE_SIZE;
+  }
+
+  lastError = "";
+  return all.map(rowToCard);
+}
+
+let lastError = "";
+
+async function pushCard(card) {
+  const c = getClient();
+  const { code } = getConfig();
+  if (!c || !code) return false;
+
+  let row = cardToRow(card, code);
+  let { error } = await c.from("cards").upsert(row);
+
+  // Cas connu : la colonne max_interval_reached vient d'être ajoutée en
+  // SQL mais le cache de schéma de PostgREST n'a pas encore été rafraîchi
+  // côté Supabase (ça peut prendre quelques minutes, même après un
+  // `NOTIFY pgrst, 'reload schema'`). Plutôt que de bloquer toute la
+  // synchro de la fiche pour ça, on retente sans ce champ : le reste
+  // (question, réponse, échéance...) part quand même, et le record de
+  // récompense repartira tout seul dès que la colonne sera reconnue.
+  if (error && isMissingColumnError(error, "max_interval_reached")) {
+    console.warn("Sync: colonne max_interval_reached pas encore reconnue, envoi sans elle");
+    const { max_interval_reached, ...rowWithoutRewards } = row;
+    ({ error } = await c.from("cards").upsert(rowWithoutRewards));
+  }
+
+  if (error) {
+    console.warn("Sync: échec de l'envoi, mis en attente", error.message);
+    lastError = error.message;
+    addPending(card.id);
+    return false;
+  }
+  lastError = "";
+  removePending(card.id);
+  return true;
+}
+
+/** Détecte l'erreur PostgREST "Could not find the 'x' column of 'y' in the
+ *  schema cache", qui survient quand une colonne a été ajoutée en base
+ *  mais que l'API n'a pas encore rechargé son schéma. */
+function isMissingColumnError(error, columnName) {
+  const msg = (error && error.message) || "";
+  return msg.includes(columnName) && msg.toLowerCase().includes("schema cache");
+}
+
+async function flushPending(getCardById) {
+  const ids = getPending();
+  for (const id of ids) {
+    const card = getCardById(id);
+    if (!card) {
+      removePending(id);
+      continue;
+    }
+    await pushCard(card);
+  }
+}
+
+function subscribeRealtime(onRemoteChange) {
+  const c = getClient();
+  const { code } = getConfig();
+  if (!c || !code) return () => {};
+
+  const channel = c
+    .channel(`cards-${code}`)
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "cards", filter: `sync_code=eq.${code}` },
+      (payload) => {
+        if (payload.new) onRemoteChange(rowToCard(payload.new));
+      }
+    )
+    .subscribe();
+
+  return () => c.removeChannel(channel);
+}
+
+/* ---------------------------------------------------------
+   État des récompenses (page "Récompenses") : une seule ligne JSON par
+   code de synchro, séparée des fiches. Contrairement aux fiches, il n'y a
+   rien à fusionner champ par champ ici : on prend l'union des clés
+   "case ouverte" des deux côtés (voir mergeRewardsOpened côté app.js).
+--------------------------------------------------------- */
+async function pullRewardState() {
+  const c = getClient();
+  const { code } = getConfig();
+  if (!c || !code) return {};
+
+  const { data, error } = await c
+    .from("reward_state")
+    .select("opened")
+    .eq("sync_code", code)
+    .maybeSingle();
+
+  if (error) {
+    console.warn("Sync: échec du chargement des récompenses distantes", error.message);
+    return {};
+  }
+  return (data && data.opened) || {};
+}
+
+async function pushRewardState(openedMap) {
+  const c = getClient();
+  const { code } = getConfig();
+  if (!c || !code) return false;
+
+  const { error } = await c.from("reward_state").upsert({
+    sync_code: code,
+    opened: openedMap,
+    updated_at: new Date().toISOString(),
+  });
+
+  if (error) {
+    console.warn("Sync: échec de l'envoi des récompenses", error.message);
+    return false;
+  }
+  return true;
+}
+
+function subscribeRewardRealtime(onRemoteChange) {
+  const c = getClient();
+  const { code } = getConfig();
+  if (!c || !code) return () => {};
+
+  const channel = c
+    .channel(`reward-state-${code}`)
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "reward_state", filter: `sync_code=eq.${code}` },
+      (payload) => {
+        if (payload.new && payload.new.opened) onRemoteChange(payload.new.opened);
+      }
+    )
+    .subscribe();
+
+  return () => c.removeChannel(channel);
+}
+
+/* ---------------------------------------------------------
+   État du Tamagotchi (page "Tamagotchi") : réutilise la même ligne/table
+   que l'ancien système de récompenses (`reward_state`, une ligne par code
+   de synchro), dans une nouvelle colonne `tamagotchi` séparée de l'ancienne
+   colonne `opened` — pas de migration destructrice nécessaire. Le blob
+   contient à la fois l'état du compagnon (`pet`) et ses cadeaux (`gifts`).
+--------------------------------------------------------- */
+async function pullTamaState() {
+  const c = getClient();
+  const { code } = getConfig();
+  if (!c || !code) return null;
+
+  const { data, error } = await c
+    .from("reward_state")
+    .select("tamagotchi")
+    .eq("sync_code", code)
+    .maybeSingle();
+
+  if (error) {
+    if (isMissingColumnError(error, "tamagotchi")) {
+      console.warn("Sync: colonne tamagotchi pas encore reconnue côté Supabase (exécute la migration SQL)");
+    } else {
+      console.warn("Sync: échec du chargement du compagnon distant", error.message);
+    }
+    return null;
+  }
+  return (data && data.tamagotchi) || null;
+}
+
+async function pushTamaState(blob) {
+  const c = getClient();
+  const { code } = getConfig();
+  if (!c || !code) return false;
+
+  const { error } = await c.from("reward_state").upsert({
+    sync_code: code,
+    tamagotchi: blob,
+    updated_at: new Date().toISOString(),
+  });
+
+  if (error) {
+    if (isMissingColumnError(error, "tamagotchi")) {
+      console.warn("Sync: colonne tamagotchi pas encore reconnue côté Supabase (exécute la migration SQL)");
+    } else {
+      console.warn("Sync: échec de l'envoi du compagnon", error.message);
+    }
+    return false;
+  }
+  return true;
+}
+
+function subscribeTamaRealtime(onRemoteChange) {
+  const c = getClient();
+  const { code } = getConfig();
+  if (!c || !code) return () => {};
+
+  const channel = c
+    .channel(`tama-state-${code}`)
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "reward_state", filter: `sync_code=eq.${code}` },
+      (payload) => {
+        if (payload.new && payload.new.tamagotchi) onRemoteChange(payload.new.tamagotchi);
+      }
+    )
+    .subscribe();
+
+  return () => c.removeChannel(channel);
+}
+
+window.Sync = {
+  generateSyncCode,
+  getConfig,
+  isConfigured,
+  saveConfig,
+  clearConfig,
+  pullAll,
+  pushCard,
+  flushPending,
+  subscribeRealtime,
+  pullRewardState,
+  pushRewardState,
+  subscribeRewardRealtime,
+  pullTamaState,
+  pushTamaState,
+  subscribeTamaRealtime,
+  pendingCount: () => getPending().length,
+  getLastError: () => lastError,
+};
