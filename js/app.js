@@ -1,6 +1,12 @@
 (() => {
   "use strict";
 
+  // Version affichée dans Réglages (bouton "Vérifier les mises à jour") —
+  // à garder alignée avec CACHE_NAME dans sw.js à chaque livraison, pour
+  // que l'utilisateur puisse vérifier facilement s'il a bien la dernière
+  // version installée.
+  const APP_VERSION = "v125";
+
   const ICON_LIBRARY = {
     cards: '<rect x="4" y="3" width="16" height="18" rx="2"/><line x1="4" y1="12" x2="20" y2="12"/>',
     folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/>',
@@ -8368,6 +8374,10 @@
   /* ---------------------------------------------------------
      Service worker (hors-ligne + mise à jour automatique)
   --------------------------------------------------------- */
+  const appVersionLabelEl = el("app-version-label");
+  if (appVersionLabelEl) appVersionLabelEl.textContent = `Version installée : ${APP_VERSION}`;
+  const checkUpdateBtn = el("check-update-btn");
+  const checkUpdateResultEl = el("check-update-result");
   if ("serviceWorker" in navigator) {
     let refreshing = false;
 
@@ -8406,11 +8416,38 @@
 
           // Filet de sécurité si l'appli reste ouverte longtemps en arrière-plan.
           setInterval(() => registration.update(), 60 * 60 * 1000);
+
+          // Bouton "Vérifier les mises à jour" (Réglages) : les
+          // déclencheurs automatiques ci-dessus ne se déclenchent pas
+          // toujours de façon fiable sur iPhone quand l'appli est
+          // rouverte depuis le multitâche plutôt qu'à froid — ce bouton
+          // permet de forcer la vérification et donne un retour explicite.
+          if (checkUpdateBtn) {
+            checkUpdateBtn.addEventListener("click", async () => {
+              if (checkUpdateResultEl) checkUpdateResultEl.textContent = "Vérification…";
+              try {
+                await registration.update();
+                // Si une mise à jour est trouvée, elle passe par "installing"
+                // puis "waiting"/"activating" — skipWaiting() côté sw.js
+                // l'active tout de suite, ce qui déclenche déjà
+                // controllerchange (rechargement automatique). On ne voit
+                // donc ce message QUE si aucune mise à jour n'a été trouvée.
+                setTimeout(() => {
+                  if (checkUpdateResultEl) checkUpdateResultEl.textContent = "Déjà à jour (aucune nouvelle version trouvée).";
+                }, 1200);
+              } catch {
+                if (checkUpdateResultEl) checkUpdateResultEl.textContent = "Échec de la vérification — vérifie ta connexion.";
+              }
+            });
+          }
         })
         .catch(() => {
           /* l'appli reste utilisable même si le SW échoue à s'enregistrer */
         });
     });
+  } else if (checkUpdateBtn) {
+    checkUpdateBtn.disabled = true;
+    if (checkUpdateResultEl) checkUpdateResultEl.textContent = "Non pris en charge par ce navigateur.";
   }
 
   function showUpdateToast() {

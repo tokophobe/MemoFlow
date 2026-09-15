@@ -666,6 +666,17 @@
     <section id="view-settings" class="view" aria-labelledby="tab-settings">
       <h2 class="section-title">Réglages</h2>
 
+      <!-- Mise à jour : bouton de vérification manuelle + version actuelle,
+           utile sur iPhone où l'appli (ajoutée à l'écran d'accueil) ne
+           relance pas toujours cette vérification toute seule en la
+           rouvrant depuis le multitâche plutôt qu'à froid. -->
+      <div class="card-form">
+        <h3 class="settings-block-title">Mise à jour de l'appli</h3>
+        <p class="field-hint" id="app-version-label" style="margin-bottom:10px;"></p>
+        <button type="button" class="btn btn--ghost" id="check-update-btn">Vérifier les mises à jour</button>
+        <p class="field-hint" id="check-update-result" style="margin-top:8px;"></p>
+      </div>
+
       <div class="card-form">
         <h3 class="settings-block-title">Page Réviser</h3>
         <label class="field">
