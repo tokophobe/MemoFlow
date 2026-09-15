@@ -1,6 +1,87 @@
 (() => {
   "use strict";
 
+  const ICON_LIBRARY = {
+    cards: '<rect x="4" y="3" width="16" height="18" rx="2"/><line x1="4" y1="12" x2="20" y2="12"/>',
+    folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/>',
+    file: '<path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M15 2v5h5"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/>',
+    stackedSheets: '<path d="M8 3h9l4 4v12a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M17 3v4h4"/><path d="M5 7v13a1 1 0 0 0 1 1h11"/><path d="M2 11v13a1 1 0 0 0 1 1h11"/>',
+    barChart: '<line x1="6" y1="20" x2="6" y2="14"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="10"/><line x1="3" y1="20" x2="21" y2="20"/>',
+    gradCap: '<path d="M2 9l10-5 10 5-10 5-10-5z"/><path d="M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/><line x1="22" y1="9" x2="22" y2="15.5"/>',
+    settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
+    brain: '<path d="M9.5 2a3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 1.5 5.5V17a3 3 0 0 0 3 3 2.5 2.5 0 0 0 2.5-2.5V4.5A2.5 2.5 0 0 0 9.5 2z"/><path d="M14.5 2a3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1-1.5 5.5V17a3 3 0 0 1-3 3 2.5 2.5 0 0 1-2.5-2.5V4.5A2.5 2.5 0 0 1 14.5 2z"/>',
+    star: '<path d="M12 2l3.1 6.6 7.2.9-5.3 5 1.4 7.1L12 18l-6.4 3.6 1.4-7.1-5.3-5 7.2-.9z"/>',
+    heart: '<path d="M12 21s-7-4.5-9.5-9C1 8 2 4 6 4c2 0 4 1.5 6 4 2-2.5 4-4 6-4 4 0 5 4 3.5 8-2.5 4.5-9.5 9-9.5 9z"/>',
+    bookmark: '<path d="M6 2h12v20l-6-4-6 4z"/>',
+    flag: '<path d="M4 22V3"/><path d="M4 4h14l-2 4 2 4H4"/>',
+    moon: '<path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/>',
+    sun: '<circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.9" y1="4.9" x2="6.3" y2="6.3"/><line x1="17.7" y1="17.7" x2="19.1" y2="19.1"/><line x1="4.9" y1="19.1" x2="6.3" y2="17.7"/><line x1="17.7" y1="6.3" x2="19.1" y2="4.9"/>',
+    clock: '<circle cx="12" cy="12" r="9"/><polyline points="12,7 12,12 15,14"/>',
+    calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/>',
+    check: '<polyline points="4,12 9,17 20,6"/>',
+    plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+    search: '<circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+    home: '<path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/>',
+    layers: '<path d="M12 2l9 5-9 5-9-5 9-5z"/><path d="M3 12l9 5 9-5"/><path d="M3 17l9 5 9-5"/>',
+    target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+    zap: '<polygon points="13,2 3,14 12,14 11,22 21,10 12,10"/>',
+    book: '<path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v18H6.5A2.5 2.5 0 0 0 4 22.5z"/><path d="M4 4.5v16"/>',
+    // Équivalents sobres des icônes déjà utilisées ailleurs dans l'appli
+    // (crayon, hibernation, chantier, annuler...).
+    pencil: '<path d="M17 3a2.83 2.83 0 0 1 4 4L7 21l-4 1 1-4z"/>',
+    sleep: '<path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/><line x1="9" y1="9" x2="13" y2="9"/><line x1="9" y1="9" x2="13" y2="9" transform="rotate(20 11 9)"/>',
+    cone: '<path d="M12 2l6 16H6z"/><line x1="8.2" y1="13" x2="15.8" y2="13"/><line x1="4" y1="21" x2="20" y2="21"/>',
+    undo: '<polyline points="9,14 4,9 9,4"/><path d="M4 9h11a5 5 0 0 1 5 5v1"/>',
+    trash: '<polyline points="3,6 5,6 21,6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>',
+    eye: '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
+    eyeOff: '<path d="M17.9 17.9A10.6 10.6 0 0 1 12 20c-7 0-11-8-11-8a19 19 0 0 1 4.2-5.4M9.9 4.2A9.7 9.7 0 0 1 12 4c7 0 11 8 11 8a19 19 0 0 1-2.2 3.1"/><line x1="1" y1="1" x2="23" y2="23"/>',
+    lock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+    unlock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.6-1.8"/>',
+    bell: '<path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 20a2 2 0 0 0 4 0"/>',
+    list: '<line x1="9" y1="6" x2="21" y2="6"/><line x1="9" y1="12" x2="21" y2="12"/><line x1="9" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/>',
+    grid: '<rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/>',
+    filter: '<polygon points="4,4 20,4 14,12 14,19 10,21 10,12"/>',
+    shuffle: '<polyline points="16,3 21,3 21,8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21,16 21,21 16,21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>',
+    chevronLeft: '<polyline points="15,18 9,12 15,6"/>',
+    chevronRight: '<polyline points="9,18 15,12 9,6"/>',
+    chevronDown: '<polyline points="6,9 12,15 18,9"/>',
+    code: '<polyline points="16,18 22,12 16,6"/><polyline points="8,6 2,12 8,18"/>',
+    chevronUp: '<polyline points="18,15 12,9 6,15"/>',
+    refresh: '<polyline points="23,4 23,10 17,10"/><polyline points="1,20 1,14 7,14"/><path d="M3.5 9a9 9 0 0 1 14.8-3.4L23 10M1 14l4.7 4.4A9 9 0 0 0 20.5 15"/>',
+    share: '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.5" x2="15.4" y2="6.5"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/>',
+    link: '<path d="M10 13a5 5 0 0 0 7.5.5l2-2a5 5 0 0 0-7-7l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.5-.5l-2 2a5 5 0 0 0 7 7l1.5-1.5"/>',
+    mail: '<rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,6 12,13 22,6"/>',
+    image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/>',
+    thumbsUp: '<path d="M7 22V11l5-9 2 1v7h6a2 2 0 0 1 2 2l-1.5 7a2 2 0 0 1-2 1.5H7z"/>',
+    alertTriangle: '<path d="M10.3 3.9L1.8 18a1.7 1.7 0 0 0 1.5 2.5h17.4a1.7 1.7 0 0 0 1.5-2.5L13.7 3.9a1.7 1.7 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+    info: '<circle cx="12" cy="12" r="9"/><line x1="12" y1="16" x2="12" y2="11"/><line x1="12" y1="8" x2="12.01" y2="8"/>',
+    shield: '<path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/>',
+    gift: '<rect x="3" y="8" width="18" height="4"/><rect x="4" y="12" width="16" height="9"/><line x1="12" y1="8" x2="12" y2="21"/><path d="M12 8C10 3 5 4 5 6.5S8 8 12 8z"/><path d="M12 8c2-5 7-4 7-1.5S16 8 12 8z"/>',
+    award: '<circle cx="12" cy="8" r="6"/><polyline points="8.2,13.5 6,22 12,18 18,22 15.8,13.5"/>',
+    compass: '<circle cx="12" cy="12" r="9"/><polygon points="15,9 13,15 9,17 11,11"/>',
+    cloud: '<path d="M17 18H6a4 4 0 1 1 .7-7.9A6 6 0 0 1 18 9.5 4 4 0 0 1 17 18z"/>',
+    hash: '<line x1="5" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="19" y2="15"/><line x1="10" y1="4" x2="8" y2="20"/><line x1="16" y1="4" x2="14" y2="20"/>',
+    smile: '<circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>',
+    userCheck: '<path d="M5 21v-2a4 4 0 0 1 4-4h3a4 4 0 0 1 4 4v2"/><circle cx="9.5" cy="7" r="4"/><polyline points="17,11 19,13 23,9"/>',
+    globe: '<circle cx="12" cy="12" r="9"/><line x1="3" y1="12" x2="21" y2="12"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z"/>',
+    tool: '<path d="M14.7 6.3a4 4 0 0 0 5.4 5.4l-6 6a2 2 0 0 1-2.8 0l-3-3a2 2 0 0 1 0-2.8z"/><path d="M2 22l6-6"/>',
+    key: '<circle cx="8" cy="15" r="4"/><path d="M10.8 12.2L20 3l2 2-2 2 2 2-3 3-2-2-3.2 3.2"/>',
+    battery: '<rect x="2" y="7" width="18" height="10" rx="2"/><line x1="22" y1="10" x2="22" y2="14"/><line x1="6" y1="10" x2="6" y2="14"/>',
+    wifi: '<path d="M2 8.5a16 16 0 0 1 20 0"/><path d="M5.5 12a11 11 0 0 1 13 0"/><path d="M9 15.5a6 6 0 0 1 6 0"/><line x1="12" y1="19" x2="12.01" y2="19"/>',
+    thermometer: '<path d="M14 14.8V4a2 2 0 0 0-4 0v10.8a4 4 0 1 0 4 0z"/>',
+    scissors: '<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.1" y2="15.9"/><line x1="14.5" y1="14.5" x2="20" y2="20"/><line x1="8.1" y1="8.1" x2="12" y2="12"/>',
+    paperclip: '<path d="M21 11.5l-9.4 9.4a5 5 0 0 1-7-7L13 5.5a3.5 3.5 0 0 1 5 5L9.4 19a2 2 0 0 1-2.8-2.8L14 8.5"/>',
+    upload: '<path d="M12 3v13"/><polyline points="7,8 12,3 17,8"/><path d="M3 17v2a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2"/>',
+    download: '<path d="M12 3v13"/><polyline points="7,11 12,16 17,11"/><path d="M3 17v2a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2"/>',
+    move: '<line x1="3" y1="12" x2="21" y2="12"/><polyline points="8,6 3,12 8,18"/><polyline points="16,6 21,12 16,18"/>',
+    // Visages pour les boutons d'évaluation (item 3) : sobres, cohérents
+    // avec le reste de la banque, remplacent les émoticônes colorées.
+    faceSad: '<circle cx="12" cy="12" r="9"/><path d="M8 16s1.5-2.5 4-2.5 4 2.5 4 2.5"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>',
+    faceNeutral: '<circle cx="12" cy="12" r="9"/><line x1="8" y1="15" x2="16" y2="15"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>',
+    faceSmile: '<circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>',
+    faceGrin: '<circle cx="12" cy="12" r="9"/><path d="M7.5 13c0 2 2 4.5 4.5 4.5s4.5-2.5 4.5-4.5z"/><line x1="7.5" y1="13" x2="16.5" y2="13"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>',
+  };
+
   /** @type {Array<any>} cache mémoire de toutes les fiches */
   let cards = [];
   /** file de fiches dues pour la session de révision en cours */
@@ -15,11 +96,57 @@
   /** true dès que la toute première session de révision a été lancée (au chargement de l'appli) */
   let reviewSessionStarted = false;
 
-  /** @type {Array<{id:string,name:string,createdAt:string,updatedAt:string}>} liste des matières */
+  /** @type {Array<{id:string,name:string,createdAt:string,updatedAt:string}>} liste des boîtes */
   let subjects = [];
-  /** id de la matière actuellement affichée */
+  /** id de la boîte actuellement affichée — peut aussi être l'une des deux
+   *  valeurs sentinelles ci-dessous (item 1 : révision toutes boîtes /
+   *  sélection de plusieurs boîtes confondues). */
   let currentSubjectId = null;
+  // Boîte ciblée par le cadre "Nouvelle fiche" (item 5) : indépendante de
+  // la boîte affichée sur Réviser (currentSubjectId), et mémorisée d'une
+  // fiche à l'autre — bug corrigé au passage : le sélecteur du cadre de
+  // création n'était jusqu'ici relié à RIEN, la fiche partait toujours
+  // dans la boîte active de Réviser, quoi qu'on ait choisi ici.
+  const NEW_CARD_SUBJECT_KEY = "fiches_new_card_subject_id";
+  let newCardSubjectId = localStorage.getItem(NEW_CARD_SUBJECT_KEY) || null;
+  function saveNewCardSubjectId(id) {
+    newCardSubjectId = id;
+    if (id) localStorage.setItem(NEW_CARD_SUBJECT_KEY, id);
+    else localStorage.removeItem(NEW_CARD_SUBJECT_KEY);
+    scheduleDevSettingsPush();
+  }
   const CURRENT_SUBJECT_KEY = "fiches_current_subject";
+  const ALL_SUBJECTS_ID = "__all__";
+  const MULTI_SUBJECTS_ID = "__multi__";
+  const MULTI_SELECTION_KEY = "fiches_multi_subject_ids";
+  function isSentinelSubject(id) {
+    return id === ALL_SUBJECTS_ID || id === MULTI_SUBJECTS_ID;
+  }
+  function loadMultiSelection() {
+    try {
+      const raw = localStorage.getItem(MULTI_SELECTION_KEY);
+      const ids = raw ? JSON.parse(raw) : [];
+      // Ne garde que des boîtes qui existent toujours.
+      return Array.isArray(ids) ? ids.filter((id) => subjects.some((s) => s.id === id)) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+  function saveMultiSelection(ids) {
+    localStorage.setItem(MULTI_SELECTION_KEY, JSON.stringify(ids));
+  }
+  const MULTI_SELECTION_LABEL_KEY = "fiches_multi_subject_label";
+  /** Libellé à afficher pour la sélection multi-boîtes (item 18) : le nom
+   *  du dossier si un seul dossier a été coché (rien d'autre), sinon vide
+   *  (générique "Sélection de boîtes"). Un seul SUJET coché ne passe même
+   *  plus par ce mécanisme : voir le confirm du picker, qui bascule alors
+   *  directement dessus. */
+  function loadMultiSelectionLabel() {
+    return localStorage.getItem(MULTI_SELECTION_LABEL_KEY) || "";
+  }
+  function saveMultiSelectionLabel(label) {
+    localStorage.setItem(MULTI_SELECTION_LABEL_KEY, label || "");
+  }
 
   const el = (id) => document.getElementById(id);
 
@@ -40,13 +167,90 @@
   const inputAnswer = el("input-answer");
   const submitBtn = el("submit-btn");
   const cancelEditBtn = el("cancel-edit");
+  // Bouton "révéler" (item 7 — repositionné en haut à droite, popup
+  // vertical) : les actions secondaires (chantier, hibernation, éditer)
+  // restent repliées tant qu'on n'a pas cliqué dessus.
+  const revealSecondaryIconsBtn = el("reveal-secondary-icons-btn");
+  const secondaryIconsWrap = el("secondary-icons-wrap");
+  if (revealSecondaryIconsBtn && secondaryIconsWrap) {
+    // Item 6 : icônes épurées (banque d'icônes) plutôt que les caractères
+    // ▾/▴, à l'aller comme au retour.
+    revealSecondaryIconsBtn.innerHTML = iconSvgMarkup("chevronDown", "icon-inline-svg");
+    revealSecondaryIconsBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      secondaryIconsWrap.hidden = !secondaryIconsWrap.hidden;
+      revealSecondaryIconsBtn.innerHTML = iconSvgMarkup(secondaryIconsWrap.hidden ? "chevronDown" : "chevronUp", "icon-inline-svg");
+    });
+    document.addEventListener("pointerdown", (e) => {
+      if (secondaryIconsWrap.hidden) return;
+      if (secondaryIconsWrap.contains(e.target) || e.target === revealSecondaryIconsBtn) return;
+      secondaryIconsWrap.hidden = true;
+      revealSecondaryIconsBtn.innerHTML = iconSvgMarkup("chevronDown", "icon-inline-svg");
+    });
+  }
   const cardListEl = el("card-list");
   const totalCountEl = el("total-count");
 
+  /* ---------------------------------------------------------
+     Barre d'outils de mise en forme riche (item 13) : agit sur le champ
+     (question ou réponse) qui avait le focus juste avant le clic sur un
+     bouton — `mousedown`+preventDefault empêche le clic de faire perdre
+     cette sélection avant que la commande ne s'applique.
+  --------------------------------------------------------- */
+  let lastFocusedEditor = null;
+  [inputQuestion, inputAnswer].forEach((editor) => {
+    if (!editor) return;
+    editor.addEventListener("focus", () => { lastFocusedEditor = editor; });
+  });
+
+  function focusLastEditor() {
+    const target = lastFocusedEditor || inputQuestion;
+    if (target) target.focus();
+    return target;
+  }
+
+  document.querySelectorAll(".rt-btn[data-cmd]").forEach((btn) => {
+    btn.addEventListener("mousedown", (e) => e.preventDefault());
+    btn.addEventListener("click", () => {
+      focusLastEditor();
+      document.execCommand(btn.dataset.cmd, false, null);
+    });
+  });
+
+  const rtHighlightBtn = document.querySelector(".rt-btn--highlight");
+  if (rtHighlightBtn) {
+    rtHighlightBtn.addEventListener("mousedown", (e) => e.preventDefault());
+    rtHighlightBtn.addEventListener("click", () => {
+      focusLastEditor();
+      const color = rtHighlightBtn.dataset.highlight;
+      // "hiliteColor" est la commande historique (Firefox) ; "backColor"
+      // est celle que Chrome/Safari reconnaissent pour le même effet sur
+      // une sélection de texte (pas tout le champ).
+      if (!document.execCommand("hiliteColor", false, color)) {
+        document.execCommand("backColor", false, color);
+      }
+    });
+  }
+
+  document.querySelectorAll(".rt-color[data-color]").forEach((btn) => {
+    btn.addEventListener("mousedown", (e) => e.preventDefault());
+    btn.addEventListener("click", () => {
+      focusLastEditor();
+      document.execCommand("foreColor", false, btn.dataset.color);
+    });
+  });
+
+  const rtClearBtn = el("rt-clear-btn");
+  if (rtClearBtn) {
+    rtClearBtn.addEventListener("mousedown", (e) => e.preventDefault());
+    rtClearBtn.addEventListener("click", () => {
+      focusLastEditor();
+      document.execCommand("removeFormat", false, null);
+    });
+  }
+
   const statTotal = el("stat-total");
   const statReviewedToday = el("stat-reviewed-today");
-  const statsSubjectSelectEl = el("stats-subject-select");
-  const statsRangeSelectEl = el("stats-range-select");
   const dueChartEl = el("due-chart");
   const chartEmptyEl = el("chart-empty");
   const ALL_SUBJECTS = "__all__";
@@ -54,7 +258,7 @@
   let statsRangeDays = 15;
   const CHART_MAX_BAR_PX = 140;
 
-  /* Mini histogramme de la page Réviser (matière en cours). Échelle propre,
+  /* Mini histogramme de la page Réviser (boîte en cours). Échelle propre,
      changée en tapant dessus, indépendante du sélecteur de l'onglet Stats. */
   const reviewChartEl = el("review-due-chart");
   const reviewChartEmptyEl = el("review-chart-empty");
@@ -62,7 +266,10 @@
   const reviewChartToggleEl = el("review-chart-toggle");
   const reviewChartScaleLabelEl = el("review-chart-scale-label");
   const reviewChartSubjectNameEl = el("review-chart-subject-name");
-  const REVIEW_CHART_STEPS = [15, 30, 90, 182, 365];
+  const REVIEW_CHART_STEPS = [15, 30, 90, 365];
+  // Item 8 : pas de "1 an" pour l'histogramme fusionné de Stats
+  // spécifiquement (celui de Réviser garde ses 4 échelles).
+  const STATS_CHART_STEPS = [15, 30, 90];
   const REVIEW_CHART_MAX_BAR_PX = 100;
   let reviewChartRangeDays = 15;
 
@@ -72,12 +279,11 @@
      graphique, sur lesquels on peut ensuite défiler horizontalement. Avant,
      les deux étaient confondus (un seul `days`), ce qui fait qu'à l'échelle
      "3 mois" par exemple, il n'y avait justement que 3 mois de données —
-     aucun défilement possible au-delà. */
+     aucun défilement possible au-delà. Échelle "6 mois" retirée (item 4). */
   const RANGE_CONFIG = {
     15: { visible: 15, total: 60 },     // 15 jours à l'écran, défilement sur 2 mois
     30: { visible: 30, total: 120 },    // 1 mois à l'écran, défilement sur 4 mois
     90: { visible: 90, total: 365 },    // 3 mois à l'écran, défilement sur 1 an
-    182: { visible: 180, total: 548 },  // 6 mois à l'écran, défilement sur 1,5 an
     365: { visible: 360, total: 1095 }, // 1 an à l'écran, défilement sur 3 ans
   };
 
@@ -104,9 +310,6 @@
   const DEFAULT_HIBERNATE_DAYS = 7;
   let hibernateDays = DEFAULT_HIBERNATE_DAYS;
   const settingHibernateDaysEl = el("setting-hibernate-days");
-  const settingTamaFoodValueEl = el("setting-tama-food-value");
-  const settingTamaGiftQtyMinEl = el("setting-tama-gift-qty-min");
-  const settingTamaGiftQtyMaxEl = el("setting-tama-gift-qty-max");
 
   /* ---------------------------------------------------------
      Algorithme de répétition espacée "maison" (remplace SM-2) :
@@ -116,71 +319,1734 @@
        (card.deadlineDaysRaw, 3 décimales) pour les calculs suivants ;
      - seule la version arrondie à l'entier (card.interval) sert à fixer la
        date de la prochaine interrogation et l'affichage.
-     Réglable par matière (Ka/Kh/Kg/Ke bornés 1–10 par dixièmes, Ma/Mh/Mg/Me
+     Réglable par boîte (Ka/Kh/Kg/Ke bornés 1–10 par dixièmes, Ma/Mh/Mg/Me
      bornés 1–365 par unités), persisté en local sous une seule clé (map
      subjectId -> réglages), donc conservé d'une version de l'appli à
      l'autre comme le reste des réglages.
      --------------------------------------------------------- */
-  const SUBJECT_ALGO_KEY = "fiches_subject_algo";
-  const ALGO_PRESETS = {
-    cool: { Ka: 3, Kh: 1.6, Kg: 2, Ke: 3.5, Ma: 3, Mh: 6, Mg: 60, Me: 300 },
-    normal: { Ka: 1.3, Kh: 1.5, Kg: 1.8, Ke: 2.4, Ma: 2, Mh: 3, Mg: 30, Me: 180 },
-    renforce: { Ka: 1, Kh: 1.3, Kg: 1.6, Ke: 1.9, Ma: 1, Mh: 2, Mg: 15, Me: 90 },
+  /* ---------------------------------------------------------
+     Modes d'apprentissage (item 2) : désormais des entités GLOBALES
+     (3 modes fixes + des modes personnalisés nommés, créés/modifiés/
+     supprimés librement), chacune affectée à une ou plusieurs boîtes
+     (ou affectée en bloc à un dossier entier, qui répercute alors le
+     changement sur toutes les boîtes qu'il contient). Modifier les
+     coefficients d'un mode affecte donc TOUTES les boîtes qui l'utilisent
+     — contrairement à l'ancien système où chaque boîte avait ses 4
+     emplacements de réglages indépendants.
+  --------------------------------------------------------- */
+  const LEARNING_MODES_KEY = "fiches_learning_modes";
+  const BUILTIN_MODE_IDS = ["cool", "normal", "renforce"];
+  const BUILTIN_MODE_DEFAULTS = {
+    // Valeurs alignées sur les 12 choix disponibles pour les curseurs
+    // (ALGO_K_VALUES/ALGO_M_VALUES) — Kg=2, Ke=2.4 et Ke=1.9 n'existaient
+    // dans aucune des deux listes, ce qui faisait apparaître un curseur/menu
+    // vide (aucune valeur sélectionnée) au lieu de la vraie valeur d'origine.
+    cool: { name: "Cool", Ka: 3, Kh: 1.6, Kg: 2.1, Ke: 3.5, Ma: 3, Mh: 6, Mg: 60, Me: 300 },
+    normal: { name: "Normal", Ka: 1.3, Kh: 1.5, Kg: 1.8, Ke: 2.5, Ma: 2, Mh: 3, Mg: 30, Me: 180 },
+    renforce: { name: "Renforcé", Ka: 1, Kh: 1.3, Kg: 1.6, Ke: 1.8, Ma: 1, Mh: 2, Mg: 15, Me: 90 },
   };
-  const ALGO_PRESET_LABELS = { cool: "Apprentissage cool", normal: "Apprentissage normal", renforce: "Apprentissage renforcé" };
-
-  function loadSubjectAlgoMap() {
-    try {
-      const raw = localStorage.getItem(SUBJECT_ALGO_KEY);
-      return raw ? JSON.parse(raw) : {};
-    } catch (e) {
-      return {};
+  // Conservés pour compatibilité avec le code existant qui les référence
+  // encore (couleurs, libellés courts...).
+  const ALGO_MODE_ORDER = ["cool", "normal", "renforce", "custom"];
+  const ALGO_MODE_SHORT_LABELS = { cool: "Cool", normal: "Normal", renforce: "Renforcé", custom: "Personnalisé" };
+  const ALGO_KEYS8 = ["Ka", "Kh", "Kg", "Ke", "Ma", "Mh", "Mg", "Me"];
+  // Valeurs discrètes disponibles pour les curseurs (item 9) — remplace les
+  // anciens champs numériques libres, plus pratiques à régler au doigt.
+  const ALGO_K_VALUES = [1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.8, 2.1, 2.5, 3, 3.5];
+  const ALGO_M_VALUES = [1, 2, 3, 4, 6, 10, 15, 30, 60, 90, 180, 300];
+  function snapToNearest(value, list) {
+    let best = list[0], bestDist = Infinity;
+    for (const v of list) {
+      const d = Math.abs(v - value);
+      if (d < bestDist) { bestDist = d; best = v; }
     }
+    return best;
   }
-  function saveSubjectAlgoMap(map) {
-    localStorage.setItem(SUBJECT_ALGO_KEY, JSON.stringify(map));
-    touchAppSettingsTimestamp();
-    if (Sync.isConfigured()) pushTamaBlob();
-  }
+
   function clampAlgoK(v, fallback) {
-    const n = Math.round(Number(v) * 10) / 10;
-    return Number.isFinite(n) ? Math.min(10, Math.max(1, n)) : fallback;
+    const n = Number(v);
+    return snapToNearest(Number.isFinite(n) ? n : Number(fallback) || 1, ALGO_K_VALUES);
   }
   function clampAlgoM(v, fallback) {
-    const n = Math.round(Number(v));
-    return Number.isFinite(n) ? Math.min(365, Math.max(1, n)) : fallback;
+    const n = Number(v);
+    return snapToNearest(Number.isFinite(n) ? n : Number(fallback) || 1, ALGO_M_VALUES);
   }
-  function getSubjectAlgoSettings(subjectId) {
-    const map = loadSubjectAlgoMap();
-    const raw = map[subjectId];
-    if (!raw) return { ...ALGO_PRESETS.normal };
+  function clampModeProfile(raw, fallbackId) {
+    const factory = getFactoryDefaults();
+    const fb = factory[fallbackId] || factory.normal;
+    const out = {};
+    ["Ka", "Kh", "Kg", "Ke"].forEach((k) => { out[k] = clampAlgoK(raw && raw[k], fb[k]); });
+    ["Ma", "Mh", "Mg", "Me"].forEach((k) => { out[k] = clampAlgoM(raw && raw[k], fb[k]); });
+    return out;
+  }
+
+  /* ---------------------------------------------------------
+     Page Développeur (item 19) : réglages internes — émoticônes/texte des
+     boutons de notation et du menu principal, et les valeurs "usine" des
+     3 modes d'apprentissage fixes (celles vers lesquelles "Revenir aux
+     réglages d'origine" ramène, et celles d'une toute nouvelle
+     installation). Cachée derrière un simple onglet pour l'instant ; une
+     vraie séparation développeur/utilisateur viendra plus tard.
+  --------------------------------------------------------- */
+  const DEV_SETTINGS_KEY = "fiches_dev_settings";
+  const DEFAULT_RATING_LABELS = { again: "😵‍💫", hard: "🤔", good: "🙂", easy: "😎" };
+  const DEFAULT_NAV_LABELS = {
+    review: "🤓", manage: "🗃️", cards: "📄", stats: "📊", settings: "⚙",
+  };
+  /** Banque d'icônes monochromes (essai apprécié, étoffé sur demande) —
+   *  chaque entrée est le contenu interne d'un <svg viewBox="0 0 24 24">
+   *  (traits seulement, currentColor géré au niveau du SVG englobant),
+   *  pour rester cohérent avec le style sobre déjà en place sur le menu. */
+  function iconSvgMarkup(iconId, cls) {
+    const inner = ICON_LIBRARY[iconId];
+    if (!inner) return "";
+    return `<svg class="${cls || "tab-icon-svg"}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
+  }
+  // Choix par défaut = les icônes déjà en place (essai précédent).
+  const DEFAULT_NAV_ICONS = {
+    review: "cards", manage: "folder", cards: "file", stats: "barChart", settings: "settings",
+    addCard: "plus", calendar: "calendar", sync: "refresh", dev: "code",
+  };
+  // Couleurs des 4 notes (boutons d'évaluation + graphiques) et des 4 modes
+  // d'apprentissage (badges) — item 2 : rendues éditables depuis la page
+  // Développeur plutôt que codées en dur dans la feuille de style.
+  const DEFAULT_RATING_COLORS = { again: "#b6604a", hard: "#cf9a4d", good: "#6f8b5c", easy: "#3e7c6b" };
+  // Fond partagé des 4 boutons d'évaluation (item 4) — une seule couleur,
+  // désormais séparée de la couleur de chaque note (qui teinte l'icône).
+  const DEFAULT_RATING_BTN_BG_COLOR = "#ffffff";
+  const DEFAULT_NIGHT_RATING_BTN_BG_COLOR = "#1c2330";
+  const DEFAULT_MODE_COLORS = { cool: "#6f8b5c", normal: "#cf9a4d", renforce: "#b6604a", custom: "#e8c84a" };
+  // Fond de l'appli, fond du bouton "chantier" actif, fond de la pastille
+  // "0 à revoir" en mode bonus (items 3/4/8).
+  const DEFAULT_APP_BG_COLOR = "#eef2f8";
+  const DEFAULT_CONSTRUCTION_ACTIVE_COLOR = "#cf9a4d";
+  const DEFAULT_BONUS_PILL_COLOR = "#ffffff";
+  // Textes généraux, barres/fonds d'histogrammes, fonds de zones (item :
+  // étoffe encore le mode développeur) — valeurs par défaut mises à jour
+  // pour le thème clair (item 1 : "futuriste naïf", blanc/gris/bleu ciel).
+  const DEFAULT_MAIN_TEXT_COLOR = "#1f2937";
+  const DEFAULT_CARD_TEXT_COLOR = "#1f2937";
+  const DEFAULT_DUE_BAR_COLOR = "#4a90d9";
+  const DEFAULT_TODAY_BAR_COLOR = "#4a9fe0";
+  const DEFAULT_CHART_WRAP_BG_COLOR = "#ffffff";
+  const DEFAULT_SVG_CHART_BG_COLOR = "#eef2f8";
+  const DEFAULT_CARD_FORM_BG_COLOR = "#ffffff";
+  const DEFAULT_RICH_EDITOR_BG_COLOR = "#f4f7fb";
+  const DEFAULT_CARD_BG_COLOR = "#ffffff";
+  const DEFAULT_EMPTY_BAR_COLOR = "#dce4f0";
+  // Nouveaux réglages "Couleurs des fonds" / "Couleurs des textes" (items
+  // 2h/2i) : chacun a un nom de réglage direct, plus explicite que les
+  // anciennes clés génériques ci-dessus.
+  const DEFAULT_BG_COLORS = {
+    appBg: "#eef2f8",
+    homeSquareBg: "#ffffff",
+    homeAddCardBg: "#4a90d9",
+    cardFormBg: "#ffffff",
+    richEditorBg: "#f4f7fb",
+    homeBtnBg: "transparent",
+    cardBg: "#ffffff",
+    subjectSelectBg: "#f0f3f7",
+    syncStatusBg: "transparent",
+    folderBg: "#ffffff",
+    folderL1Bg: "#ffffff",
+    folderL2Bg: "#ffffff",
+    folderL3Bg: "#ffffff",
+    subjectRowBg: "#ffffff",
+    addBtnBg: "#f0f3f7",
+    chartWrapBg: "#ffffff",
+    svgChartBg: "#eef2f8",
+    dueBarColor: "#4a90d9",
+    todayBarColor: "#4a9fe0",
+    reviewedBarColor: "#4a90d9",
+    // Item 10 (dernier lot) : fond du bouton "Ne pas suivre le programme".
+    skipProgramBg: "#fde8d7",
+    // Item 11 (dernier lot) : fond de la page d'accueil, indépendant du
+    // fond des autres pages (appBg).
+    homeBg: "#eef2f8",
+  };
+  // Item 4 : couleurs de fond pour le mode nuit — un jeu de valeurs sombres
+  // parallèle, réglable séparément dans le mode développeur.
+  const DEFAULT_NIGHT_BG_COLORS = {
+    appBg: "#11151c",
+    homeSquareBg: "#1c2330",
+    homeAddCardBg: "#3a75b3",
+    cardFormBg: "#1c2330",
+    richEditorBg: "#232b3a",
+    homeBtnBg: "transparent",
+    cardBg: "#1c2330",
+    subjectSelectBg: "#232b3a",
+    syncStatusBg: "transparent",
+    folderBg: "#1c2330",
+    folderL1Bg: "#212939",
+    folderL2Bg: "#252e40",
+    folderL3Bg: "#2a3447",
+    subjectRowBg: "#1c2330",
+    addBtnBg: "#232b3a",
+    chartWrapBg: "#1c2330",
+    svgChartBg: "#11151c",
+    dueBarColor: "#5a9fe0",
+    todayBarColor: "#6bafef",
+    reviewedBarColor: "#5a9fe0",
+    skipProgramBg: "#4a3524",
+    homeBg: "#11151c",
+  };
+  const DEFAULT_TEXT_COLORS_SET = {
+    homeTitle: "#1f2937",
+    titles: "#1f2937",
+    generalText: "#64748b",
+    folderSubjectNames: "#1f2937",
+    cardText: "#1f2937",
+    chartValues: "#6b7280",
+    chartLabels: "#6b7280",
+    chartTodayLabel: "#1f2937",
+    selectorText: "#1f2937",
+    syncText: "#64748b",
+  };
+  const DEFAULT_NIGHT_TEXT_COLORS_SET = {
+    homeTitle: "#eef2f8",
+    titles: "#eef2f8",
+    generalText: "#93a1b5",
+    folderSubjectNames: "#eef2f8",
+    cardText: "#eef2f8",
+    chartValues: "#93a1b5",
+    chartLabels: "#93a1b5",
+    chartTodayLabel: "#eef2f8",
+    selectorText: "#eef2f8",
+    syncText: "#93a1b5",
+  };
+  // Effet d'ombrage réglable élément par élément (item 5) — clé -> nom de
+  // variable CSS + intitulé affiché dans la page développeur. Tout activé
+  // par défaut (comportement actuel inchangé tant qu'on ne décoche rien).
+  const SHADOW_ELEMENTS = {
+    duePill: { varName: "--shadow-due-pill", title: "Pastille « à revoir »" },
+    homeSquare: { varName: "--shadow-home-square", title: "Boutons de la page d'accueil" },
+    card: { varName: "--shadow-card", title: "Fiches (recto & verso)" },
+    cardForm: { varName: "--shadow-card-form", title: "Cadres (blocs)" },
+    statBox: { varName: "--shadow-stat-box", title: "Cases de statistiques" },
+    chartWrap: { varName: "--shadow-chart-wrap", title: "Histogrammes" },
+    subjectRow: { varName: "--shadow-subject-row", title: "Boîtes et dossiers" },
+  };
+  const DEFAULT_SHADOWS = Object.fromEntries(Object.keys(SHADOW_ELEMENTS).map((k) => [k, true]));
+  // Score d'apprentissage des fiches (item 1) : S = ((D-1)^P)/((D-1)^P+B),
+  // D = délai (en jours) avant la prochaine interrogation.
+  const DEFAULT_CARD_SCORE_SETTINGS = {
+    p: 1.2,
+    b: 10,
+    v1: 10,
+    v2: 45,
+    v3: 65,
+    v4: 75,
+    v5: 85,
+    hideReviewScoreInfo: false,
+    hideSubjectScoreOnReview: false,
+    // Item 3 : taille de police du texte "Objectif : X" sur la jauge de
+    // la page Programme de révision, réglable dans le mode développeur.
+    programTargetFontSize: 8,
+  };
+  // Zones de la jauge (item 4) : 6 zones désormais ("Bien" ajoutée entre
+  // "En bonne voie" et "Maîtrisé"), couleurs réglables depuis le mode
+  // développeur plutôt que fixes.
+  const GAUGE_ZONE_DEFS = [
+    { key: "debutant", boundKey: "v1", label: "0 étoile", stars: 0 },
+    { key: "fragile", boundKey: "v2", label: "1 étoile", stars: 1 },
+    { key: "enBonneVoie", boundKey: "v3", label: "2 étoiles", stars: 2 },
+    { key: "bien", boundKey: "v4", label: "3 étoiles", stars: 3 },
+    { key: "maitrise", boundKey: "v5", label: "4 étoiles", stars: 4 },
+    { key: "acquis", boundKey: null, label: "5 étoiles", stars: 5 },
+  ];
+  // Item 8 : intitulés des zones remplacés par des étoiles — une étoile
+  // grisée vide pour le tout premier niveau (0), puis 1 à 5 étoiles
+  // pleines, dans la couleur de la zone.
+  function gaugeZoneStarText(stars) {
+    return stars === 0 ? "☆" : "★".repeat(stars);
+  }
+  const DEFAULT_GAUGE_COLORS = {
+    debutant: "#94a3b8",
+    fragile: "#7c93b3",
+    enBonneVoie: "#4a90d9",
+    bien: "#3a7cc4",
+    maitrise: "#2f6fb0",
+    acquis: "#5fae7c",
+  };
+  // Disposition dispersée de la page d'accueil (item 3) : position (x,y en
+  // pixels, coin haut-gauche du cercle) + diamètre (px) par bouton — tailles
+  // différentes selon l'importance (Réviser le plus grand, Développeur le
+  // plus petit). Repères en pourcentage de la zone d'accueil (item — bug
+  // corrigé : des pixels fixes, pensés pour ~390px de large, décalaient
+  // tout vers la gauche sur un écran plus large comme un PC, puisque
+  // l'appli s'adapte elle en largeur — le pourcentage, lui, suit toujours
+  // la largeur réelle quel que soit l'appareil).
+  const HOME_LAYOUT_TITLES = {
+    review: "Réviser", manage: "Dossiers & boîtes", cards: "Fiches", addCard: "Ajouter une fiche",
+    stats: "Statistiques", settings: "Réglages", calendar: "Calendrier",
+    sync: "Synchronisation", dev: "Développeur",
+  };
+  // Largeur/hauteur de référence utilisées uniquement pour convertir une
+  // seule fois d'anciens réglages enregistrés en pixels (avant ce
+  // correctif) vers des pourcentages équivalents.
+  const HOME_LAYOUT_LEGACY_REF_WIDTH = 354;
+  const HOME_LAYOUT_LEGACY_REF_HEIGHT = 640;
+  const DEFAULT_HOME_LAYOUT = {
+    review: { x: 26.1, y: 13.7, d: 155 },
+    addCard: { x: 73.4, y: 14.9, d: 110 },
+    cards: { x: 21.9, y: 39.5, d: 105 },
+    stats: { x: 77.7, y: 37.5, d: 100 },
+    manage: { x: 79.8, y: 59.0, d: 95 },
+    calendar: { x: 39.5, y: 54.7, d: 100 },
+    settings: { x: 16.2, y: 73.8, d: 85 },
+    sync: { x: 54.4, y: 76.2, d: 95 },
+    dev: { x: 89.0, y: 79.0, d: 80 },
+  };
+  // Items 1/2 (logo) : position (X/Y en %, centre du logo) et taille (px)
+  // du logo sur la page d'accueil.
+  const DEFAULT_HOME_LOGO = { x: 50, y: 7, size: 64 };
+  // Disposition de la page Réviser (item 1c) : hauteur/largeur de la fiche
+  // et position Y de son bord haut, position Y des boutons d'évaluation
+  // (tous en % de l'écran), temps de retournement en secondes.
+  const DEFAULT_REVIEW_LAYOUT = {
+    cardHeightPct: 45,
+    cardWidthPct: 91,
+    cardTopPct: 13,
+    ratingRowTopPct: 60,
+    scoreInfoTopPct: 70,
+    gaugeTopPct: 80,
+    flipDurationSec: 0.7,
+  };
+  const DEFAULT_ICONS = {
+    hibernate: "💤", edit: "✎", construction: "🚧", undo: "◀️", folder: "📁",
+  };
+  // Choix par défaut dans la banque d'icônes pour ces mêmes réglages
+  // (utilisé seulement pour les 4 premiers — le dossier reste en
+  // émoticône, utilisé comme simple texte à trop d'endroits pour basculer
+  // en SVG sans tout casser).
+  const DEFAULT_ICON_BANK_CHOICES = { hibernate: "sleep", edit: "pencil", construction: "cone", undo: "undo" };
+  // Icônes de la page Organisation (item 3) : renommer/déplacer/supprimer,
+  // sobres, choisies dans la banque d'icônes.
+  const DEFAULT_ORG_ICON_BANK_CHOICES = { orgRename: "pencil", orgMove: "move", orgDelete: "trash" };
+  // Icônes des boutons d'évaluation (item 2a) : plus d'émoticônes libres,
+  // uniquement la banque d'icônes sobres.
+  const DEFAULT_RATING_ICONS = { again: "faceSad", hard: "faceNeutral", good: "faceSmile", easy: "faceGrin" };
+  // Palette de couleurs de texte proposée dans la mise en forme des fiches
+  // (item 20 puis étendue ici) — modifiable, y compris ajouter/retirer des
+  // couleurs, depuis la page Développeur.
+  const DEFAULT_TEXT_COLORS = [
+    { label: "Foncé", hex: "#23302a" },
+    { label: "Terracotta", hex: "#b6604a" },
+    { label: "Ambre", hex: "#cf9a4d" },
+    { label: "Sauge", hex: "#6f8b5c" },
+    { label: "Bleu-vert", hex: "#3e7c6b" },
+    { label: "Marine", hex: "#1f3a5f" },
+    { label: "Ciel", hex: "#2a8fd8" },
+    { label: "Rose", hex: "#c96a95" },
+    { label: "Violet", hex: "#8a5fb3" },
+    { label: "Orange", hex: "#d97f35" },
+    { label: "Gris", hex: "#6b7280" },
+  ];
+
+  /** Convertit une disposition d'accueil enregistrée en pixels (avant le
+   *  correctif de cet item) vers des pourcentages équivalents, une seule
+   *  fois — repérable via l'absence du marqueur homeLayoutUnit. Les
+   *  réglages déjà migrés, ou tout nouveau réglage refait depuis
+   *  l'interface (déjà en pourcentage), passent au travers sans y
+   *  toucher. Gère aussi le passage du coin haut-gauche vers le centre du
+   *  cercle (homeLayoutAnchor) — deux migrations indépendantes, un
+   *  réglage peut avoir besoin de l'une, de l'autre, des deux, ou d'aucune. */
+  function migrateHomeLayoutToPercent(parsed) {
+    const stored = parsed.homeLayout || {};
+    const unitMigrated = parsed.homeLayoutUnit === "percent";
+    const anchorMigrated = parsed.homeLayoutAnchor === "center";
+    return Object.fromEntries(
+      Object.keys(DEFAULT_HOME_LAYOUT).map((k) => {
+        const def = DEFAULT_HOME_LAYOUT[k];
+        const val = stored[k];
+        if (!val) return [k, { ...def }];
+        // Ancien format en pixels : convertit vers un pourcentage de la
+        // largeur/hauteur de référence d'origine (~390px de large).
+        let x = val.x !== undefined ? Number(val.x) : def.x;
+        let y = val.y !== undefined ? Number(val.y) : def.y;
+        const d = val.d !== undefined ? Number(val.d) : def.d;
+        if (!unitMigrated) {
+          x = (x / HOME_LAYOUT_LEGACY_REF_WIDTH) * 100;
+          y = (y / HOME_LAYOUT_LEGACY_REF_HEIGHT) * 100;
+        }
+        if (!anchorMigrated) {
+          // Coin haut-gauche -> centre : on décale d'un demi-diamètre,
+          // converti en pourcentage des mêmes repères de référence.
+          x += (d / 2 / HOME_LAYOUT_LEGACY_REF_WIDTH) * 100;
+          y += (d / 2 / HOME_LAYOUT_LEGACY_REF_HEIGHT) * 100;
+        }
+        return [k, { x, y, d }];
+      })
+    );
+  }
+
+  // Bug corrigé (item 9) : cette fonction est appelée TRÈS souvent (une
+  // fois par fiche pour son score, par exemple) et reconstruisait à chaque
+  // fois l'objet complet (JSON.parse + fusion de ~15 groupes de réglages)
+  // — sur une liste de nombreuses fiches, ça pouvait provoquer un vrai
+  // temps de gel. On ne refait ce travail que si le contenu brut de
+  // localStorage a changé depuis le dernier appel.
+  let _devSettingsCacheRaw;
+  let _devSettingsCache;
+  function loadDevSettings() {
+    const raw = localStorage.getItem(DEV_SETTINGS_KEY);
+    if (_devSettingsCache && raw === _devSettingsCacheRaw) return _devSettingsCache;
+    let parsed = {};
+    try {
+      parsed = raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      parsed = {};
+    }
+    const built = {
+      ratingLabels: { ...DEFAULT_RATING_LABELS, ...(parsed.ratingLabels || {}) },
+      navLabels: { ...DEFAULT_NAV_LABELS, ...(parsed.navLabels || {}) },
+      navIcons: { ...DEFAULT_NAV_ICONS, ...(parsed.navIcons || {}) },
+      ratingIcons: { ...DEFAULT_RATING_ICONS, ...(parsed.ratingIcons || {}) },
+      iconBank: { ...DEFAULT_ICON_BANK_CHOICES, ...(parsed.iconBank || {}) },
+      orgIconBank: { ...DEFAULT_ORG_ICON_BANK_CHOICES, ...(parsed.orgIconBank || {}) },
+      ratingColors: { ...DEFAULT_RATING_COLORS, ...(parsed.ratingColors || {}) },
+      ratingBtnBgColor: parsed.ratingBtnBgColor || DEFAULT_RATING_BTN_BG_COLOR,
+      modeColors: { ...DEFAULT_MODE_COLORS, ...(parsed.modeColors || {}) },
+      customModeColors: { ...(parsed.customModeColors || {}) },
+      appBgColor: parsed.appBgColor || DEFAULT_APP_BG_COLOR,
+      constructionActiveColor: parsed.constructionActiveColor || DEFAULT_CONSTRUCTION_ACTIVE_COLOR,
+      bonusPillColor: parsed.bonusPillColor || DEFAULT_BONUS_PILL_COLOR,
+      mainTextColor: parsed.mainTextColor || DEFAULT_MAIN_TEXT_COLOR,
+      cardTextColor: parsed.cardTextColor || DEFAULT_CARD_TEXT_COLOR,
+      dueBarColor: parsed.dueBarColor || DEFAULT_DUE_BAR_COLOR,
+      todayBarColor: parsed.todayBarColor || DEFAULT_TODAY_BAR_COLOR,
+      chartWrapBgColor: parsed.chartWrapBgColor || DEFAULT_CHART_WRAP_BG_COLOR,
+      svgChartBgColor: parsed.svgChartBgColor || DEFAULT_SVG_CHART_BG_COLOR,
+      cardFormBgColor: parsed.cardFormBgColor || DEFAULT_CARD_FORM_BG_COLOR,
+      richEditorBgColor: parsed.richEditorBgColor || DEFAULT_RICH_EDITOR_BG_COLOR,
+      cardBgColor: parsed.cardBgColor || DEFAULT_CARD_BG_COLOR,
+      emptyBarColor: parsed.emptyBarColor || DEFAULT_EMPTY_BAR_COLOR,
+      bgColors: { ...DEFAULT_BG_COLORS, ...(parsed.bgColors || {}) },
+      textColorsSet: { ...DEFAULT_TEXT_COLORS_SET, ...(parsed.textColorsSet || {}) },
+      shadows: { ...DEFAULT_SHADOWS, ...(parsed.shadows || {}) },
+      homeLayout: migrateHomeLayoutToPercent(parsed),
+      homeLogo: { ...DEFAULT_HOME_LOGO, ...(parsed.homeLogo || {}) },
+      homeLayoutUnit: "percent",
+      homeLayoutAnchor: "center",
+      reviewLayout: { ...DEFAULT_REVIEW_LAYOUT, ...(parsed.reviewLayout || {}) },
+      cardScore: { ...DEFAULT_CARD_SCORE_SETTINGS, ...(parsed.cardScore || {}) },
+      gaugeColors: { ...DEFAULT_GAUGE_COLORS, ...(parsed.gaugeColors || {}) },
+      // Item 4 : mode nuit — un jeu de couleurs parallèle et réglable pour
+      // chacun des groupes ci-dessus, plus un simple drapeau on/off (dont
+      // l'état effectif est en réalité piloté par le bouton en topbar, pas
+      // ce réglage-ci, qui ne sert qu'à mémoriser le dernier choix).
+      nightMode: parsed.nightMode === true,
+      nightColors: {
+        bgColors: { ...DEFAULT_NIGHT_BG_COLORS, ...((parsed.nightColors || {}).bgColors || {}) },
+        textColorsSet: { ...DEFAULT_NIGHT_TEXT_COLORS_SET, ...((parsed.nightColors || {}).textColorsSet || {}) },
+        ratingColors: { ...DEFAULT_RATING_COLORS, ...((parsed.nightColors || {}).ratingColors || {}) },
+        ratingBtnBgColor: (parsed.nightColors || {}).ratingBtnBgColor || DEFAULT_NIGHT_RATING_BTN_BG_COLOR,
+        modeColors: { ...DEFAULT_MODE_COLORS, ...((parsed.nightColors || {}).modeColors || {}) },
+        gaugeColors: { ...DEFAULT_GAUGE_COLORS, ...((parsed.nightColors || {}).gaugeColors || {}) },
+      },
+      icons: { ...DEFAULT_ICONS, ...(parsed.icons || {}) },
+      textColors: Array.isArray(parsed.textColors) && parsed.textColors.length > 0 ? parsed.textColors : DEFAULT_TEXT_COLORS,
+      factoryDefaults: {
+        cool: { ...BUILTIN_MODE_DEFAULTS.cool, ...((parsed.factoryDefaults || {}).cool || {}) },
+        normal: { ...BUILTIN_MODE_DEFAULTS.normal, ...((parsed.factoryDefaults || {}).normal || {}) },
+        renforce: { ...BUILTIN_MODE_DEFAULTS.renforce, ...((parsed.factoryDefaults || {}).renforce || {}) },
+      },
+    };
+    _devSettingsCacheRaw = raw;
+    _devSettingsCache = built;
+    return built;
+  }
+  function saveDevSettings(settings) {
+    settings.updatedAt = new Date().toISOString();
+    localStorage.setItem(DEV_SETTINGS_KEY, JSON.stringify(settings));
+    scheduleDevSettingsPush();
+  }
+  // Poussée retardée (item 1 — synchro des réglages développeur) :
+  // beaucoup d'appels à saveDevSettings coup sur coup en bougeant un
+  // curseur de couleur enverraient sinon une requête réseau par pixel de
+  // déplacement — un seul envoi group  é, un court instant après la
+  // dernière modification.
+  let devSettingsPushTimer = null;
+  function scheduleDevSettingsPush() {
+    if (typeof Sync === "undefined" || !Sync.isConfigured || !Sync.isConfigured()) return;
+    clearTimeout(devSettingsPushTimer);
+    devSettingsPushTimer = setTimeout(() => {
+      Sync.pushDevSettings({ ...loadDevSettings(), appPrefs: gatherAppPrefs() });
+    }, 900);
+  }
+  /** Réglages de la page "Réglages" (item — jusqu'ici jamais synchronisés
+   *  du tout, contrairement aux couleurs/icônes) : mode bonus, jours
+   *  d'hibernation, affichage des jours sur les boutons, histogramme de
+   *  Réviser, boîte mémorisée pour "Nouvelle fiche". Regroupés à part
+   *  ici et glissés dans le MÊME envoi que les réglages développeur (pas
+   *  besoin d'une deuxième table Supabase pour si peu de valeurs). */
+  function gatherAppPrefs() {
     return {
-      Ka: clampAlgoK(raw.Ka, ALGO_PRESETS.normal.Ka),
-      Kh: clampAlgoK(raw.Kh, ALGO_PRESETS.normal.Kh),
-      Kg: clampAlgoK(raw.Kg, ALGO_PRESETS.normal.Kg),
-      Ke: clampAlgoK(raw.Ke, ALGO_PRESETS.normal.Ke),
-      Ma: clampAlgoM(raw.Ma, ALGO_PRESETS.normal.Ma),
-      Mh: clampAlgoM(raw.Mh, ALGO_PRESETS.normal.Mh),
-      Mg: clampAlgoM(raw.Mg, ALGO_PRESETS.normal.Mg),
-      Me: clampAlgoM(raw.Me, ALGO_PRESETS.normal.Me),
+      bonusDays: localStorage.getItem("fiches_bonus_days"),
+      bonusAgainMode: localStorage.getItem("fiches_bonus_again_mode"),
+      hibernateDays: localStorage.getItem("fiches_hibernate_days"),
+      showRatingDays: localStorage.getItem("fiches_show_rating_days"),
+      showReviewChart: localStorage.getItem("fiches_show_review_chart"),
+      newCardSubjectId: localStorage.getItem("fiches_new_card_subject_id"),
+      cardFontSize: localStorage.getItem("fiches_card_font_size"),
+      calendarEvents: localStorage.getItem("fiches_calendar_events"),
+      nightModeActive: localStorage.getItem("fiches_night_mode"),
     };
   }
-  function setSubjectAlgoSettings(subjectId, settings) {
-    const map = loadSubjectAlgoMap();
-    map[subjectId] = settings;
-    saveSubjectAlgoMap(map);
-  }
-  /** Le mode affiché (page Réviser, page Mode d'apprentissage) : le nom du
-   *  préréglage si les 8 valeurs correspondent exactement, sinon
-   *  "Personnalisé". */
-  function algoModeName(settings) {
-    for (const [key, preset] of Object.entries(ALGO_PRESETS)) {
-      const matches = ["Ka", "Kh", "Kg", "Ke", "Ma", "Mh", "Mg", "Me"].every(
-        (k) => Math.abs(settings[k] - preset[k]) < 1e-9
-      );
-      if (matches) return ALGO_PRESET_LABELS[key];
+  function applyAppPrefsFromRemote(prefs) {
+    if (!prefs) return;
+    const setIfPresent = (key, value) => {
+      if (value === null || value === undefined) return;
+      localStorage.setItem(key, value);
+    };
+    setIfPresent("fiches_bonus_days", prefs.bonusDays);
+    setIfPresent("fiches_bonus_again_mode", prefs.bonusAgainMode);
+    setIfPresent("fiches_hibernate_days", prefs.hibernateDays);
+    setIfPresent("fiches_show_rating_days", prefs.showRatingDays);
+    setIfPresent("fiches_show_review_chart", prefs.showReviewChart);
+    setIfPresent("fiches_new_card_subject_id", prefs.newCardSubjectId);
+    setIfPresent("fiches_card_font_size", prefs.cardFontSize);
+    setIfPresent("fiches_calendar_events", prefs.calendarEvents);
+    // Bug corrigé (item 1) : si l'utilisateur vient tout juste de changer
+    // ce réglage LUI-MÊME (les quelques secondes qui suivent), on ignore
+    // un écho de synchro qui reviendrait entre-temps avec l'ANCIENNE
+    // valeur — le contraire ferait clignoter le bouton juste après l'avoir
+    // pressé.
+    if (Date.now() - lastLocalNightModeChangeAt > 4000) {
+      setIfPresent("fiches_night_mode", prefs.nightModeActive);
     }
-    return "Personnalisé";
+    loadBonusDaysSettings();
+    loadBonusAgainMode();
+    loadHibernateDays();
+    newCardSubjectId = localStorage.getItem("fiches_new_card_subject_id") || null;
+    applyShowRatingDays();
+    applyShowReviewChart();
+    applyCardFontSize();
+    if (el("view-calendar") && el("view-calendar").classList.contains("is-active")) renderCalendarEvents();
+    applyColorSettings();
+    const nmBtn = el("night-mode-toggle-btn");
+    document.documentElement.classList.toggle("is-night-mode", isNightModeActive());
+    if (nmBtn) nmBtn.classList.toggle("is-active", isNightModeActive());
+    renderSettingsView();
+  }
+  function getFactoryDefaults() {
+    return loadDevSettings().factoryDefaults;
+  }
+
+  /** Couleur d'un mode personnalisé précis (item 16) — contrairement aux 3
+   *  modes fixes (une couleur chacun), TOUS les modes personnalisés
+   *  partageaient auparavant une seule et même couleur "custom". Chaque
+   *  mode personnalisé a maintenant la sienne, réglable depuis la page
+   *  Développeur, distincte de la couleur "custom" par défaut qui sert de
+   *  repli pour un mode qui n'a pas encore de couleur assignée. */
+  function getCustomModeColor(modeId) {
+    const settings = loadDevSettings();
+    return (settings.customModeColors || {})[modeId] || settings.modeColors.custom;
+  }
+  function setCustomModeColor(modeId, hex) {
+    const settings = loadDevSettings();
+    if (!settings.customModeColors) settings.customModeColors = {};
+    settings.customModeColors[modeId] = hex;
+    saveDevSettings(settings);
+  }
+
+  /** Applique la classe ET (pour un mode personnalisé) la couleur propre à
+   *  CE mode précis sur un badge de mode (item 16) — un seul endroit pour
+   *  les 2 emplacements où un badge de mode est affiché (page Gérer et
+   *  fiche de révision). */
+  function applyModeBadgeStyle(badgeEl, modeId) {
+    if (!badgeEl) return;
+    const key = algoModeCssKey(modeId);
+    Object.values(ALGO_MODE_KEY_TO_CLASS).forEach((c) => badgeEl.classList.remove(c));
+    badgeEl.classList.add(ALGO_MODE_KEY_TO_CLASS[key]);
+    if (key === "custom") {
+      // Item 3 : seule la couleur de l'icône reflète le mode personnalisé
+      // choisi, le fond reste neutre (comme les autres modes).
+      const color = getCustomModeColor(modeId);
+      badgeEl.style.background = "";
+      badgeEl.style.borderColor = "";
+      badgeEl.style.color = color;
+    } else {
+      badgeEl.style.background = "";
+      badgeEl.style.borderColor = "";
+      badgeEl.style.color = "";
+    }
+  }
+
+  /** Applique les émoticônes/texte des boutons de notation (item 19) —
+   *  appelé au démarrage et après chaque modification sur la page
+   *  Développeur. */
+  function applyRatingLabels() {
+    const settings = loadDevSettings();
+    const icons = settings.ratingIcons;
+    ["again", "hard", "good", "easy"].forEach((r) => {
+      const el2 = document.querySelector(`.stamp--${r} .stamp-label`);
+      if (el2 && icons[r] && ICON_LIBRARY[icons[r]]) el2.innerHTML = iconSvgMarkup(icons[r], "icon-inline-svg");
+    });
+  }
+  /** Applique les émoticônes/texte du menu principal (item 19). */
+  function applyNavLabels() {
+    const settings = loadDevSettings();
+    const labels = settings.navLabels;
+    Object.keys(labels).forEach((view) => {
+      const tab = document.querySelector(`.tab[data-view="${view}"]`);
+      if (!tab) return;
+      // Une vraie personnalisation texte/émoticône (page Développeur)
+      // l'emporte sur tout. Sinon, l'icône choisie dans la banque
+      // s'applique (par défaut, celle déjà en place).
+      if (labels[view] !== DEFAULT_NAV_LABELS[view]) {
+        tab.textContent = labels[view];
+      } else {
+        const iconId = settings.navIcons[view];
+        if (iconId && ICON_LIBRARY[iconId]) tab.innerHTML = iconSvgMarkup(iconId);
+      }
+    });
+  }
+
+  /** Applique les couleurs des notes et des modes (item 2) : posées comme
+   *  variables CSS sur :root, que la feuille de style référence désormais
+   *  (voir .stamp--again, .is-cool, etc.) — un seul endroit à mettre à
+   *  jour pour que ça se répercute partout où ces couleurs sont utilisées. */
+  /** Conversions hex <-> TSL (teinte/saturation/lumière), item 17 — pour
+   *  proposer un réglage par curseurs H/S/L en plus (ou à la place) du
+   *  sélecteur natif <input type="color">, qui ne le propose pas partout
+   *  de la même façon selon le navigateur/l'OS. */
+  function hexToHsl(hex) {
+    const r = parseInt(hex.slice(1, 3), 16) / 255;
+    const g = parseInt(hex.slice(3, 5), 16) / 255;
+    const b = parseInt(hex.slice(5, 7), 16) / 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h = 0, s = 0;
+    const l = (max + min) / 2;
+    const d = max - min;
+    if (d !== 0) {
+      s = d / (1 - Math.abs(2 * l - 1));
+      switch (max) {
+        case r: h = 60 * (((g - b) / d) % 6); break;
+        case g: h = 60 * ((b - r) / d + 2); break;
+        case b: h = 60 * ((r - g) / d + 4); break;
+      }
+    }
+    if (h < 0) h += 360;
+    return { h: Math.round(h), s: Math.round(s * 100), l: Math.round(l * 100) };
+  }
+  function hslToHex(h, s, l) {
+    s /= 100;
+    l /= 100;
+    const c = (1 - Math.abs(2 * l - 1)) * s;
+    const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+    const m = l - c / 2;
+    let r1 = 0, g1 = 0, b1 = 0;
+    if (h < 60) { r1 = c; g1 = x; } else if (h < 120) { r1 = x; g1 = c; }
+    else if (h < 180) { g1 = c; b1 = x; } else if (h < 240) { g1 = x; b1 = c; }
+    else if (h < 300) { r1 = x; b1 = c; } else { r1 = c; b1 = x; }
+    const toHex = (v) => Math.round((v + m) * 255).toString(16).padStart(2, "0");
+    return `#${toHex(r1)}${toHex(g1)}${toHex(b1)}`;
+  }
+
+  const COLOR_SLIDER_MODE_KEY = "fiches_color_slider_mode";
+  /** "none" | "rgb" | "tsl" — item : remplace la simple case à cocher par
+   *  un vrai choix entre deux jeux de curseurs personnalisés, en plus du
+   *  sélecteur natif de l'appareil (qui propose ses propres onglets
+   *  Grille/Spectre/Curseurs, mais ceux-là appartiennent à l'OS et ne
+   *  peuvent pas être renommés ni complétés depuis une page web). */
+  function loadColorSliderMode() {
+    const v = localStorage.getItem(COLOR_SLIDER_MODE_KEY);
+    return v === "rgb" || v === "tsl" ? v : "none";
+  }
+  function saveColorSliderMode(value) {
+    localStorage.setItem(COLOR_SLIDER_MODE_KEY, value);
+  }
+
+  /** Remplace le sélecteur natif <input type="color"> par un popup
+   *  personnalisé (item 2 — clarifié : le choix RVB/TSL doit vivre DANS le
+   *  popup qui s'ouvre au clic sur une couleur, pas à côté sous forme de
+   *  réglage séparé). Chaque couleur de la page Développeur (et de la
+   *  page Modes d'apprentissage pour les modes personnalisés) devient une
+   *  pastille cliquable ; le popup contient l'aperçu, les curseurs
+   *  (RVB ou TSL selon le dernier choix fait, mémorisé), et un bouton pour
+   *  basculer entre les deux à tout moment. */
+  let colorPopupEl = null;
+  /** Popup de sélection dans la banque d'icônes (grille), même principe
+   *  que le popup de couleur : un seul popup partagé, repositionné et
+   *  re-rempli à chaque ouverture. */
+  let iconPopupEl = null;
+  function ensureIconPopup() {
+    if (iconPopupEl) return iconPopupEl;
+    iconPopupEl = document.createElement("div");
+    iconPopupEl.className = "icon-popup";
+    iconPopupEl.hidden = true;
+    document.body.appendChild(iconPopupEl);
+    // "pointerdown" plutôt que "click" (bug corrigé) : sur iOS Safari, un
+    // clic sur un élément qui n'est pas nativement "cliquable" (un simple
+    // <body>/<div> sans gestionnaire dessus) ne remonte pas toujours
+    // fiablement jusqu'à un écouteur "click" posé sur document — le popup
+    // semblait alors ne jamais se refermer au clic en dehors.
+    // "pointerdown" est délivré de façon bien plus fiable, quel que soit
+    // l'élément visé.
+    document.addEventListener("pointerdown", (e) => {
+      if (iconPopupEl.hidden) return;
+      if (iconPopupEl.contains(e.target) || e.target.closest(".icon-picker-btn")) return;
+      iconPopupEl.hidden = true;
+    });
+    return iconPopupEl;
+  }
+  function openIconPopup(anchorBtn, currentIconId, onPick) {
+    const popup = ensureIconPopup();
+    const rect = anchorBtn.getBoundingClientRect();
+    const popupWidth = 240;
+    popup.style.position = "fixed";
+    popup.style.top = `${rect.bottom + 6}px`;
+    popup.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - popupWidth - 8))}px`;
+    popup.hidden = false;
+    popup.innerHTML = Object.keys(ICON_LIBRARY)
+      .map(
+        (id) =>
+          `<button type="button" class="icon-bank-btn${id === currentIconId ? " is-active" : ""}" data-icon="${id}">${iconSvgMarkup(id, "icon-bank-svg")}</button>`
+      )
+      .join("");
+    popup.querySelectorAll(".icon-bank-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        onPick(btn.dataset.icon);
+        popup.hidden = true;
+      });
+    });
+  }
+
+  /** Éditeur des icônes du menu principal (banque d'icônes). */
+  /** Éditeur générique "banque d'icônes" (item : réutilisé pour le menu
+   *  principal ET les icônes de la fiche/arborescence) — une ligne par
+   *  emplacement, avec un aperçu cliquable ouvrant la grille de choix. */
+  function renderIconBankPicker(wrapId, slots, titles, settingsKey, onApplied) {
+    const wrap = el(wrapId);
+    if (!wrap) return;
+    const settings = loadDevSettings();
+    wrap.innerHTML = slots
+      .map(
+        (slot) => `<div class="dev-nav-icon-row">
+          <span>${titles[slot] || slot}</span>
+          <button type="button" class="icon-picker-btn" data-slot="${slot}">${iconSvgMarkup(settings[settingsKey][slot], "icon-bank-svg")}</button>
+        </div>`
+      )
+      .join("");
+    wrap.querySelectorAll(".icon-picker-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const slot = btn.dataset.slot;
+        const current = loadDevSettings()[settingsKey][slot];
+        openIconPopup(btn, current, (iconId) => {
+          const s = loadDevSettings();
+          s[settingsKey][slot] = iconId;
+          saveDevSettings(s);
+          onApplied();
+          renderIconBankPicker(wrapId, slots, titles, settingsKey, onApplied);
+        });
+      });
+    });
+  }
+
+  /** Applique les icônes choisies aux carrés de la page d'accueil (item
+   *  2c) — même réglage "navIcons" que l'ancien menu principal, maintenant
+   *  invisible, mais bien réel pour l'accueil. */
+  function applyHomeIcons() {
+    const settings = loadDevSettings();
+    Object.keys(DEFAULT_NAV_ICONS).forEach((view) => {
+      const square = document.querySelector(`.home-circle[data-key="${view}"] .home-circle-icon`);
+      const iconId = settings.navIcons[view];
+      if (square && iconId && ICON_LIBRARY[iconId]) {
+        square.outerHTML = iconSvgMarkup(iconId, "home-circle-icon");
+      }
+    });
+  }
+
+  function renderNavIconsEditor() {
+    renderIconBankPicker(
+      "dev-nav-icons-list",
+      Object.keys(DEFAULT_NAV_ICONS),
+      { review: "Réviser", manage: "Gérer", cards: "Fiches", stats: "Stats", settings: "Réglages", addCard: "Ajouter une fiche", calendar: "Calendrier", sync: "Synchronisation", dev: "Développeur" },
+      "navIcons",
+      () => {
+        applyNavLabels();
+        applyHomeIcons();
+      }
+    );
+  }
+
+  function renderIconBankEditor() {
+    renderIconBankPicker(
+      "dev-icon-bank-list",
+      Object.keys(DEFAULT_ICON_BANK_CHOICES),
+      { hibernate: "Hibernation", edit: "Éditer", construction: "Chantier", undo: "Annuler" },
+      "iconBank",
+      applyIconSettings
+    );
+  }
+
+  /** Icônes de la page Organisation (item 3) : renommer/déplacer/
+   *  supprimer. */
+  function renderOrgIconBankEditor() {
+    renderIconBankPicker(
+      "dev-org-icon-bank-list",
+      Object.keys(DEFAULT_ORG_ICON_BANK_CHOICES),
+      { orgRename: "Renommer", orgMove: "Déplacer", orgDelete: "Supprimer" },
+      "orgIconBank",
+      renderManageList
+    );
+  }
+
+  /** Icônes des boutons d'évaluation (item 2a) — plus d'émoticônes libres. */
+  function renderRatingIconsEditor() {
+    renderIconBankPicker(
+      "dev-rating-icons-list",
+      Object.keys(DEFAULT_RATING_ICONS),
+      { again: "Encore", hard: "Difficile", good: "Bien", easy: "Facile" },
+      "ratingIcons",
+      applyRatingLabels
+    );
+  }
+
+  /** Liste verticale intitulé/sélecteur de couleur (items 2h/2i) —
+   *  générique, réutilisée pour "Couleurs des fonds" et "Couleurs des
+   *  textes" : un ordre précis de clés, avec leur intitulé affiché. */
+  function renderColorListPicker(wrapId, order, titles, settingsKey, onApplied) {
+    const wrap = el(wrapId);
+    if (!wrap) return;
+    const settings = loadDevSettings();
+    wrap.innerHTML = order
+      .map(
+        (key) => `<div class="dev-color-row dev-color-row--daynight">
+          <span>${titles[key] || key}</span>
+          <span class="dev-color-daynight-pair">
+            <input type="text" class="dev-color-value" data-key="${key}" data-variant="day" title="Mode jour" value="${settings[settingsKey][key]}" />
+            <input type="text" class="dev-color-value" data-key="${key}" data-variant="night" title="Mode nuit" value="${(settings.nightColors[settingsKey] || {})[key]}" />
+          </span>
+        </div>`
+      )
+      .join("");
+    wrap.querySelectorAll("input.dev-color-value").forEach((input) => {
+      input.addEventListener("input", () => {
+        const s = loadDevSettings();
+        if (input.dataset.variant === "night") {
+          if (!s.nightColors[settingsKey]) s.nightColors[settingsKey] = {};
+          s.nightColors[settingsKey][input.dataset.key] = input.value;
+        } else {
+          s[settingsKey][input.dataset.key] = input.value;
+        }
+        saveDevSettings(s);
+        onApplied();
+      });
+    });
+    enhanceColorInputsWithHsl();
+  }
+
+  const BG_COLORS_ORDER = [
+    "appBg", "homeBg", "homeSquareBg", "homeAddCardBg", "cardFormBg", "richEditorBg", "homeBtnBg", "cardBg",
+    "subjectSelectBg", "syncStatusBg", "folderBg", "folderL1Bg", "folderL2Bg", "folderL3Bg",
+    "subjectRowBg", "addBtnBg", "chartWrapBg", "svgChartBg", "dueBarColor", "todayBarColor", "reviewedBarColor",
+    "skipProgramBg",
+  ];
+  const BG_COLORS_TITLES = {
+    appBg: "Fond de l'appli (toutes pages sauf accueil)",
+    homeBg: "Fond de la page d'accueil",
+    homeSquareBg: "Boutons de la page d'accueil",
+    homeAddCardBg: "Bouton « Ajouter une fiche » de l'accueil",
+    cardFormBg: "Fond des cadres (blocs)",
+    richEditorBg: "Fond des zones de texte",
+    homeBtnBg: "Bouton home",
+    cardBg: "Fond des fiches (recto & verso)",
+    subjectSelectBg: "Fond des sélecteurs de boîtes",
+    syncStatusBg: "Fond de la pastille synchronisé",
+    folderBg: "Fond des dossiers",
+    folderL1Bg: "Fond des sous-dossiers de niveau 1",
+    folderL2Bg: "Fond des sous-dossiers de niveau 2",
+    folderL3Bg: "Fond des sous-dossiers de niveau 3",
+    subjectRowBg: "Fond des boîtes",
+    addBtnBg: "Fond des boutons (nouveau dossier / nouvelle boîte)",
+    chartWrapBg: "Fond des histogrammes",
+    svgChartBg: "Fond des graphiques",
+    dueBarColor: "Barres « à revoir »",
+    todayBarColor: "Barre « Aujourd'hui »",
+    reviewedBarColor: "Barres « révisées »",
+    skipProgramBg: "Fond du bouton « Ne pas suivre le programme »",
+  };
+  function renderBgColorsEditor() {
+    renderColorListPicker("dev-bg-colors-list", BG_COLORS_ORDER, BG_COLORS_TITLES, "bgColors", applyColorSettings);
+  }
+
+  const TEXT_COLORS_SET_ORDER = [
+    "homeTitle", "titles", "generalText", "folderSubjectNames", "cardText",
+    "chartValues", "chartLabels", "chartTodayLabel", "selectorText", "syncText",
+  ];
+  const TEXT_COLORS_SET_TITLES = {
+    homeTitle: "Titre de la page d'accueil",
+    titles: "Titres (toutes les pages)",
+    generalText: "Textes (autres que titres)",
+    folderSubjectNames: "Intitulés dossiers et boîtes",
+    cardText: "Texte fiches",
+    chartValues: "Valeurs graphiques",
+    chartLabels: "Étiquettes graphiques",
+    chartTodayLabel: "Étiquette « Aujourd'hui »",
+    selectorText: "Texte sélecteurs",
+    syncText: "Texte « synchroniser »",
+  };
+  function renderTextColorsSetEditor() {
+    renderColorListPicker("dev-text-colors-set-list", TEXT_COLORS_SET_ORDER, TEXT_COLORS_SET_TITLES, "textColorsSet", applyColorSettings);
+  }
+
+  /** Applique (ou retire) l'ombrage de chaque élément réglable (item 5). */
+  /** Positionne chaque cercle de l'accueil selon x/y/diamètre réglés
+   *  (item 3). */
+  function applyHomeLayout() {
+    const layout = loadDevSettings().homeLayout;
+    document.querySelectorAll(".home-circle[data-key]").forEach((circle) => {
+      const pos = layout[circle.dataset.key];
+      if (!pos) return;
+      // Pourcentage de la zone d'accueil (bug corrigé) : suit la largeur
+      // réelle de l'écran au lieu d'un pixel fixe pensé pour un iPhone,
+      // qui décalait tout à gauche sur un PC plus large. X/Y visent
+      // maintenant le CENTRE du cercle (translate -50%/-50%), plus
+      // intuitif que le coin haut-gauche, surtout pour aligner des
+      // cercles de tailles différentes entre eux.
+      circle.style.left = `${pos.x}%`;
+      circle.style.top = `${pos.y}%`;
+      circle.style.width = `${pos.d}px`;
+      circle.style.height = `${pos.d}px`;
+      circle.style.transform = "translate(-50%, -50%)";
+    });
+    // Items 1/2 (logo) : position/taille du logo sur la page d'accueil,
+    // réglables depuis le mode développeur.
+    const logo = loadDevSettings().homeLogo;
+    const root = document.documentElement.style;
+    root.setProperty("--home-logo-x", `${logo.x}%`);
+    root.setProperty("--home-logo-y", `${logo.y}%`);
+    root.setProperty("--home-logo-size", `${logo.size}px`);
+  }
+
+  /** Retourne le temps de retournement de fiche réglé (item 1c), en
+   *  millisecondes — utilisé à la fois pour la durée de transition CSS et
+   *  pour savoir combien de temps attendre en JS avant d'échanger le
+   *  contenu de la fiche (voir showNextCard). */
+  function getFlipDurationMs() {
+    return Math.max(150, Number(loadDevSettings().reviewLayout.flipDurationSec) * 1000 || 700);
+  }
+
+  /** Disposition de la page Réviser (item 1c) : taille/position de la
+   *  fiche et des boutons d'évaluation, toutes en % de l'écran. */
+  /** Positions/tailles de la page Réviser en pixels, calculées en JS
+   *  (item — bug persistant malgré des corrections qui fonctionnaient en
+   *  test : très probablement `max()`/`calc()` imbriqués, mal supportés
+   *  sur certaines versions d'iOS Safari, silencieusement ignorés par le
+   *  navigateur si c'est le cas — la fiche retombait alors sur une
+   *  position par défaut qui pouvait chevaucher la barre de boîte.
+   *  Cette version n'utilise plus AUCUNE fonction CSS de calcul : tout est
+   *  calculé ici en JavaScript ordinaire, puis posé en pixels bruts,
+   *  beaucoup plus difficile à mal interpréter pour un navigateur. */
+  function applyReviewLayout() {
+    const r = loadDevSettings().reviewLayout;
+    const root = document.documentElement.style;
+    const vh = window.innerHeight / 100;
+    const vw = window.innerWidth / 100;
+    // Marge de sécurité fixe sous la barre du haut + la barre de boîte
+    // (elle-même posée à 54px + l'encoche) — 110px couvre confortablement
+    // les deux sur la quasi-totalité des appareils.
+    const MIN_CARD_TOP_PX = 110;
+    const cardTopPx = Math.max(r.cardTopPct * vh, MIN_CARD_TOP_PX);
+    root.setProperty("--review-card-height", `${Math.round(r.cardHeightPct * vh)}px`);
+    root.setProperty("--review-card-width", `${Math.round(r.cardWidthPct * vw)}px`);
+    root.setProperty("--review-card-top", `${Math.round(cardTopPx)}px`);
+    root.setProperty("--review-rating-row-top", `${Math.round(r.ratingRowTopPct * vh)}px`);
+    root.setProperty("--review-score-info-top", `${Math.round(r.scoreInfoTopPct * vh)}px`);
+    root.setProperty("--review-gauge-top", `${Math.round(r.gaugeTopPct * vh)}px`);
+    // Bug corrigé (item 2) : la durée CSS utilisait la valeur BRUTE du
+    // réglage, alors que le calcul JS (voir getFlipDurationMs) applique un
+    // minimum de 150ms — avec un réglage très court, la fiche changeait
+    // alors de contenu à un instant qui ne correspondait plus du tout au
+    // milieu RÉEL de l'animation. Les deux utilisent maintenant exactement
+    // la même valeur, plafonnée de la même façon.
+    root.setProperty("--review-flip-duration", `${getFlipDurationMs() / 1000}s`);
+  }
+
+  function renderHomeLayoutEditor() {
+    const wrap = el("dev-home-layout-list");
+    if (!wrap) return;
+    const settings = loadDevSettings();
+    wrap.innerHTML = Object.keys(DEFAULT_HOME_LAYOUT)
+      .map((key) => {
+        const pos = settings.homeLayout[key];
+        return `<div class="dev-home-layout-row">
+          <span class="dev-home-layout-title">${HOME_LAYOUT_TITLES[key] || key}</span>
+          <label>X % <input type="number" step="0.1" class="dev-home-layout-input" data-key="${key}" data-field="x" value="${Math.round(pos.x * 10) / 10}" /></label>
+          <label>Y % <input type="number" step="0.1" class="dev-home-layout-input" data-key="${key}" data-field="y" value="${Math.round(pos.y * 10) / 10}" /></label>
+          <label>Ø px <input type="number" class="dev-home-layout-input" data-key="${key}" data-field="d" value="${pos.d}" /></label>
+        </div>`;
+      })
+      .join("");
+    wrap.querySelectorAll(".dev-home-layout-input").forEach((input) => {
+      input.addEventListener("input", () => {
+        const s = loadDevSettings();
+        s.homeLayout[input.dataset.key][input.dataset.field] = Number(input.value) || 0;
+        saveDevSettings(s);
+        applyHomeLayout();
+      });
+    });
+  }
+
+  /** Items 1/2 : position/taille du logo sur la page d'accueil. */
+  function renderHomeLogoEditor() {
+    const wrap = el("dev-home-logo-list");
+    if (!wrap) return;
+    const logo = loadDevSettings().homeLogo;
+    wrap.innerHTML = `<div class="dev-home-layout-row">
+      <span class="dev-home-layout-title">Logo</span>
+      <label>X % <input type="number" step="0.1" class="dev-home-logo-input" data-field="x" value="${logo.x}" /></label>
+      <label>Y % <input type="number" step="0.1" class="dev-home-logo-input" data-field="y" value="${logo.y}" /></label>
+      <label>Taille px <input type="number" class="dev-home-logo-input" data-field="size" value="${logo.size}" /></label>
+    </div>`;
+    wrap.querySelectorAll(".dev-home-logo-input").forEach((input) => {
+      input.addEventListener("input", () => {
+        const s = loadDevSettings();
+        s.homeLogo[input.dataset.field] = Number(input.value) || 0;
+        saveDevSettings(s);
+        applyHomeLayout();
+      });
+    });
+  }
+
+  /** Disposition de la page Réviser (item 1b/1c). */
+  const REVIEW_LAYOUT_FIELDS = [
+    { key: "cardHeightPct", title: "Hauteur de la fiche", unit: "% de l'écran" },
+    { key: "cardWidthPct", title: "Largeur de la fiche", unit: "% de l'écran" },
+    { key: "cardTopPct", title: "Position Y du bord haut de la fiche", unit: "% de l'écran" },
+    { key: "ratingRowTopPct", title: "Position Y des boutons d'évaluation", unit: "% de l'écran" },
+    { key: "scoreInfoTopPct", title: "Position Y des infos de score de la fiche", unit: "% de l'écran" },
+    { key: "gaugeTopPct", title: "Position Y de la jauge", unit: "% de l'écran" },
+    { key: "flipDurationSec", title: "Temps de retournement de la fiche", unit: "secondes" },
+  ];
+  function renderReviewLayoutEditor() {
+    const wrap = el("dev-review-layout-list");
+    if (!wrap) return;
+    const settings = loadDevSettings();
+    wrap.innerHTML = REVIEW_LAYOUT_FIELDS.map(
+      ({ key, title, unit }) => `<div class="dev-color-row">
+        <span>${title} (${unit})</span>
+        <input type="number" step="${key === "flipDurationSec" ? "0.1" : "1"}" class="dev-review-layout-input" data-key="${key}" value="${settings.reviewLayout[key]}" style="width:70px;" />
+      </div>`
+    ).join("");
+    wrap.querySelectorAll(".dev-review-layout-input").forEach((input) => {
+      input.addEventListener("input", () => {
+        const s = loadDevSettings();
+        s.reviewLayout[input.dataset.key] = Number(input.value) || 0;
+        saveDevSettings(s);
+        applyReviewLayout();
+      });
+    });
+  }
+  const devReviewLayoutResetBtn = el("dev-review-layout-reset");
+  if (devReviewLayoutResetBtn) {
+    devReviewLayoutResetBtn.addEventListener("click", () => {
+      const s = loadDevSettings();
+      s.reviewLayout = { ...DEFAULT_REVIEW_LAYOUT };
+      saveDevSettings(s);
+      applyReviewLayout();
+      renderDevView();
+    });
+  }
+
+  /** Score des fiches (items 1a/1d/2) : P, B, seuils de jauge V1-V4, et
+   *  les deux cases "masquer". */
+  function renderCardScoreEditor() {
+    const s = loadDevSettings().cardScore;
+    const pInput = el("dev-score-p");
+    const bInput = el("dev-score-b");
+    if (pInput) pInput.value = s.p;
+    if (bInput) bInput.value = s.b;
+    ["v1", "v2", "v3", "v4", "v5"].forEach((k) => {
+      const input = el(`dev-score-${k}`);
+      if (input) input.value = s[k];
+    });
+    const fontSizeInput = el("dev-score-program-target-font-size");
+    if (fontSizeInput) fontSizeInput.value = s.programTargetFontSize;
+    const hideInfo = el("dev-score-hide-info");
+    if (hideInfo) hideInfo.checked = s.hideReviewScoreInfo;
+    const hideSubject = el("dev-score-hide-subject");
+    if (hideSubject) hideSubject.checked = s.hideSubjectScoreOnReview;
+  }
+  function saveCardScoreFromInputs() {
+    const settings = loadDevSettings();
+    const pInput = el("dev-score-p");
+    const bInput = el("dev-score-b");
+    if (pInput) settings.cardScore.p = Number(pInput.value) || DEFAULT_CARD_SCORE_SETTINGS.p;
+    if (bInput) settings.cardScore.b = Number(bInput.value) || DEFAULT_CARD_SCORE_SETTINGS.b;
+    ["v1", "v2", "v3", "v4", "v5"].forEach((k) => {
+      const input = el(`dev-score-${k}`);
+      if (input) settings.cardScore[k] = Number(input.value) || DEFAULT_CARD_SCORE_SETTINGS[k];
+    });
+    const fontSizeInput = el("dev-score-program-target-font-size");
+    if (fontSizeInput) settings.cardScore.programTargetFontSize = Number(fontSizeInput.value) || DEFAULT_CARD_SCORE_SETTINGS.programTargetFontSize;
+    const hideInfo = el("dev-score-hide-info");
+    if (hideInfo) settings.cardScore.hideReviewScoreInfo = hideInfo.checked;
+    const hideSubject = el("dev-score-hide-subject");
+    if (hideSubject) settings.cardScore.hideSubjectScoreOnReview = hideSubject.checked;
+    saveDevSettings(settings);
+    renderManageList();
+    updateRatingPreviews();
+    renderReviewSubjectScore();
+    renderReviewGauge();
+    renderRevisionProgramList();
+  }
+  ["dev-score-p", "dev-score-b", "dev-score-v1", "dev-score-v2", "dev-score-v3", "dev-score-v4", "dev-score-v5", "dev-score-program-target-font-size", "dev-score-hide-info", "dev-score-hide-subject"].forEach((id) => {
+    const input = el(id);
+    if (input) input.addEventListener("input", saveCardScoreFromInputs);
+  });
+  const devScoreResetBtn = el("dev-score-reset");
+  if (devScoreResetBtn) {
+    devScoreResetBtn.addEventListener("click", () => {
+      const settings = loadDevSettings();
+      settings.cardScore = { ...DEFAULT_CARD_SCORE_SETTINGS };
+      settings.gaugeColors = { ...DEFAULT_GAUGE_COLORS };
+      settings.nightColors.gaugeColors = { ...DEFAULT_GAUGE_COLORS };
+      saveDevSettings(settings);
+      renderDevView();
+      renderManageList();
+      updateRatingPreviews();
+      renderReviewSubjectScore();
+      renderReviewGauge();
+    });
+  }
+
+  /** Couleurs des zones de la jauge (item 4). */
+  const GAUGE_COLORS_TITLES = Object.fromEntries(GAUGE_ZONE_DEFS.map((z) => [z.key, z.label]));
+  function renderGaugeColorsEditor() {
+    renderColorListPicker(
+      "dev-gauge-colors-list",
+      GAUGE_ZONE_DEFS.map((z) => z.key),
+      GAUGE_COLORS_TITLES,
+      "gaugeColors",
+      () => {
+        renderReviewGauge();
+        renderManageList();
+      }
+    );
+  }
+
+  function applyShadowSettings() {
+    const settings = loadDevSettings();
+    const root = document.documentElement.style;
+    Object.keys(SHADOW_ELEMENTS).forEach((key) => {
+      const varName = SHADOW_ELEMENTS[key].varName;
+      if (settings.shadows[key] === false) root.setProperty(varName, "none");
+      else root.removeProperty(varName);
+    });
+  }
+
+  function renderShadowsEditor() {
+    const wrap = el("dev-shadows-list");
+    if (!wrap) return;
+    const settings = loadDevSettings();
+    wrap.innerHTML = Object.keys(SHADOW_ELEMENTS)
+      .map((key) => {
+        const { title } = SHADOW_ELEMENTS[key];
+        const checked = settings.shadows[key] !== false;
+        return `<label class="settings-toggle-row">
+          <input type="checkbox" class="dev-shadow-toggle" data-key="${key}" ${checked ? "checked" : ""} />
+          <span>${title}</span>
+        </label>`;
+      })
+      .join("");
+    wrap.querySelectorAll(".dev-shadow-toggle").forEach((cb) => {
+      cb.addEventListener("change", () => {
+        const s = loadDevSettings();
+        s.shadows[cb.dataset.key] = cb.checked;
+        saveDevSettings(s);
+        applyShadowSettings();
+      });
+    });
+  }
+
+  function ensureColorPopup() {
+    if (colorPopupEl) return colorPopupEl;
+    colorPopupEl = document.createElement("div");
+    colorPopupEl.className = "color-popup";
+    colorPopupEl.hidden = true;
+    document.body.appendChild(colorPopupEl);
+    // Même correctif que le popup d'icônes : "pointerdown" plutôt que
+    // "click", plus fiable sur iOS Safari pour détecter un clic "en
+    // dehors".
+    document.addEventListener("pointerdown", (e) => {
+      if (colorPopupEl.hidden) return;
+      if (colorPopupEl.contains(e.target) || e.target.classList.contains("color-swatch-btn")) return;
+      colorPopupEl.hidden = true;
+    });
+    return colorPopupEl;
+  }
+
+  /** Décompose une valeur de couleur (6 chiffres hex opaque, 8 chiffres
+   *  hex avec alpha, ou l'ancien mot-clé "transparent") en teinte opaque +
+   *  transparence 0-100 (item 2 : curseur réglable plutôt qu'un simple
+   *  interrupteur tout ou rien). */
+  function parseColorValue(value) {
+    if (value === "transparent") return { hex6: "#000000", alpha: 0 };
+    if (/^#[0-9a-fA-F]{8}$/i.test(value)) {
+      return { hex6: value.slice(0, 7), alpha: Math.round((parseInt(value.slice(7, 9), 16) / 255) * 100) };
+    }
+    if (/^#[0-9a-fA-F]{6}$/i.test(value)) return { hex6: value, alpha: 100 };
+    return { hex6: "#000000", alpha: 100 };
+  }
+  function buildColorValue(hex6, alpha) {
+    const a = Math.max(0, Math.min(100, Math.round(alpha)));
+    if (a >= 100) return hex6;
+    const aHex = Math.round((a / 100) * 255).toString(16).padStart(2, "0");
+    return `${hex6}${aHex}`;
+  }
+
+  function openColorPopup(input, anchorBtn) {
+    const popup = ensureColorPopup();
+    const rect = anchorBtn.getBoundingClientRect();
+    const popupWidth = 260;
+    popup.style.position = "fixed";
+    popup.style.top = `${rect.bottom + 6}px`;
+    popup.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - popupWidth - 8))}px`;
+    popup.hidden = false;
+
+    function render() {
+      const mode = loadColorSliderMode() === "rgb" ? "rgb" : "tsl";
+      const { hex6: hex, alpha } = parseColorValue(input.value);
+      let slidersHtml;
+      if (mode === "rgb") {
+        const r = parseInt(hex.slice(1, 3), 16) || 0;
+        const g = parseInt(hex.slice(3, 5), 16) || 0;
+        const bch = parseInt(hex.slice(5, 7), 16) || 0;
+        slidersHtml = `
+          <div class="hsl-slider-row"><span>R</span><input type="range" min="0" max="255" value="${r}" data-c="r" /><span class="hsl-slider-value" data-cv="r">${r}</span></div>
+          <div class="hsl-slider-row"><span>V</span><input type="range" min="0" max="255" value="${g}" data-c="v" /><span class="hsl-slider-value" data-cv="v">${g}</span></div>
+          <div class="hsl-slider-row"><span>B</span><input type="range" min="0" max="255" value="${bch}" data-c="b" /><span class="hsl-slider-value" data-cv="b">${bch}</span></div>
+        `;
+      } else {
+        const hsl = hexToHsl(hex);
+        slidersHtml = `
+          <div class="hsl-slider-row"><span>T</span><input type="range" min="0" max="360" value="${hsl.h}" data-c="h" /><span class="hsl-slider-value" data-cv="h">${hsl.h}</span></div>
+          <div class="hsl-slider-row"><span>S</span><input type="range" min="0" max="100" value="${hsl.s}" data-c="s" /><span class="hsl-slider-value" data-cv="s">${hsl.s}</span></div>
+          <div class="hsl-slider-row"><span>L</span><input type="range" min="0" max="100" value="${hsl.l}" data-c="l" /><span class="hsl-slider-value" data-cv="l">${hsl.l}</span></div>
+        `;
+      }
+      popup.innerHTML = `
+        <div class="color-popup-preview color-popup-preview--checker" style="--swatch-color:${hex6WithAlpha(hex, alpha)}"></div>
+        <label class="color-popup-hex-row">
+          <span>Hex</span>
+          <input type="text" class="color-popup-hex-input" value="${hex}" placeholder="#rrggbb" maxlength="7" />
+        </label>
+        <div class="color-popup-sliders">${slidersHtml}</div>
+        <div class="hsl-slider-row color-popup-alpha-row">
+          <span>Opacité</span>
+          <input type="range" min="0" max="100" value="${alpha}" id="color-popup-alpha" />
+          <span class="hsl-slider-value" id="color-popup-alpha-value">${alpha}%</span>
+        </div>
+        <div class="color-popup-mode-toggle">
+          <button type="button" class="color-popup-mode-btn${mode === "rgb" ? " is-active" : ""}" data-mode="rgb">RVB</button>
+          <button type="button" class="color-popup-mode-btn${mode === "tsl" ? " is-active" : ""}" data-mode="tsl">TSL</button>
+        </div>
+      `;
+      const commit = (newHex6, newAlpha) => {
+        const value = buildColorValue(newHex6, newAlpha);
+        input.value = value;
+        setSwatchVisual(anchorBtn, value);
+        const preview = popup.querySelector(".color-popup-preview");
+        if (preview) preview.style.setProperty("--swatch-color", hex6WithAlpha(newHex6, newAlpha));
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      };
+      popup.querySelectorAll('input[type="range"]:not(#color-popup-alpha)').forEach((slider) => {
+        slider.addEventListener("input", () => {
+          // Affiche la valeur en direct à côté du curseur qu'on bouge,
+          // sans attendre le prochain rendu complet (item 1).
+          const valueSpan = popup.querySelector(`[data-cv="${slider.dataset.c}"]`);
+          if (valueSpan) valueSpan.textContent = slider.value;
+          let newHex;
+          if (mode === "rgb") {
+            const toHex = (v) => Number(v).toString(16).padStart(2, "0");
+            newHex = `#${toHex(popup.querySelector('[data-c="r"]').value)}${toHex(popup.querySelector('[data-c="v"]').value)}${toHex(popup.querySelector('[data-c="b"]').value)}`;
+          } else {
+            newHex = hslToHex(
+              Number(popup.querySelector('[data-c="h"]').value),
+              Number(popup.querySelector('[data-c="s"]').value),
+              Number(popup.querySelector('[data-c="l"]').value)
+            );
+          }
+          const hexInput = popup.querySelector(".color-popup-hex-input");
+          if (hexInput) hexInput.value = newHex;
+          const curAlpha = Number(popup.querySelector("#color-popup-alpha").value);
+          commit(newHex, curAlpha);
+        });
+      });
+      // Opacité (item 2) : curseur réglable de 0 à 100%, plutôt qu'un
+      // simple "transparent" tout ou rien.
+      const alphaSlider = popup.querySelector("#color-popup-alpha");
+      if (alphaSlider) {
+        alphaSlider.addEventListener("input", () => {
+          const valueSpan = popup.querySelector("#color-popup-alpha-value");
+          if (valueSpan) valueSpan.textContent = `${alphaSlider.value}%`;
+          const hexInput = popup.querySelector(".color-popup-hex-input");
+          const curHex = hexInput ? hexInput.value : hex;
+          commit(curHex, Number(alphaSlider.value));
+        });
+      }
+      // Code hex tapé/collé directement (item 1).
+      const hexInput = popup.querySelector(".color-popup-hex-input");
+      if (hexInput) {
+        hexInput.addEventListener("change", () => {
+          const v = hexInput.value.trim();
+          const curAlpha = Number(popup.querySelector("#color-popup-alpha").value);
+          if (/^#[0-9a-fA-F]{6}$/.test(v)) commit(v, curAlpha);
+          else hexInput.value = hex;
+        });
+      }
+      popup.querySelectorAll(".color-popup-mode-btn").forEach((b) => {
+        b.addEventListener("click", (e) => {
+          // Bug corrigé (item 6) : sans stopPropagation, le clic remontait
+          // jusqu'au document APRÈS que render() ait déjà remplacé le
+          // contenu du popup (donc l'ancien bouton cliqué n'existait plus
+          // dans le DOM) — le test "clic en dehors du popup" se trompait
+          // et refermait le popup juste après l'avoir redessiné.
+          e.stopPropagation();
+          saveColorSliderMode(b.dataset.mode);
+          render();
+        });
+      });
+    }
+    render();
+  }
+
+  /** Transforme chaque <input class="dev-color-value"> pertinent en
+   *  pastille cliquable ouvrant le popup ci-dessus — appelé après chaque
+   *  rendu (les pastilles de couleur des modes personnalisés étant
+   *  régénérées dynamiquement). L'input reste dans le DOM (caché) : il
+   *  continue de porter la valeur et de déclencher les mêmes événements
+   *  "input" que tout le reste du code attend déjà — en <input type="text">
+   *  plutôt que type="color" (item 1) pour pouvoir aussi porter la valeur
+   *  spéciale "transparent", que le sélecteur natif refuserait. */
+  function enhanceColorInputsWithHsl() {
+    document.querySelectorAll('#view-dev input.dev-color-value, #algo-custom-picker-list input.dev-color-value').forEach((input) => {
+      if (input.dataset.swatchUpgraded) {
+        const btn = input.nextElementSibling;
+        if (btn && btn.classList.contains("color-swatch-btn")) setSwatchVisual(btn, input.value);
+        return;
+      }
+      input.dataset.swatchUpgraded = "true";
+      input.style.display = "none";
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "color-swatch-btn" + (input.className.includes("algo-custom-picker-color") ? " algo-custom-picker-color" : "");
+      setSwatchVisual(btn, input.value);
+      btn.title = input.title || "";
+      input.insertAdjacentElement("afterend", btn);
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openColorPopup(input, btn);
+      });
+    });
+  }
+
+  /** Affiche un damier (case transparente) plutôt qu'un simple à-plat de
+   *  couleur quand la valeur est "transparent" (item 1 : couleur
+   *  transparente possible partout). */
+  /** Convertit hex6 + opacité (0-100) en rgba() utilisable dans un style
+   *  inline (item 2 — curseur de transparence réglable). */
+  function hex6WithAlpha(hex6, alpha) {
+    const r = parseInt(hex6.slice(1, 3), 16) || 0;
+    const g = parseInt(hex6.slice(3, 5), 16) || 0;
+    const b = parseInt(hex6.slice(5, 7), 16) || 0;
+    return `rgba(${r}, ${g}, ${b}, ${Math.max(0, Math.min(100, alpha)) / 100})`;
+  }
+
+  /** Affiche un damier en dessous de la couleur dès qu'elle n'est pas
+   *  totalement opaque (item 2), pour que le niveau de transparence choisi
+   *  soit visible sur la pastille elle-même — pas seulement à 0%. */
+  function setSwatchVisual(btn, value) {
+    const { hex6, alpha } = parseColorValue(value);
+    if (alpha >= 100) {
+      btn.classList.remove("color-swatch-btn--transparent");
+      btn.style.removeProperty("--swatch-color");
+      btn.style.background = hex6;
+    } else {
+      btn.classList.add("color-swatch-btn--transparent");
+      btn.style.background = "";
+      btn.style.setProperty("--swatch-color", hex6WithAlpha(hex6, alpha));
+    }
+  }
+
+  // Item 4 : mode nuit — bouton en topbar, bascule quel jeu de couleurs
+  // (jour ou nuit, réglés séparément dans le mode développeur) est
+  // effectivement appliqué.
+  const NIGHT_MODE_KEY = "fiches_night_mode";
+  function isNightModeActive() {
+    return localStorage.getItem(NIGHT_MODE_KEY) === "true";
+  }
+  function effectiveColors(settings) {
+    if (!isNightModeActive()) {
+      return {
+        bgColors: settings.bgColors,
+        textColorsSet: settings.textColorsSet,
+        ratingColors: settings.ratingColors,
+        ratingBtnBgColor: settings.ratingBtnBgColor,
+        modeColors: settings.modeColors,
+        gaugeColors: settings.gaugeColors,
+      };
+    }
+    return settings.nightColors;
+  }
+  let lastLocalNightModeChangeAt = 0;
+  function setNightModeActive(value) {
+    localStorage.setItem(NIGHT_MODE_KEY, String(value));
+    document.documentElement.classList.toggle("is-night-mode", value);
+    lastLocalNightModeChangeAt = Date.now();
+    // Bug corrigé (item 1) : ce réglage ne passait pas par saveDevSettings,
+    // donc son horodatage de synchro n'était jamais mis à jour — un échange
+    // de données (même sans rapport direct) pouvait alors réappliquer un
+    // état de synchro plus ancien et faire "clignoter" le bouton entre nuit
+    // et jour juste après l'avoir pressé. saveDevSettings met à jour cet
+    // horodatage à chaque fois, donc ce changement est toujours reconnu
+    // comme le plus récent.
+    const settings = loadDevSettings();
+    settings.nightMode = value;
+    saveDevSettings(settings);
+    applyColorSettings();
+    renderManageList();
+    renderReviewGauge();
+    const btn = el("night-mode-toggle-btn");
+    if (btn) btn.classList.toggle("is-active", value);
+  }
+  const nightModeToggleBtn = el("night-mode-toggle-btn");
+  // Item 7 (dernier lot) : l'appli s'ouvre en mode nuit ou jour selon
+  // l'heure réelle à chaque lancement — avant 7h ou après 20h, c'est la
+  // nuit. Le bouton reste utilisable ensuite pour changer d'avis le temps
+  // de cette session. Bug corrigé : appeler setNightModeActive() ICI (au
+  // moment où ce bouton s'initialise, tôt dans le script) atteignait des
+  // réglages déclarés plus bas (cardsScopeFilter) avant leur
+  // initialisation — l'appli ne démarrait plus du tout. On se contente
+  // ici d'un simple bascule de classe (sans dépendance), l'appel complet
+  // est déplacé dans la séquence de démarrage, en bas de fichier.
+  const hourNow = new Date().getHours();
+  const isNightByClock = hourNow < 7 || hourNow >= 20;
+  document.documentElement.classList.toggle("is-night-mode", isNightByClock);
+  if (nightModeToggleBtn) {
+    nightModeToggleBtn.classList.toggle("is-active", isNightByClock);
+    nightModeToggleBtn.addEventListener("click", () => setNightModeActive(!isNightModeActive()));
+  }
+
+  function applyColorSettings() {
+    const settings = loadDevSettings();
+    const eff = effectiveColors(settings);
+    const root = document.documentElement.style;
+    root.setProperty("--rating-again-color", eff.ratingColors.again);
+    root.setProperty("--rating-hard-color", eff.ratingColors.hard);
+    root.setProperty("--rating-good-color", eff.ratingColors.good);
+    root.setProperty("--rating-easy-color", eff.ratingColors.easy);
+    root.setProperty("--rating-btn-bg-color", eff.ratingBtnBgColor);
+    root.setProperty("--mode-cool-color", eff.modeColors.cool);
+    root.setProperty("--mode-normal-color", eff.modeColors.normal);
+    root.setProperty("--mode-renforce-color", eff.modeColors.renforce);
+    root.setProperty("--mode-custom-color", eff.modeColors.custom);
+    root.setProperty("--app-bg-color", settings.appBgColor);
+    root.setProperty("--construction-active-color", settings.constructionActiveColor);
+    root.setProperty("--due-pill-bonus-color", settings.bonusPillColor);
+    root.setProperty("--empty-bar-color", settings.emptyBarColor);
+    // Items 2h/2i : nouveaux blocs "Couleurs des fonds"/"Couleurs des
+    // textes", chacun avec son propre nom de réglage direct — remplacent
+    // les anciens réglages ci-dessus repris un par un (appBgColor,
+    // cardFormBgColor, richEditorBgColor, cardBgColor, chartWrapBgColor,
+    // svgChartBgColor, dueBarColor, todayBarColor, mainTextColor,
+    // cardTextColor), qui restent lus pour la compatibilité mais ne sont
+    // plus la source appliquée.
+    // Items 2h/2i : nouveaux blocs "Couleurs des fonds"/"Couleurs des
+    // textes", chacun avec son propre nom de réglage direct.
+    const bg = eff.bgColors;
+    root.setProperty("--home-square-bg-color", bg.homeSquareBg);
+    root.setProperty("--home-add-card-bg-color", bg.homeAddCardBg);
+    root.setProperty("--home-btn-bg-color", bg.homeBtnBg);
+    root.setProperty("--subject-select-bg-color", bg.subjectSelectBg);
+    root.setProperty("--sync-status-bg-color", bg.syncStatusBg);
+    root.setProperty("--folder-bg-color", bg.folderBg);
+    root.setProperty("--folder-l1-bg-color", bg.folderL1Bg);
+    root.setProperty("--folder-l2-bg-color", bg.folderL2Bg);
+    root.setProperty("--folder-l3-bg-color", bg.folderL3Bg);
+    root.setProperty("--subject-row-bg-color", bg.subjectRowBg);
+    root.setProperty("--add-btn-bg-color", bg.addBtnBg);
+    root.setProperty("--reviewed-bar-color", bg.reviewedBarColor);
+    root.setProperty("--skip-program-bg-color", bg.skipProgramBg);
+    root.setProperty("--home-bg-color", bg.homeBg);
+    // Les 4 réglages ci-dessous partagent leur nom avec d'anciennes clés
+    // (appBgColor/cardFormBgColor/richEditorBgColor/dueBarColor/
+    // todayBarColor/chartWrapBgColor/svgChartBgColor déjà posées plus haut)
+    // — bgColors sert désormais de source pour ceux-là aussi, pour n'avoir
+    // qu'un seul endroit où les régler dans la page développeur.
+    root.setProperty("--app-bg-color", bg.appBg);
+    root.setProperty("--card-form-bg-color", bg.cardFormBg);
+    root.setProperty("--rich-editor-bg-color", bg.richEditorBg);
+    root.setProperty("--card-bg-color", bg.cardBg);
+    root.setProperty("--chart-wrap-bg-color", bg.chartWrapBg);
+    root.setProperty("--svg-chart-bg-color", bg.svgChartBg);
+    root.setProperty("--due-bar-color", bg.dueBarColor);
+    root.setProperty("--today-bar-color", bg.todayBarColor);
+
+    const tx = eff.textColorsSet;
+    root.setProperty("--home-title-color", tx.homeTitle);
+    root.setProperty("--main-text-color", tx.titles);
+    root.setProperty("--general-text-color", tx.generalText);
+    root.setProperty("--folder-subject-name-color", tx.folderSubjectNames);
+    root.setProperty("--card-text-color", tx.cardText);
+    root.setProperty("--chart-value-color", tx.chartValues);
+    root.setProperty("--chart-label-color", tx.chartLabels);
+    root.setProperty("--chart-today-label-color", tx.chartTodayLabel);
+    root.setProperty("--selector-text-color", tx.selectorText);
+    root.setProperty("--sync-text-color", tx.syncText);
+  }
+
+  /** Applique les émoticônes des icônes de la fiche/de l'arborescence
+   *  (item 2) : hibernation, édition, chantier, annuler, dossier. */
+  /** Icône (émoticône personnalisée OU SVG de la banque) pour un réglage
+   *  précis parmi hibernate/edit/construction/undo (item 1 — bug corrigé) :
+   *  centralisé ici pour que TOUS les endroits de l'appli qui affichent
+   *  cette icône (la fiche de révision, mais aussi le bouton "chantier" de
+   *  chaque ligne dans la liste de Fiches) suivent bien le même réglage —
+   *  jusqu'ici seule la fiche de révision le faisait, la liste affichait
+   *  toujours l'émoticône brute. */
+  function getIconMarkupFor(key) {
+    const settings = loadDevSettings();
+    if (settings.icons[key] !== DEFAULT_ICONS[key]) return escapeHtml(settings.icons[key]);
+    const iconId = settings.iconBank[key];
+    if (iconId && ICON_LIBRARY[iconId]) return iconSvgMarkup(iconId, "icon-inline-svg");
+    return escapeHtml(settings.icons[key]);
+  }
+
+  function applyIconSettings() {
+    const settings = loadDevSettings();
+    const icons = settings.icons;
+    const iconBank = settings.iconBank;
+    // Applique l'icône SVG de la banque si CE réglage précis n'a jamais
+    // été personnalisé en émoticône/texte (sinon la personnalisation reste
+    // prioritaire, comme pour le menu principal).
+    const applyOne = (elId, key) => {
+      const target = el(elId);
+      if (!target) return;
+      target.innerHTML = getIconMarkupFor(key);
+    };
+    applyOne("hibernate-current-btn", "hibernate");
+    applyOne("edit-current-btn", "edit");
+    applyOne("construction-current-btn", "construction");
+    applyOne("undo-rating-btn", "undo");
+    applyOne("construction-filter-icon", "construction");
+  }
+
+  /** Regénère les pastilles de couleur de texte de la barre d'outils de
+   *  mise en forme (item 2/20) à partir de la palette réglable. */
+  function folderIcon() {
+    return loadDevSettings().icons.folder;
+  }
+
+  function applyTextColorPalette() {
+    const group = document.querySelector(".rt-color-group");
+    if (!group) return;
+    const colors = loadDevSettings().textColors;
+    group.innerHTML = colors
+      .map(
+        (c) =>
+          `<button type="button" class="rt-color" data-color="${c.hex}" style="background:${c.hex}" title="Texte ${escapeHtml(c.label)}"></button>`
+      )
+      .join("");
+    group.querySelectorAll(".rt-color[data-color]").forEach((btn) => {
+      btn.addEventListener("mousedown", (e) => e.preventDefault());
+      btn.addEventListener("click", () => {
+        focusLastEditor();
+        document.execCommand("foreColor", false, btn.dataset.color);
+      });
+    });
+  }
+
+  /** Charge tous les modes (3 fixes + personnalisés), garantissant que les
+   *  3 fixes existent toujours (avec leurs valeurs éventuellement
+   *  modifiées, sinon leurs valeurs d'origine). */
+  function loadLearningModes() {
+    let stored = {};
+    try {
+      const raw = localStorage.getItem(LEARNING_MODES_KEY);
+      stored = raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      stored = {};
+    }
+    const modes = {};
+    BUILTIN_MODE_IDS.forEach((id) => {
+      modes[id] = {
+        id,
+        name: BUILTIN_MODE_DEFAULTS[id].name,
+        builtin: true,
+        updatedAt: (stored[id] && stored[id].updatedAt) || new Date(0).toISOString(),
+        ...clampModeProfile(stored[id], id),
+      };
+    });
+    Object.values(stored).forEach((m) => {
+      if (m && m.id && !BUILTIN_MODE_IDS.includes(m.id)) {
+        modes[m.id] = {
+          id: m.id,
+          name: (m.name || "Sans nom").trim() || "Sans nom",
+          builtin: false,
+          updatedAt: m.updatedAt || new Date(0).toISOString(),
+          ...clampModeProfile(m, "normal"),
+        };
+      }
+    });
+    return modes;
+  }
+  function saveLearningModes(modes) {
+    localStorage.setItem(LEARNING_MODES_KEY, JSON.stringify(modes));
+    touchAppSettingsTimestamp();
+  }
+  /** Enregistre localement ET envoie ce mode précis vers Supabase (item 1,
+   *  audit synchro : jusqu'ici jamais synchronisé du tout). */
+  function persistModeChange(modes, modeId) {
+    modes[modeId].updatedAt = new Date().toISOString();
+    saveLearningModes(modes);
+    if (Sync.isConfigured()) Sync.pushLearningMode(modes[modeId]);
+  }
+
+  function createCustomMode(name, basedOnId) {
+    const modes = loadLearningModes();
+    const id = "custom-" + uid();
+    const base = modes[basedOnId] || modes.normal;
+    modes[id] = { id, name: (name || "Nouveau mode").trim(), builtin: false, ...clampModeProfile(base, "normal") };
+    persistModeChange(modes, id);
+    return id;
+  }
+  function renameCustomMode(modeId, name) {
+    const modes = loadLearningModes();
+    if (!modes[modeId] || modes[modeId].builtin || !name || !name.trim()) return;
+    modes[modeId].name = name.trim();
+    persistModeChange(modes, modeId);
+  }
+  async function deleteCustomMode(modeId) {
+    const modes = loadLearningModes();
+    if (!modes[modeId] || modes[modeId].builtin) return;
+    const deletedMode = { ...modes[modeId], deleted: true, updatedAt: new Date().toISOString() };
+    delete modes[modeId];
+    saveLearningModes(modes);
+    if (Sync.isConfigured()) Sync.pushLearningMode(deletedMode);
+    // Toute boîte qui utilisait ce mode supprimé retombe sur "Normal".
+    for (const s of subjects) {
+      if (s.modeId === modeId) {
+        s.modeId = "normal";
+        s.updatedAt = new Date().toISOString();
+        await persistSubject(s);
+      }
+    }
+  }
+  function updateModeProfile(modeId, values) {
+    const modes = loadLearningModes();
+    if (!modes[modeId]) return;
+    Object.assign(modes[modeId], clampModeProfile(values, modeId));
+    persistModeChange(modes, modeId);
+  }
+
+  /** Mode effectif d'une boîte (objet complet, avec Ka..Me) — "Normal" si
+   *  la boîte n'a pas encore de mode affecté ou si son mode a disparu. */
+  function getSubjectMode(subjectId) {
+    const s = subjects.find((x) => x.id === subjectId);
+    const modes = loadLearningModes();
+    const modeId = s && modes[s.modeId] ? s.modeId : "normal";
+    return modes[modeId];
+  }
+  function getSubjectAlgoSettings(subjectId) {
+    return getSubjectMode(subjectId);
+  }
+  function getSubjectAlgoMode(subjectId) {
+    return getSubjectMode(subjectId).id;
+  }
+  /** Affecte un mode à une boîte (utilisé aussi en boucle pour affecter un
+   *  dossier entier — voir assignModeToFolder). */
+  async function assignModeToSubject(subjectId, modeId) {
+    const s = subjects.find((x) => x.id === subjectId);
+    if (!s) return;
+    s.modeId = modeId;
+    s.updatedAt = new Date().toISOString();
+    await persistSubject(s);
+  }
+  /** "quand on affecte un mode à un sous dossier ou un dossier, ça
+   *  s'applique à toutes les boîtes contenues dedans" (item 1/2) : un
+   *  affectage en bloc, immédiat, pas une référence permanente au dossier —
+   *  déplacer ensuite une boîte hors du dossier ne lui retire pas le mode
+   *  déjà affecté. */
+  async function assignModeToFolder(folderId, modeId) {
+    for (const id of subjectIdsInFolder(folderId)) {
+      await assignModeToSubject(id, modeId);
+    }
+  }
+
+  /** Migration ponctuelle depuis l'ancien système (4 emplacements de
+   *  réglages PAR MATIÈRE, clé localStorage "fiches_subject_algo") vers les
+   *  modes globaux nommés (item 2). Pour chaque boîte ayant un réglage
+   *  dans l'ancien format : si son mode actif à l'époque correspondait
+   *  exactement à un préréglage fixe, elle est simplement affectée à ce
+   *  mode ; sinon (c'était un "Personnalisé" propre à cette boîte), un
+   *  nouveau mode personnalisé est créé avec ces valeurs, nommé d'après la
+   *  boîte, pour ne rien perdre de ses réglages existants. Ne s'exécute
+   *  qu'une fois (l'ancienne clé est ensuite supprimée). */
+  async function migrateSubjectModesIfNeeded() {
+    const OLD_KEY = "fiches_subject_algo";
+    let oldMap;
+    try {
+      const raw = localStorage.getItem(OLD_KEY);
+      oldMap = raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      oldMap = null;
+    }
+    let changed = false;
+    for (const s of subjects) {
+      if (s.modeId === undefined) {
+        s.modeId = "normal";
+        changed = true;
+      }
+    }
+    if (oldMap) {
+      for (const s of subjects) {
+        const old = oldMap[s.id];
+        if (!old || !old.profiles) continue;
+        const mode = old.mode && old.profiles[old.mode] ? old.profiles[old.mode] : old.profiles.normal;
+        if (!mode) continue;
+        let matched = null;
+        for (const key of BUILTIN_MODE_IDS) {
+          if (ALGO_KEYS8.every((k) => Math.abs(mode[k] - BUILTIN_MODE_DEFAULTS[key][k]) < 1e-9)) {
+            matched = key;
+            break;
+          }
+        }
+        if (matched) {
+          s.modeId = matched;
+        } else {
+          s.modeId = createCustomMode(`${s.name} (personnalisé)`, "normal");
+          updateModeProfile(s.modeId, mode);
+        }
+        changed = true;
+      }
+      localStorage.removeItem(OLD_KEY);
+    }
+    if (changed) {
+      for (const s of subjects) {
+        await persistSubject(s);
+      }
+    }
+  }
+
+  /** Clé CSS de couleur (is-cool/is-normal/is-renforce/is-custom) : tout
+   *  mode personnalisé (id "custom-xxxx", quel que soit son nom) retombe
+   *  sur la couleur "is-custom" (jaune) partagée par tous les modes maison. */
+  function algoModeCssKey(modeId) {
+    return BUILTIN_MODE_IDS.includes(modeId) ? modeId : "custom";
+  }
+  /** Nom affiché d'un mode — le vrai nom pour un mode personnalisé (créé et
+   *  nommé librement), le libellé court fixe pour les 3 modes intégrés. */
+  function modeDisplayName(modeId) {
+    const modes = loadLearningModes();
+    const m = modes[modeId];
+    if (m) return m.name;
+    return ALGO_MODE_SHORT_LABELS.normal;
   }
 
   const ALGO_RATING_KEYS = { again: ["Ka", "Ma"], hard: ["Kh", "Mh"], good: ["Kg", "Mg"], easy: ["Ke", "Me"] };
@@ -202,6 +2068,19 @@
   /** Applique une note à une fiche avec le nouvel algorithme : renvoie les
    *  champs à fusionner dans la fiche (échéance brute conservée à 3
    *  décimales, échéance entière, et date de prochaine interrogation). */
+  /** Score d'apprentissage d'une fiche (item 1), de 0 à 100 (entier) :
+   *  S = ((D-1)^P)/((D-1)^P+B), D = délai actuel (en jours) avant la
+   *  prochaine interrogation. D est ramené à 1 minimum (fiche due
+   *  aujourd'hui ou en retard) pour éviter une puissance d'un nombre
+   *  négatif avec un exposant non entier (NaN sinon). */
+  function computeCardScore(card, intervalOverride) {
+    const settings = loadDevSettings().cardScore;
+    const D = Math.max(1, intervalOverride !== undefined ? intervalOverride : card.interval || 1);
+    const base = Math.pow(D - 1, settings.p);
+    const S = base / (base + settings.b);
+    return Math.round(S * 100);
+  }
+
   function computeAlgoNext(card, rating, subjectId) {
     const settings = getSubjectAlgoSettings(subjectId);
     const rawBefore = currentDeadlineRaw(card);
@@ -223,1129 +2102,13 @@
     card.maxIntervalReached = Math.max(card.maxIntervalReached || 0, intervalDays);
   }
 
-  /* ---------------------------------------------------------
-     Tamagotchi : un foyer de compagnons qui grandissent tout seuls.
-
-     Chaque compagnon n'a plus qu'UNE seule jauge : sa "vie" (0 → un maximum
-     qui grandit avec le stade). Cette vie baisse en continu (-1 point par
-     heure, quelle que soit l'appli ouverte ou non — rattrapé au prochain
-     lancement). Cycle de stades :
-
-       œuf (20/100) -> poussin qui éclot (30/150) -> poussin (40/200)
-       -> chenille (50/250) -> papillon (60/300) -> animal (70/350, espèce
-       révélée au hasard et gravée pour toujours dans les "trophées")
-
-     Vie à 0 : le compagnon redescend d'un stade (sauf l'œuf et l'animal,
-     qui passent directement en "œuf au plat" 🍳 et disparaissent 1 jour
-     après que la personne les a vus dans cet état). Vie au maximum du
-     stade : promotion au stade suivant. Plus la vie est haute, plus le
-     compagnon est affiché grand ; l'anneau autour de lui va du rouge (vie
-     basse) au vert (vie haute), et sa longueur suit le même pourcentage.
-
-     Les cadeaux ne se règlent plus directement sur l'histogramme : les
-     toucher les fait simplement atterrir dans une pile "à ouvrir" sur la
-     page Tamagotchi. Les ouvrir là-bas tire au sort un œuf (nouveau
-     compagnon) ou de la nourriture (un besoin de vie aléatoire, donné à un
-     compagnon vivant tiré au hasard) — la probabilité d'œuf chute vite à
-     mesure que le foyer grossit (voir `tamaEggProbability`).
-
-     Sur l'histogramme de la page Réviser, il y a en permanence un objectif
-     par catégorie (= palier de rareté commune/rare/épique/légendaire) : une
-     échéance entre 3 et 15 jours, un palier à atteindre calculé depuis les
-     données réelles. Dès qu'il est récolté, un nouveau le remplace aussitôt.
-     Vider la pile du jour (0 fiche à revoir) offre un cadeau bonus par
-     catégorie. Une journée sans le moindre cadeau donne droit à un cadeau
-     de rattrapage le lendemain, cumulable.
-
-     État synchronisé (une ligne JSON par code de synchro, voir js/sync.js) :
-     `tamaState` (compagnons, trophées, pile à ouvrir, compteurs) et
-     `tamaGoals` (objectifs en cours par matière + catégorie).
-  --------------------------------------------------------- */
-  const TAMA_STATE_KEY = "fiches_tama_state";
-  const TAMA_GOALS_KEY = "fiches_tama_goals";
-  const TAMA_FOOD_VALUE_KEY = "fiches_tama_food_value";
-  const TAMA_GIFT_QTY_MIN_KEY = "fiches_tama_gift_qty_min";
-  const TAMA_GIFT_QTY_MAX_KEY = "fiches_tama_gift_qty_max";
-  const TAMA_PEN_COLOR_KEY = "fiches_tama_pen_color";
-
-  /** Un très large pool "nourriture et boissons" : n'importe quel emoji de
-   *  repas, fruit, boisson chaude ou fraîche peut sortir d'un cadeau. */
-  const FOOD_EMOJI_POOL = ["🍎","🍏","🍊","🍋","🍌","🍉","🍇","🍓","🍒","🍑","🥭","🍍","🥥","🥝","🍅","🥑","🥕","🌽","🥒","🥦","🍞","🥐","🥖","🧀","🍕","🍔","🍣","🍰","🎂","🍫","🍩","🍯","☕","🍵","🧃","🥤","🥛","🧋","🍶","🫖","🍹","🧉","🫙","🍧","🍦","🍿","🥞","🧇","🥯","🥨","🌮","🌯","🥙","🍜","🍝","🍛","🍱","🍤","🍗","🍖","🥩","🍮","🍬","🍭"];
-
-  /** Les 6 stades du cycle de vie, dans l'ordre. `start` = vie de départ en
-   *  arrivant dans ce stade (par le haut comme par le bas), `max` = vie à
-   *  atteindre pour passer au suivant, `baseSize` = taille de référence
-   *  à l'écran (px), modulée ensuite par le pourcentage de vie du moment. */
-  const STAGE_ORDER = ["oeuf", "poussin_oeuf", "poussin", "chenille", "papillon", "animal"];
-  const STAGE_DEFS = {
-    oeuf: { name: "Œuf", emoji: "🥚", start: 20, max: 100, baseSize: 34 },
-    poussin_oeuf: { name: "Poussin (éclosion)", emoji: "🐥", start: 30, max: 150, baseSize: 38 },
-    poussin: { name: "Poussin", emoji: "🐤", start: 40, max: 200, baseSize: 42 },
-    chenille: { name: "Chenille", emoji: "🐛", start: 50, max: 250, baseSize: 46 },
-    papillon: { name: "Papillon", emoji: "🦋", start: 60, max: 300, baseSize: 50 },
-    animal: { name: "Animal", emoji: null, start: 70, max: 350, baseSize: 58 },
-  };
-
-  /** Noms attribués par l'appli à chaque nouveau compagnon (jamais choisis
-   *  par la personne) — un nom différent pour chaque compagnon actuellement
-   *  vivant dans le foyer. Plus de 500 noms répartis par thème pour limiter
-   *  au maximum les répétitions même avec plusieurs compagnons à la fois. */
-  const PET_NAME_POOL = [
-    // Gourmandises et sucreries
-    "Nougat", "Praline", "Biscotte", "Pixel", "Cannelle", "Griotte", "Réglisse",
-    "Câpre", "Nashi", "Pruneau", "Coquelicot", "Chamallow", "Éclair", "Bretzel",
-    "Churro", "Wasabi", "Miso", "Sushi", "Fondant", "Praliné", "Marmelade",
-    "Guimauve", "Meringue", "Financier", "Sablé", "Cajou", "Pistache",
-    "Noisette", "Amande", "Cornichon", "Radis", "Groseille", "Mirabelle",
-    "Poivron", "Safran", "Muscade", "Popcorn", "Biscuit", "Caramel", "Sorbet",
-    "Nectarine", "Abricot", "Framboise", "Myrtille", "Cassis", "Litchi",
-    "Kiwi", "Ananas", "Papaye", "Mangue", "Grenade", "Clémentine",
-    "Mandarine", "Kumquat", "Physalis", "Datte", "Figue", "Rhubarbe",
-    "Coing", "Nèfle", "Prunelle", "Airelle", "Sureau", "Pamplemousse",
-    "Bergamote", "Yuzu", "Combava", "Vanille", "Chocolat", "Nougatine",
-    "Calisson", "Berlingot", "Papillote", "Dragée", "Macaron", "Cupcake",
-    "Brownie", "Cookie", "Gaufre", "Crêpe", "Beignet", "Pancake", "Muffin",
-    "Cannelé", "Kouglof", "Croquant", "Nonnette", "Speculoos", "Panettone",
-    "Tiramisu", "Cheesecake", "Flan", "Clafoutis", "Frangipane", "Massepain",
-    "Nanan", "Chouquette", "Religieuse", "Paris-Brest", "Baba", "Savarin",
-    "Tartelette", "Gourmandise", "Confiserie", "Berlingot2", "Sucette",
-    "Guimauve2", "Barbapapa",
-    // Épices et aromates
-    "Curcuma", "Gingembre", "Cardamome", "Girofle", "Anis", "Fenouil",
-    "Basilic", "Thym", "Romarin", "Origan", "Sauge", "Persil", "Ciboulette",
-    "Estragon", "Coriandre", "Cumin", "Paprika", "Piment", "Poivre", "Sel",
-    "Menthe", "Lavande", "Verveine", "Camomille", "Tilleul", "Hibiscus",
-    "Jasmin", "Citronnelle", "Aneth", "Livèche", "Absinthe", "Armoise",
-    "Bourrache", "Consoude", "Achillée",
-    // Fleurs et plantes
-    "Pâquerette", "Pissenlit", "Trèfle", "Chardon", "Bruyère", "Genêt",
-    "Mimosa", "Glycine", "Iris", "Tulipe", "Pivoine", "Dahlia", "Bleuet",
-    "Violette", "Muguet", "PerceNeige", "Crocus", "Jonquille", "Narcisse",
-    "Freesia", "Camélia", "Azalée", "Rhododendron", "Magnolia",
-    "Chèvrefeuille", "Clématite", "Anémone", "Renoncule", "Ancolie",
-    "Delphinium", "Œillet", "Zinnia", "Cosmos", "Capucine", "Bégonia",
-    "Fuchsia", "Géranium", "Hortensia", "Lilas", "Jacinthe", "Amaryllis",
-    "Orchidée", "Edelweiss", "Gentiane", "Myosotis", "Digitale", "Volubilis",
-    "Belle-de-jour", "Immortelle", "Lotus", "Nénuphar", "Papyrus", "Fougère",
-    "Mousse", "Lichen", "Gui", "Houx", "Bambou", "Saule", "Chêne", "Érable",
-    "Bouleau", "Sapin", "Cèdre", "Séquoia", "Aubépine", "Prunellier",
-    "Sorbier", "Noisetier", "Charme", "Hêtre", "Frêne", "Platane",
-    // Minéraux, couleurs et matières douces
-    "Opale", "Jade", "Onyx", "Ambre", "Topaze", "Émeraude", "Saphir",
-    "Rubis", "Perle", "Nacre", "Cristal", "Quartz", "Grenat", "Corail",
-    "Turquoise", "Ivoire", "Argent", "Bronze", "Cuivre", "Étain", "Platine",
-    "Acier", "Plume", "Duvet", "Cocon", "Bulle", "Écume", "Rosée", "Brume",
-    "Buée", "Flocon", "Grelot", "Ruban", "Pompon", "Volute", "Étincelle",
-    "Lueur", "Éclat", "Reflet", "Murmure", "Soupir", "Frisson", "Câlin",
-    "Doudou", "Cocotte", "Velours", "Satin", "Soie", "Mousseline", "Dentelle",
-    "Organza", "Taffetas", "Cachemire", "Angora", "Mohair", "Feutrine",
-    // Petits objets, jouets et lieux
-    "Bilboquet", "Toupie", "Origami", "Confetti", "Ballon", "CerfVolant",
-    "Marionnette", "Diabolo", "Kaléidoscope", "Boussole", "Lanterne",
-    "Lampion", "Carillon", "Girouette", "Moulin", "Nichoir", "Cabane",
-    "Grenier", "Terrier", "Nid", "Coquille", "Galet", "Caillou", "Rocher",
-    "Ruisseau", "Cascade", "Source", "Étang", "Marais", "Clairière",
-    "Sentier", "Chemin", "Vallée", "Colline", "Sommet", "Falaise", "Grotte",
-    "Caverne", "Récif", "Lagune", "Archipel", "Presqu'île", "Îlot", "Dune",
-    "Oasis", "Mirage", "Horizon", "Méridien", "Zénith", "Aurore", "Crépuscule",
-    "Équinoxe", "Solstice", "Comète", "Météore", "Nébuleuse", "Constellation",
-    "Satellite", "Astéroïde", "Éclipse", "Firmament",
-    // Onomatopées, mots doux et esprits facétieux
-    "Bidule", "Trucmuche", "Farfelu", "Zigzag", "Gribouille", "Chatouille",
-    "Pagaille", "Cabriole", "Pirouette", "Galipette", "Frimousse", "Bouille",
-    "Minois", "Fripon", "Coquin", "Espiègle", "Guilleret", "Rigolo",
-    "Loufoque", "Farceur", "Polisson", "Chenapan", "Gredin", "Lutin",
-    "Farfadet", "Elfe", "Gnome", "Korrigan", "Follet", "Sylphe", "Ondine",
-    "Naïade", "Dryade", "Nymphe", "Sirène", "Griffon", "Phénix", "Pégase",
-    "Chimère", "Sphinx", "Hippogriffe", "Kraken", "Yéti", "Farandole",
-    "Sarabande", "Ribambelle", "Batifole", "Cabriolet", "Girondin", "Falbala",
-    "Tourbillon", "Vadrouille", "Gambade", "Cavalcade", "Sautillon",
-    "Trottinette", "Culbute", "Chamboule", "Vagabond", "Baladin", "Troubadour",
-    "Ménestrel", "Jongleur", "Acrobate", "Funambule", "Équilibriste",
-    "Prestidigitateur", "Illusionniste", "Magicien", "Sorcier", "Enchanteur",
-    "Devin", "Oracle", "Augure", "Présage", "Talisman", "Grigri", "Porte-bonheur",
-    // Mots doux additionnels et petits êtres
-    "Pompette", "Frisette", "Bouclette", "Pétale", "Bourgeon", "Germe",
-    "Pousse", "Rameau", "Brindille", "Feuillage", "Ramure", "Racine",
-    "Écorce", "Sève", "Nectar", "Pollen", "Etamine", "Corolle", "Calice",
-    "Pistil", "Bractée", "Involucre", "Stipule", "Vrille", "Tige", "Chaton",
-    "Épi", "Grain", "Semence", "Graine", "Noyau", "Pépin", "Zeste", "Écale",
-    "Coque", "Cosse", "Gousse", "Silique", "Baie", "Drupe", "Akène",
-    "Samare", "Capsule", "Follicule",
-    // Petits objets du quotidien, façon comptine
-    "Dé", "Bouton", "Perlette", "Épingle", "Aiguille", "Fil", "Écheveau",
-    "Pelote", "Bobine", "Fuseau", "Quenouille", "Métier", "Navette",
-    "Tricot", "Crochet", "Ourlet", "Fronce", "Pli", "Volant", "Falbala2",
-    "Jabot", "Col", "Manchette", "Empiècement", "Empeigne", "Semelle",
-    "Talon", "Boucle", "Lacet", "Cordon", "Ganse", "Passepoil", "Liseré",
-    "Galon", "Franges", "Pompon2", "Grelot2", "Sonnette", "Clochette",
-    "Cymbale", "Tambourin", "Castagnette", "Maracas", "Xylophone",
-    "Harmonica", "Ocarina", "Flûteau", "Pipeau", "Chalumeau",
-    // Petites gourmandises salées et pain
-    "Croûton", "Biscotte2", "Tartine", "Baguette", "Pain", "Toast",
-    "Crouton2", "Croustille", "Gressin", "Fougasse", "Chapata", "Naan",
-    "Pita", "Tortilla", "Falafel", "Houmous", "Tzatziki", "Guacamole",
-    "Salsa", "Pesto", "Chimichurri", "Vinaigrette", "Rémoulade",
-    // Mots-valises et petits noms rigolos
-    "Pompon3", "Choupinou", "Croquignou", "Mignoux", "Chouette2", "Câlinou",
-    "Doudoux", "Bibou", "Fripouille", "Coquinou", "Câlinet", "Poupoune",
-    "Chatoune", "Minoune", "Loulou", "Coco", "Zaza", "Titi", "Pompomette",
-    "Câpucine2", "Biboune", "Chouchou", "Pitchoune", "Marmiton", "Bambin",
-    "Poupon", "Bambino", "Chérubin", "Angelot", "Séraphin", "Étoilon",
-    "Lunette", "Soleillou", "Nuageon", "Plumette", "Ailette", "Papillote2",
-    "Cocorico", "Coucou", "Zinzin", "Guili", "Chatouilli", "Rigolette",
-    "Farfouille", "Gribouillis", "Barbouille", "Patouille", "Cabosse",
-    "Pomponette", "Frimoussette", "Câlinette",
-  ];
-  const BROKEN_EGG_EMOJI = "🍳";
-  const LIFE_DECAY_PER_HOUR = 1;
-  /** Poids utilisés dans la probabilité d'obtenir un œuf plutôt qu'à manger
-   *  (voir tamaEggProbability) : un foyer plein d'œufs/poussins pèse très
-   *  lourd, un foyer d'animaux adultes presque rien. */
-  const GIFT_EGG_WEIGHTS = { oeuf: 15, poussin_oeuf: 8, poussin: 2, chenille: 1, papillon: 0.7, animal: 0.5 };
-
-  /** Épitaphes rendant hommage aux compagnons disparus (section "Ils nous
-   *  ont quittés") : plutôt que d'écrire 500 phrases à la main, on combine
-   *  trois banques de courts fragments (constat de vie / legs / adieu) —
-   *  25×24×24 ≈ 14 400 combinaisons possibles, largement au-delà des 500
-   *  demandées, pour une poignée de fragments à maintenir. Une combinaison
-   *  est tirée UNE fois à la mort du compagnon et conservée telle quelle
-   *  (voir `pet.epitaph`), donc jamais recalculée ensuite.
-   */
-  const EPITAPH_A = [
-    "Il aura battu son record personnel de siestes trois jours de suite",
-    "Elle courait après les miettes plus vite que son ombre",
-    "Il a passé sa vie à confondre le nord et le sud du pré",
-    "Elle collectionnait les brins d'herbe sans jamais dire pourquoi",
-    "Il n'a jamais rattrapé le dernier aliment tombé au sol",
-    "Elle faisait semblant de dormir pour observer les autres",
-    "Il a inventé sa propre démarche, jamais reproduite depuis",
-    "Elle a essayé de manger un nuage, une fois, par principe",
-    "Il regardait toujours ailleurs au moment de la photo",
-    "Elle a fait le tour du pré exactement 4 217 fois",
-    "Il croyait dur comme fer être le plus rapide du foyer",
-    "Elle partageait sa nourriture, mais seulement les jours pairs",
-    "Il boudait dès qu'un autre compagnon arrivait en premier",
-    "Elle a dormi debout plus souvent qu'assise",
-    "Il saluait chaque lever de soleil d'un air très solennel",
-    "Elle refusait obstinément de manger deux fois la même chose",
-    "Il pensait que le pré était infiniment plus grand qu'il ne l'était",
-    "Elle a marché en rond si longtemps qu'on l'a crue perdue",
-    "Il avait un talent rare pour arriver juste après le repas",
-    "Elle observait les fiches révisées avec un intérêt profond",
-    "Il ne s'est jamais remis d'avoir raté un aliment doré",
-    "Elle prenait tout son temps, même pour ne rien faire",
-    "Il défendait fièrement un territoire large de trois pas",
-    "Elle a un jour dépassé tout le monde, une fois, brièvement",
-    "Il gardait toujours un œil sur le prochain cadeau à venir",
-  ];
-  const EPITAPH_B = [
-    "Sa collection de miettes restera dans les mémoires",
-    "Son style de course inimitable ne sera jamais égalé",
-    "Personne n'a jamais compris sa stratégie, et c'est très bien ainsi",
-    "Son sens de l'exploration aura marqué ce petit bout de pré",
-    "Sa capacité à dormir n'importe où force le respect",
-    "On se souviendra longtemps de son air toujours étonné",
-    "Sa passion pour les longues siestes fait déjà des émules",
-    "Son appétit légendaire restera un sujet de conversation",
-    "Sa façon bien à lui de regarder le monde manquera à tous",
-    "Son enthousiasme matinal, lui, ne manquera à personne le lundi",
-    "Sa curiosité sans limite l'aura mené jusqu'ici, et c'est beau",
-    "Son goût prononcé pour les détours restera une énigme",
-    "Sa patience légendaire face aux aliments récalcitrants inspire encore",
-    "Son indifférence royale aux autres compagnons avait quelque chose de noble",
-    "Sa manière unique de trébucher sur rien du tout fera date",
-    "Son air toujours un peu perdu cachait une grande sagesse, paraît-il",
-    "Sa ténacité à finir toujours dernier n'aura d'égal que sa bonne humeur",
-    "Son goût du risque (traverser le pré en diagonale) impressionnait",
-    "Sa loyauté envers son coin d'ombre préféré était sans faille",
-    "Son excellence en matière de siestes prolongées reste un modèle",
-    "Sa manie de tout renifler deux fois avant d'agir avait ses fans",
-    "Son grand sens du timing (toujours en retard) était presque une signature",
-    "Sa discrétion légendaire cachait en réalité un appétit féroce",
-    "Son goût immodéré pour les longues pauses inspire encore le respect",
-  ];
-  const EPITAPH_C = [
-    "Repose en paix, petit gourmand",
-    "On se souviendra de toi, aventurier du pré",
-    "Merci pour ces siestes partagées",
-    "Le pré est un peu plus calme sans toi",
-    "Bon vent, petit explorateur",
-    "Tu manqueras aux prochains cadeaux",
-    "Repose, tu l'as bien mérité",
-    "Que ton prochain pré soit rempli d'aliments dorés",
-    "Adieu, champion des longues siestes",
-    "On aura ri, on aura couru, merci pour tout",
-    "Le foyer se souvient de toi avec tendresse",
-    "Va rejoindre les grandes légendes du pré",
-    "Tu as marqué ce petit bout d'herbe à ta façon",
-    "Repose en paix, entre deux brins d'herbe",
-    "On garde le souvenir de tes petites bêtises",
-    "Bon repos, tu as bien gagné ta pause éternelle",
-    "Le pré n'oubliera pas ton passage",
-    "Merci d'avoir été toi, jusqu'au bout",
-    "Que la prochaine vie te réserve plus de cadeaux",
-    "Petit compagnon, tu resteras dans les mémoires du foyer",
-    "Repose, ta place au soleil t'attendra toujours",
-    "Adieu, tu auras égayé chaque jour passé ici",
-    "Le pré te dit merci et au revoir",
-    "Tu pars, mais l'écho de tes pas reste",
-  ];
-  function randomEpitaph() {
-    const a = EPITAPH_A[Math.floor(Math.random() * EPITAPH_A.length)];
-    const b = EPITAPH_B[Math.floor(Math.random() * EPITAPH_B.length)];
-    const c = EPITAPH_C[Math.floor(Math.random() * EPITAPH_C.length)];
-    return `${a}. ${b}. ${c}.`;
-  }
-
-  /** Espèces à découvrir au stade "animal" (tirage uniforme, gravé dans les
-   *  trophées pour toujours, même si le compagnon disparaît ensuite).
-   *  Couvre la quasi-totalité des emoji animaux usuels (mammifères,
-   *  oiseaux, mer, reptiles/insectes, créatures fantastiques) — 🐛 et 🦋
-   *  sont volontairement exclus : ils désignent déjà les stades de
-   *  croissance "chenille"/"papillon", les réutiliser comme espèces finales
-   *  aurait prêté à confusion. */
-  const SPECIES = [
-    { id: "chat", name: "Chat", emoji: "🐱" },
-    { id: "chien", name: "Chien", emoji: "🐶" },
-    { id: "lapin", name: "Lapin", emoji: "🐰" },
-    { id: "renard", name: "Renard", emoji: "🦊" },
-    { id: "panda", name: "Panda", emoji: "🐼" },
-    { id: "koala", name: "Koala", emoji: "🐨" },
-    { id: "lion", name: "Lion", emoji: "🦁" },
-    { id: "tortue", name: "Tortue", emoji: "🐢" },
-    { id: "pingouin", name: "Pingouin", emoji: "🐧" },
-    { id: "poulpe", name: "Poulpe", emoji: "🐙" },
-    { id: "dragon", name: "Dragon", emoji: "🐲" },
-    { id: "licorne", name: "Licorne", emoji: "🦄" },
-    { id: "souris", name: "Souris", emoji: "🐭" },
-    { id: "hamster", name: "Hamster", emoji: "🐹" },
-    { id: "ours", name: "Ours", emoji: "🐻" },
-    { id: "tigre", name: "Tigre", emoji: "🐯" },
-    { id: "vache", name: "Vache", emoji: "🐮" },
-    { id: "cochon", name: "Cochon", emoji: "🐷" },
-    { id: "grenouille", name: "Grenouille", emoji: "🐸" },
-    { id: "singe", name: "Singe", emoji: "🐵" },
-    { id: "poule", name: "Poule", emoji: "🐔" },
-    { id: "oiseau", name: "Oiseau", emoji: "🐦" },
-    { id: "poussin", name: "Poussin", emoji: "🐤" },
-    { id: "canard", name: "Canard", emoji: "🦆" },
-    { id: "aigle", name: "Aigle", emoji: "🦅" },
-    { id: "hibou", name: "Hibou", emoji: "🦉" },
-    { id: "chauve_souris", name: "Chauve-souris", emoji: "🦇" },
-    { id: "loup", name: "Loup", emoji: "🐺" },
-    { id: "sanglier", name: "Sanglier", emoji: "🐗" },
-    { id: "cheval", name: "Cheval", emoji: "🐴" },
-    { id: "abeille", name: "Abeille", emoji: "🐝" },
-    { id: "escargot", name: "Escargot", emoji: "🐌" },
-    { id: "coccinelle", name: "Coccinelle", emoji: "🐞" },
-    { id: "fourmi", name: "Fourmi", emoji: "🐜" },
-    { id: "scarabee", name: "Scarabée", emoji: "🪲" },
-    { id: "araignee", name: "Araignée", emoji: "🕷️" },
-    { id: "scorpion", name: "Scorpion", emoji: "🦂" },
-    { id: "serpent", name: "Serpent", emoji: "🐍" },
-    { id: "lezard", name: "Lézard", emoji: "🦎" },
-    { id: "trex", name: "T-Rex", emoji: "🦖" },
-    { id: "sauropode", name: "Dinosaure", emoji: "🦕" },
-    { id: "calamar", name: "Calamar", emoji: "🦑" },
-    { id: "crevette", name: "Crevette", emoji: "🦐" },
-    { id: "homard", name: "Homard", emoji: "🦞" },
-    { id: "crabe", name: "Crabe", emoji: "🦀" },
-    { id: "poisson_globe", name: "Poisson-globe", emoji: "🐡" },
-    { id: "poisson_tropical", name: "Poisson tropical", emoji: "🐠" },
-    { id: "poisson", name: "Poisson", emoji: "🐟" },
-    { id: "dauphin", name: "Dauphin", emoji: "🐬" },
-    { id: "baleine", name: "Baleine", emoji: "🐳" },
-    { id: "requin", name: "Requin", emoji: "🦈" },
-    { id: "crocodile", name: "Crocodile", emoji: "🐊" },
-    { id: "leopard", name: "Léopard", emoji: "🐆" },
-    { id: "zebre", name: "Zèbre", emoji: "🦓" },
-    { id: "gorille", name: "Gorille", emoji: "🦍" },
-    { id: "orang_outan", name: "Orang-outan", emoji: "🦧" },
-    { id: "elephant", name: "Éléphant", emoji: "🐘" },
-    { id: "mammouth", name: "Mammouth", emoji: "🦣" },
-    { id: "hippopotame", name: "Hippopotame", emoji: "🦛" },
-    { id: "rhinoceros", name: "Rhinocéros", emoji: "🦏" },
-    { id: "dromadaire", name: "Dromadaire", emoji: "🐪" },
-    { id: "chameau", name: "Chameau", emoji: "🐫" },
-    { id: "girafe", name: "Girafe", emoji: "🦒" },
-    { id: "kangourou", name: "Kangourou", emoji: "🦘" },
-    { id: "bison", name: "Bison", emoji: "🦬" },
-    { id: "buffle", name: "Buffle", emoji: "🐃" },
-    { id: "belier", name: "Bélier", emoji: "🐏" },
-    { id: "mouton", name: "Mouton", emoji: "🐑" },
-    { id: "lama", name: "Lama", emoji: "🦙" },
-    { id: "chevre", name: "Chèvre", emoji: "🐐" },
-    { id: "cerf", name: "Cerf", emoji: "🦌" },
-    { id: "caniche", name: "Caniche", emoji: "🐩" },
-    { id: "coq", name: "Coq", emoji: "🐓" },
-    { id: "dinde", name: "Dinde", emoji: "🦃" },
-    { id: "dodo", name: "Dodo", emoji: "🦤" },
-    { id: "paon", name: "Paon", emoji: "🦚" },
-    { id: "perroquet", name: "Perroquet", emoji: "🦜" },
-    { id: "cygne", name: "Cygne", emoji: "🦢" },
-    { id: "flamant", name: "Flamant rose", emoji: "🦩" },
-    { id: "colombe", name: "Colombe", emoji: "🕊️" },
-    { id: "raton_laveur", name: "Raton laveur", emoji: "🦝" },
-    { id: "moufette", name: "Moufette", emoji: "🦨" },
-    { id: "blaireau", name: "Blaireau", emoji: "🦡" },
-    { id: "castor", name: "Castor", emoji: "🦫" },
-    { id: "loutre", name: "Loutre", emoji: "🦦" },
-    { id: "paresseux", name: "Paresseux", emoji: "🦥" },
-    { id: "rat", name: "Rat", emoji: "🐀" },
-    { id: "ecureuil", name: "Écureuil", emoji: "🐿️" },
-    { id: "herisson", name: "Hérisson", emoji: "🦔" },
-  ];
-
-  function speciesById(id) {
-    return SPECIES.find((s) => s.id === id) || null;
-  }
-
-  function uidTama() {
-    return `tama_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
-  }
-
-  function todayISODate() {
-    return startOfDay(new Date()).toISOString().slice(0, 10);
-  }
-
-  /** Choisit un nom pour un nouveau compagnon, différent de tous les noms
-   *  actuellement portés par les autres compagnons vivants du foyer. Si le
-   *  pool est épuisé (beaucoup de compagnons en même temps), on numérote. */
-  function pickPetName(existingPets) {
-    const used = new Set((existingPets || []).map((p) => p.name).filter(Boolean));
-    const free = PET_NAME_POOL.filter((n) => !used.has(n));
-    if (free.length > 0) return free[Math.floor(Math.random() * free.length)];
-    const base = PET_NAME_POOL[Math.floor(Math.random() * PET_NAME_POOL.length)];
-    let i = 2;
-    while (used.has(`${base} ${i}`)) i += 1;
-    return `${base} ${i}`;
-  }
-
-  function makeEgg(existingPets) {
-    const now = new Date().toISOString();
-    return {
-      id: uidTama(),
-      name: pickPetName(existingPets),
-      stage: "oeuf",
-      life: STAGE_DEFS.oeuf.start,
-      species: null,
-      lastDecayAt: now,
-      createdAt: now,
-      brokenSeenAt: null,
-    };
-  }
-
-  function defaultTamaState() {
-    const today = todayISODate();
-    return {
-      pets: [makeEgg([])],
-      foods: [], // { id, emoji, total, remaining, x, y, eatenBy, createdAt } — posées dans le pré
-      trophies: [], // { species, dateReached }
-      memorial: [], // { id, name, emoji, ageAtDeathDays, deathAt, epitaph } — plus récent en premier
-      pendingGifts: [], // { id, source, createdAt } — à ouvrir sur la page Tamagotchi
-      zeroBonusGivenDates: {}, // { subjectId: dateISO }
-      lastGiftCollectedDate: null,
-      lastBookkeepingDate: today,
-      catchupCredits: 0,
-      createdAt: new Date().toISOString(),
-      // Volontairement très ancien (et non "maintenant") : un foyer neuf
-      // créé localement (première ouverture sur un appareil qui n'a encore
-      // jamais synchronisé) ne doit JAMAIS être considéré comme "plus
-      // récent" qu'un état déjà présent côté serveur lors de la première
-      // connexion — sinon ce foyer vide écraserait la vraie progression
-      // distante (voir pullAndMergeTama).
-      updatedAt: new Date(0).toISOString(),
-    };
-  }
-
-  let tamaState = null;
-  /** { "<subjectId>": { threshold, createdAt } } */
-  let tamaGoals = {};
-  let tamaSyncUnsub = null;
-
-  /** Écrit l'état en local SANS toucher `updatedAt` — à réserver aux cas où
-   *  l'écriture ne reflète pas une "vraie" nouvelle progression (création
-   *  du foyer par défaut, migration de forme des données) : la comparer
-   *  aux timestamps distants lors de la prochaine synchro doit continuer à
-   *  refléter la dernière fois où quelque chose s'est *réellement* passé,
-   *  pas la dernière fois où l'appli a juste été ouverte. Pour toute vraie
-   *  évolution du foyer (temps qui passe, cadeau, repas...), utiliser
-   *  saveTamaState() à la place. */
-  function persistTamaStateOnly() {
-    localStorage.setItem(TAMA_STATE_KEY, JSON.stringify(tamaState));
-  }
-
-  /** Migration depuis les anciens formats (v25 mono-compagnon à besoins, ou
-   *  v26 foyer à besoins/inventaire) : on repart d'un foyer neuf plutôt que
-   *  d'essayer de transposer des jauges qui n'ont plus de sens ici. */
-  function loadTamaState() {
-    try {
-      const raw = localStorage.getItem(TAMA_STATE_KEY);
-      tamaState = raw ? JSON.parse(raw) : null;
-    } catch {
-      tamaState = null;
-    }
-    const looksCurrent = tamaState && Array.isArray(tamaState.pets) && tamaState.pets.every((p) => p.stage);
-    if (!looksCurrent) {
-      tamaState = defaultTamaState();
-      persistTamaStateOnly();
-    }
-    if (!tamaState.trophies) tamaState.trophies = [];
-    if (!tamaState.pendingGifts) tamaState.pendingGifts = [];
-    if (!tamaState.zeroBonusGivenDates) tamaState.zeroBonusGivenDates = {};
-    if (!tamaState.foods) tamaState.foods = [];
-    if (!tamaState.memorial) tamaState.memorial = [];
-    // Migration : compagnons créés avant l'introduction des noms.
-    let namedSomeone = false;
-    tamaState.pets.forEach((p) => {
-      if (!p.name) {
-        p.name = pickPetName(tamaState.pets);
-        namedSomeone = true;
-      }
-    });
-    if (namedSomeone) persistTamaStateOnly();
-  }
-
-  function saveTamaState() {
-    tamaState.updatedAt = new Date().toISOString();
-    localStorage.setItem(TAMA_STATE_KEY, JSON.stringify(tamaState));
-  }
-
-  /** Ne garde que les clés au nouveau format (une par matière). Les clés
-   *  composites "subjectId::tier" d'avant la simplification des cadeaux
-   *  sont abandonnées : un nouvel objectif propre est recalculé pour
-   *  chaque matière au prochain rendu de son histogramme. */
-  function sanitizeTamaGoals(goals) {
-    const clean = {};
-    for (const [key, value] of Object.entries(goals || {})) {
-      if (!key.includes("::") && value && typeof value.threshold === "number") {
-        clean[key] = value;
-      }
-    }
-    return clean;
-  }
-
-  function loadTamaGoals() {
-    try {
-      const raw = localStorage.getItem(TAMA_GOALS_KEY);
-      tamaGoals = sanitizeTamaGoals(raw ? JSON.parse(raw) : {});
-    } catch {
-      tamaGoals = {};
-    }
-  }
-
-  function saveTamaGoals() {
-    localStorage.setItem(TAMA_GOALS_KEY, JSON.stringify(tamaGoals));
-  }
-
-  /** Valeur nutritive : FIXE pour tout aliment (même valeur d'un cadeau à
-   *  l'autre) — c'est la quantité d'aliments par cadeau qui varie (voir
-   *  ci-dessous), pas leur valeur individuelle. Le but est qu'on puisse
-   *  reconnaître d'un coup d'œil qu'un aliment donné "vaut" toujours pareil. */
-  function getFoodValue() {
-    const v = Number(localStorage.getItem(TAMA_FOOD_VALUE_KEY));
-    return Number.isFinite(v) && v > 0 ? v : 15;
-  }
-  function setFoodValue(v) {
-    localStorage.setItem(TAMA_FOOD_VALUE_KEY, String(v));
-    touchAppSettingsTimestamp();
-    if (Sync.isConfigured()) pushTamaBlob();
-  }
-
-  /** Quantité d'aliments déposés dans le pré par un même cadeau de
-   *  nourriture : tirée uniformément entre ces deux bornes réglables. */
-  function getGiftQtyMin() {
-    const v = Number(localStorage.getItem(TAMA_GIFT_QTY_MIN_KEY));
-    return Number.isFinite(v) && v >= 1 ? v : 1;
-  }
-  function getGiftQtyMax() {
-    const v = Number(localStorage.getItem(TAMA_GIFT_QTY_MAX_KEY));
-    return Number.isFinite(v) && v >= 1 ? v : 3;
-  }
-  function setGiftQtyMin(v) {
-    localStorage.setItem(TAMA_GIFT_QTY_MIN_KEY, String(v));
-    touchAppSettingsTimestamp();
-    if (Sync.isConfigured()) pushTamaBlob();
-  }
-  function setGiftQtyMax(v) {
-    localStorage.setItem(TAMA_GIFT_QTY_MAX_KEY, String(v));
-    touchAppSettingsTimestamp();
-    if (Sync.isConfigured()) pushTamaBlob();
-  }
-
-  /** Couleur de fond du pré : palette de teintes prédéfinies + un nuancier
-   *  libre (input type=color). Persistée dans localStorage (donc conservée
-   *  d'une version de l'appli à l'autre, seul le Cache Storage étant
-   *  vidé/reconstruit à chaque mise à jour) et synchronisée comme les
-   *  autres réglages via collectAppSettings/applyAppSettings. */
-  const TAMA_PEN_COLOR_PRESETS = ["#8bb56a", "#7ea8c9", "#e0a5c1", "#e8c877", "#a98bc9", "#d98c6b", "#7bbfae", "#c9c9c9"];
-  function getPenColor() {
-    return localStorage.getItem(TAMA_PEN_COLOR_KEY) || TAMA_PEN_COLOR_PRESETS[0];
-  }
-  function setPenColor(hex) {
-    localStorage.setItem(TAMA_PEN_COLOR_KEY, hex);
-    touchAppSettingsTimestamp();
-    if (Sync.isConfigured()) pushTamaBlob();
-    applyPenColor();
-    renderPenColorSwatches();
-  }
-  function applyPenColor() {
-    if (tamaPetsListEl) tamaPetsListEl.style.backgroundColor = getPenColor();
-  }
-  function renderPenColorSwatches() {
-    const wrap = el("tama-pen-color-swatches");
-    if (!wrap) return;
-    wrap.innerHTML = "";
-    const current = getPenColor();
-    const frag = document.createDocumentFragment();
-    TAMA_PEN_COLOR_PRESETS.forEach((hex) => {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "tama-pen-color-swatch" + (hex.toLowerCase() === current.toLowerCase() ? " is-selected" : "");
-      btn.style.background = hex;
-      btn.title = hex;
-      btn.addEventListener("click", () => setPenColor(hex));
-      frag.appendChild(btn);
-    });
-    // Nuancier libre : rond arc-en-ciel, sélectionné dès que la couleur
-    // actuelle n'est pas l'une des teintes prédéfinies ci-dessus.
-    const isCustom = !TAMA_PEN_COLOR_PRESETS.some((hex) => hex.toLowerCase() === current.toLowerCase());
-    const customWrap = document.createElement("label");
-    customWrap.className = "tama-pen-color-swatch tama-pen-color-swatch--custom" + (isCustom ? " is-selected" : "");
-    customWrap.title = "Couleur personnalisée";
-    const customInput = document.createElement("input");
-    customInput.type = "color";
-    customInput.value = isCustom ? current : "#888888";
-    customInput.addEventListener("input", () => setPenColor(customInput.value));
-    customWrap.appendChild(customInput);
-    frag.appendChild(customWrap);
-    wrap.appendChild(frag);
-  }
-
-  /** Recale un compagnon dont la vie vient de changer : fait redescendre
-   *  ou remonter en cascade d'autant de stades que nécessaire (utile après
-   *  une longue absence, où plusieurs paliers peuvent être franchis d'un
-   *  coup). Révèle l'espèce et grave le trophée en entrant dans "animal". */
-  function normalizePetLife(pet) {
-    // Cascade vers le bas : vie ≤ 0.
-    while (pet.stage !== "broken" && pet.life <= 0) {
-      if (pet.stage === "oeuf" || pet.stage === "animal") {
-        pet.stage = "broken";
-        pet.life = 0;
-        // Fige nom, âge et une épitaphe tirée une fois pour toutes au
-        // moment du décès — c'est cette version figée qui s'affiche
-        // ensuite (tuile "RIP" dans le pré, puis mémorial "Ils nous ont
-        // quittés"), qu'importe ce qui se passe après dans l'appli.
-        pet.deathAt = new Date().toISOString();
-        pet.ageAtDeathDays = tamaPetAgeDays(pet, pet.deathAt);
-        pet.epitaph = randomEpitaph();
-        return;
-      }
-      const idx = STAGE_ORDER.indexOf(pet.stage);
-      const overflow = -pet.life;
-      pet.stage = STAGE_ORDER[idx - 1];
-      pet.life = STAGE_DEFS[pet.stage].max - overflow;
-    }
-    // Cascade vers le haut : vie ≥ maximum du stade.
-    while (pet.stage !== "broken" && pet.stage !== "animal" && pet.life >= STAGE_DEFS[pet.stage].max) {
-      const idx = STAGE_ORDER.indexOf(pet.stage);
-      const overflow = pet.life - STAGE_DEFS[pet.stage].max;
-      pet.stage = STAGE_ORDER[idx + 1];
-      pet.life = STAGE_DEFS[pet.stage].start + overflow;
-      if (pet.stage === "animal" && !pet.species) {
-        const choice = SPECIES[Math.floor(Math.random() * SPECIES.length)];
-        pet.species = choice.id;
-        tamaState.trophies.push({ species: choice.id, dateReached: new Date().toISOString() });
-      }
-    }
-    if (pet.stage === "animal" && pet.life > STAGE_DEFS.animal.max) pet.life = STAGE_DEFS.animal.max;
-  }
-
-  /** Applique la baisse continue de vie (-1/h) depuis la dernière fois
-   *  qu'on s'en est occupé, en une fois même après une longue absence. */
-  function applyHourlyDecay(pet, nowMs) {
-    if (pet.stage === "broken") return;
-    const last = new Date(pet.lastDecayAt).getTime();
-    const elapsedHours = Math.max(0, (nowMs - last) / 3600000);
-    if (elapsedHours <= 0) return;
-    pet.life -= elapsedHours * LIFE_DECAY_PER_HOUR;
-    pet.lastDecayAt = new Date(nowMs).toISOString();
-    normalizePetLife(pet);
-  }
-
-  /** Fait avancer l'horloge du foyer : vie de chaque compagnon, disparition
-   *  des œufs au plat vus depuis plus de 24h, et comptabilité quotidienne
-   *  des cadeaux de rattrapage. Appelée à l'ouverture et à chaque rendu de
-   *  la page Tamagotchi. */
-  /** Fait avancer l'horloge du foyer : vie de chaque compagnon vivant, et
-   *  comptabilité quotidienne des cadeaux de rattrapage. Les œufs au plat
-   *  (compagnons décédés) ne disparaissent plus tout seuls après 24h : ils
-   *  restent visibles dans le pré tant qu'on reste sur la page Tamagotchi,
-   *  et ne sont archivés dans le mémorial "Ils nous ont quittés" qu'au
-   *  moment où on quitte cette page (voir archiveDeceasedPets). Appelée à
-   *  l'ouverture et à chaque rendu de la page Tamagotchi. */
-  function applyTamaUpkeep() {
-    const now = Date.now();
-    let changed = false;
-
-    tamaState.pets.forEach((pet) => {
-      if (pet.stage !== "broken") {
-        applyHourlyDecay(pet, now);
-        changed = true;
-      }
-    });
-
-    // Comptabilité des jours sans cadeau -> cadeaux de rattrapage cumulables.
-    // Bornée à 30 itérations (30 jours) : si `lastBookkeepingDate` arrivait
-    // corrompue ou aberrante (ex. via la synchro, une donnée ancienne ou mal
-    // formée), cette boucle pouvait auparavant tourner des dizaines de
-    // milliers de fois sans jamais lever d'erreur — un gel silencieux et
-    // total du navigateur (écran figé/blanc, aucun message, le
-    // "chien de garde" anti-écran-blanc lui-même ne peut pas se déclencher
-    // tant que la boucle synchrone ne rend pas la main). Au-delà de 30 jours
-    // d'écart, on saute directement à aujourd'hui plutôt que d'accumuler des
-    // centaines de cadeaux de rattrapage, ce qui n'aurait de toute façon
-    // aucun sens pour l'utilisateur.
-    const today = todayISODate();
-    let cursor = tamaState.lastBookkeepingDate || today;
-    let bookkeepingSteps = 0;
-    const MAX_BOOKKEEPING_STEPS = 30;
-    while (cursor < today && bookkeepingSteps < MAX_BOOKKEEPING_STEPS) {
-      if (tamaState.lastGiftCollectedDate !== cursor) {
-        tamaState.catchupCredits = (tamaState.catchupCredits || 0) + 1;
-      }
-      const d = new Date(cursor + "T00:00:00");
-      d.setDate(d.getDate() + 1);
-      cursor = d.toISOString().slice(0, 10);
-      changed = true;
-      bookkeepingSteps += 1;
-    }
-    tamaState.lastBookkeepingDate = today;
-    // Même logique de plafond pour la distribution des cadeaux accumulés :
-    // au-delà d'une trentaine, ça n'a plus de sens et ça bloquerait le rendu
-    // de la pile de cadeaux (voir renderGiftsTray) pour rien.
-    if (tamaState.catchupCredits > MAX_BOOKKEEPING_STEPS) {
-      tamaState.catchupCredits = MAX_BOOKKEEPING_STEPS;
-    }
-    while (tamaState.catchupCredits > 0) {
-      tamaState.catchupCredits -= 1;
-      tamaState.pendingGifts.push({ id: uidTama(), source: "catchup", createdAt: new Date().toISOString() });
-      changed = true;
-    }
-
-    if (changed) {
-      saveTamaState();
-      scheduleTamaPush();
-    }
-  }
-
-  /** Marque un œuf au plat comme "vu" par la personne : déclenche le compte
-   *  à rebours de 24h avant disparition. Appelé au rendu de la page. */
-  /** Appelée en quittant la page Tamagotchi (voir le gestionnaire de tabs
-   *  plus bas) : archive tout compagnon décédé ("œuf au plat") dans le
-   *  mémorial permanent `tamaState.memorial` (nom, emoji, âge au décès,
-   *  épitaphe déjà figée), puis le retire du pré. Résultat : un défunt
-   *  reste visible dans le pré tant qu'on ne quitte pas la page, mais
-   *  bascule ensuite dans "Ils nous ont quittés" pour de bon. */
-  function archiveDeceasedPets() {
-    const deceased = tamaState.pets.filter((pet) => pet.stage === "broken");
-    if (deceased.length === 0) return;
-    if (!Array.isArray(tamaState.memorial)) tamaState.memorial = [];
-    deceased.forEach((pet) => {
-      tamaState.memorial.unshift({
-        id: pet.id,
-        name: pet.name,
-        emoji: pet.species ? (speciesById(pet.species) || {}).emoji || BROKEN_EGG_EMOJI : BROKEN_EGG_EMOJI,
-        ageAtDeathDays: typeof pet.ageAtDeathDays === "number" ? pet.ageAtDeathDays : tamaPetAgeDays(pet, pet.deathAt),
-        deathAt: pet.deathAt || new Date().toISOString(),
-        epitaph: pet.epitaph || randomEpitaph(),
-      });
-    });
-    tamaState.pets = tamaState.pets.filter((pet) => pet.stage !== "broken");
-    saveTamaState();
-    scheduleTamaPush();
-  }
-
-  function tamaPetLifeFraction(pet) {
-    if (pet.stage === "broken") return 0;
-    return Math.max(0, Math.min(1, pet.life / STAGE_DEFS[pet.stage].max));
-  }
-
-  function tamaPetDisplayEmoji(pet) {
-    if (pet.stage === "broken") return BROKEN_EGG_EMOJI;
-    if (pet.stage === "animal") {
-      const species = speciesById(pet.species);
-      return species ? species.emoji : "❓";
-    }
-    return STAGE_DEFS[pet.stage].emoji;
-  }
-
-  function tamaPetDisplayName(pet) {
-    if (pet.stage === "broken") return "Œuf au plat";
-    if (pet.stage === "animal") {
-      const species = speciesById(pet.species);
-      return species ? species.name : "Animal";
-    }
-    return STAGE_DEFS[pet.stage].name;
-  }
-
-  /** Âge du compagnon depuis sa création (l'œuf initial), affiché sous son
-   *  nom à la place de l'espèce/du stade (retiré : superflu à côté du nom,
-   *  et ça élargissait inutilement l'étiquette — voir tamaPetDisplayName,
-   *  toujours utilisée ailleurs, ex. pour l'annonce d'un nouveau cadeau). */
-  /** Âge du compagnon en jours entiers, depuis sa création (l'œuf initial).
-   *  `atISO` optionnel fige le calcul à un instant donné (utilisé pour
-   *  figer l'âge à l'instant du décès — voir normalizePetLife) ; sans lui,
-   *  calcule l'âge "maintenant". */
-  function tamaPetAgeDays(pet, atISO) {
-    const created = pet.createdAt ? new Date(pet.createdAt) : null;
-    if (!created || Number.isNaN(created.getTime())) return 0;
-    const at = atISO ? new Date(atISO) : new Date();
-    return Math.max(0, Math.floor((at.getTime() - created.getTime()) / 86400000));
-  }
-
-  function formatAgeDays(days) {
-    if (days < 1) return "né aujourd'hui";
-    if (days === 1) return "1 jour";
-    if (days < 31) return `${days} jours`;
-    const months = Math.floor(days / 30);
-    if (months < 12) return months === 1 ? "1 mois" : `${months} mois`;
-    const years = Math.floor(months / 12);
-    return years === 1 ? "1 an" : `${years} ans`;
-  }
-
-  /** Âge affiché sous le nom d'un compagnon — uniquement pertinent au stade
-   *  "animal" (voir item 4 : le nom et l'âge ne sont révélés qu'à ce
-   *  stade-là) ou pour un défunt (voir tamaPetAgeDays avec `deathAt`,
-   *  utilisé directement côté appelant plutôt que via cette fonction). */
-  function tamaPetAgeLabel(pet) {
-    return formatAgeDays(tamaPetAgeDays(pet));
-  }
-
-  /** Probabilité d'obtenir un œuf (plutôt que de la nourriture) à
-   *  l'ouverture d'un cadeau : chute très vite à mesure que le foyer
-   *  s'agrandit, pondérée par stade (les œufs/poussins comptent plus lourd
-   *  que les animaux adultes, déjà "réussis"). */
-  function tamaEggProbability() {
-    const counts = {};
-    STAGE_ORDER.forEach((s) => (counts[s] = 0));
-    tamaState.pets.forEach((p) => {
-      if (counts[p.stage] !== undefined) counts[p.stage] += 1;
-    });
-    const weighted = STAGE_ORDER.reduce((acc, s) => acc + (GIFT_EGG_WEIGHTS[s] || 0) * counts[s], 0);
-    return 1 / (1 + weighted * weighted);
-  }
-
-  /** Capacité de vie restante d'un compagnon avant qu'il n'ait "plus
-   *  besoin" de nourriture pour l'instant : illimitée tant qu'il peut
-   *  encore grandir/évoluer, plafonnée au maximum du stade une fois au
-   *  stade final ("animal") — le surplus de nourriture reste alors
-   *  disponible dans le pré pour le prochain compagnon qui la trouvera. */
-  function tamaPetCapacity(pet) {
-    if (pet.stage === "broken") return 0;
-    if (pet.stage === "animal") return Math.max(0, STAGE_DEFS.animal.max - pet.life);
-    return Infinity;
-  }
-
-  /** Résout le contenu d'un cadeau : un œuf tout neuf, ou une quantité
-   *  aléatoire (entre les bornes réglables) d'aliments — chacun à la même
-   *  valeur nutritive fixe (également réglable) — posés au hasard dans le
-   *  pré. C'est le premier compagnon qui tombera dessus en se baladant qui
-   *  les mangera (voir stepTamaSimulation). */
-  function resolveTamaGift() {
-    const alive = tamaState.pets.filter((p) => p.stage !== "broken");
-    const pEgg = alive.length === 0 ? 1 : tamaEggProbability();
-
-    if (Math.random() < pEgg) {
-      const pet = makeEgg(tamaState.pets);
-      tamaState.pets.push(pet);
-      saveTamaState();
-      return { type: "egg", petId: pet.id, petName: pet.name };
-    }
-
-    const value = getFoodValue();
-    const qtyMin = getGiftQtyMin();
-    const qtyMax = Math.max(qtyMin, getGiftQtyMax());
-    const qty = qtyMin + Math.floor(Math.random() * (qtyMax - qtyMin + 1));
-    // Aliments différents les uns des autres au sein d'un même cadeau : on
-    // pioche `qty` emoji distincts dans le pool (mélange, puis on prend les
-    // `qty` premiers) plutôt qu'un seul emoji répété pour tout le cadeau.
-    // Si qty dépasse la taille du pool (peu probable), on boucle dessus.
-    const shuffledEmoji = [...FOOD_EMOJI_POOL].sort(() => Math.random() - 0.5);
-    const foodIds = [];
-    let firstEmoji = null;
-    for (let i = 0; i < qty; i++) {
-      const emoji = shuffledEmoji[i % shuffledEmoji.length];
-      if (i === 0) firstEmoji = emoji;
-      const food = {
-        id: uidTama(),
-        emoji,
-        total: value,
-        remaining: value,
-        x: 12 + Math.random() * 76,
-        y: 18 + Math.random() * 64,
-        eatenBy: null,
-        createdAt: new Date().toISOString(),
-      };
-      tamaState.foods.push(food);
-      foodIds.push(food.id);
-    }
-    saveTamaState();
-    return { type: "food", emoji: firstEmoji, qty, value, foodIds };
-  }
-
-  /** Ouvre un cadeau de la pile "à ouvrir" (page Tamagotchi uniquement). */
-  function openPendingTamaGift(giftId) {
-    const idx = tamaState.pendingGifts.findIndex((g) => g.id === giftId);
-    if (idx < 0) return null;
-    tamaState.pendingGifts.splice(idx, 1);
-    const result = resolveTamaGift();
-    saveTamaState();
-    if (Sync.isConfigured()) pushTamaBlob();
-    return result;
-  }
-
-  /** Objectif-cadeau en cours pour une matière : une seule ligne à
-   *  franchir, fixée à 80% de la barre la plus haute au moment où elle est
-   *  tracée. `goalBuckets` doit couvrir au moins 16 jours (voir
-   *  renderReviewChart), indépendamment du zoom actuellement affiché, pour
-   *  que le seuil ne dépende pas de l'échelle regardée sur le moment. */
-  function ensureSubjectGoal(subjectId, goalBuckets) {
-    if (tamaGoals[subjectId]) return tamaGoals[subjectId];
-    const max = Math.max(0, ...goalBuckets.map((b) => b.count));
-    // Arrondi au plus proche (et non systématiquement arrondi en dessous) :
-    // demandé pour que le seuil affiché corresponde vraiment à "80%",
-    // plutôt qu'à "80% ou un peu moins".
-    const threshold = Math.max(0, Math.round(max * 0.8));
-    // `max` est conservé en plus de `threshold` : il sert à positionner la
-    // ligne d'objectif visuellement à 80% de la hauteur RENDUE de la barre
-    // la plus haute (voir renderHistogramInto), plutôt qu'à 80% de l'échelle
-    // arrondie du graphique (qui donnait une ligne bien plus basse que 80%,
-    // ex. 50% de hauteur pour un maximum de 7 fiches).
-    const goal = { threshold, max, createdAt: new Date().toISOString() };
-    tamaGoals[subjectId] = goal;
-    saveTamaGoals();
-    return goal;
-  }
-
-  /** Récolte l'objectif atteint pour une matière : il part dans la pile "à
-   *  ouvrir" du Tamagotchi, et un nouvel objectif est immédiatement
-   *  recalculé (nouvelle ligne à 80% du nouveau maximum). */
-  function collectSubjectGoal(subjectId) {
-    if (!tamaGoals[subjectId]) return;
-    delete tamaGoals[subjectId];
-    saveTamaGoals();
-    tamaState.pendingGifts.push({ id: uidTama(), source: "goal", createdAt: new Date().toISOString() });
-    tamaState.lastGiftCollectedDate = todayISODate();
-    saveTamaState();
-    if (Sync.isConfigured()) pushTamaBlob();
-    refreshTamaTabIcon();
-  }
-
-  /** Cadeau bonus quand la file du jour tombe à zéro pour la matière en
-   *  cours — une seule fois par jour et par matière. */
-  function maybeGrantZeroDueBonus(subjectId, dueTodayCount) {
-    if (dueTodayCount !== 0) return;
-    const today = todayISODate();
-    if (tamaState.zeroBonusGivenDates[subjectId] === today) return;
-    tamaState.zeroBonusGivenDates[subjectId] = today;
-    tamaState.pendingGifts.push({ id: uidTama(), source: "zero-bonus", createdAt: new Date().toISOString() });
-    tamaState.lastGiftCollectedDate = today;
-    saveTamaState();
-    if (Sync.isConfigured()) pushTamaBlob();
-    refreshTamaTabIcon();
-  }
-
-  /** Un objectif est-il actuellement atteint et prêt à être récolté, dans le
-   *  graphique actuellement affiché ? Mis à jour à chaque rendu du mini
-   *  histogramme de la page Réviser ; sert au petit point de notification
-   *  sur l'onglet Tamagotchi (avec la pile de cadeaux en attente). */
-  let reviewChartHasReadyGoal = false;
-
-  /** L'icône de l'onglet Tamagotchi fait double usage : elle affiche
-   *  l'humeur du compagnon qui va le moins bien (comme l'ancien bouton du
-   *  header, retiré), sauf s'il y a un cadeau en attente — auquel cas
-   *  celui-ci prend la priorité, pour rester bien visible. */
-  function refreshTamaTabIcon() {
-    const iconEl = el("tab-tamagotchi-icon");
-    const pending = (tamaState.pendingGifts || []).length;
-    if (iconEl) {
-      if (pending > 0) {
-        iconEl.textContent = "🎁";
-      } else {
-        const worst = [...tamaState.pets]
-          .filter((p) => p.stage !== "broken")
-          .sort((a, b) => tamaPetLifeFraction(a) - tamaPetLifeFraction(b))[0];
-        iconEl.textContent = worst ? tamaPetDisplayEmoji(worst) : "🥚";
-      }
-    }
-    const tabEl = el("tab-tamagotchi");
-    if (tabEl) {
-      tabEl.classList.toggle("has-pending-gift", pending > 0);
-      tabEl.title = pending > 0 ? "Un cadeau t'attend !" : "Humeur du compagnon";
-    }
-  }
-
-  /* ---------------------------------------------------------
-     Synchro multi-appareils de l'état du foyer (compagnons, trophées, pile
-     à ouvrir + objectifs regroupés dans un seul blob JSON, sync.js).
-  --------------------------------------------------------- */
-  function mergeTamaGoals(remoteGoals) {
-    let changed = false;
-    for (const [key, remote] of Object.entries(sanitizeTamaGoals(remoteGoals))) {
-      if (!tamaGoals[key]) {
-        tamaGoals[key] = remote;
-        changed = true;
-      }
-    }
-    if (changed) saveTamaGoals();
-    return changed;
-  }
-
-  /** Réglages persistés localement (jours de rattrapage, mode "encore",
-   *  jours avant hibernation, valeur nutritive / quantité des cadeaux) :
-   *  embarqués dans le même blob que le foyer Tamagotchi pour voyager d'un
-   *  appareil à l'autre — et donc survivre à un changement d'hébergement/URL
-   *  entre deux versions livrées, pas seulement au localStorage d'un
-   *  appareil. */
-  function collectAppSettings() {
-    return {
-      bonusDays: bonusDaysSettings,
-      bonusAgainMode,
-      hibernateDays,
-      foodValue: getFoodValue(),
-      giftQtyMin: getGiftQtyMin(),
-      giftQtyMax: getGiftQtyMax(),
-      penColor: getPenColor(),
-      updatedAt: getAppSettingsTimestamp(),
-    };
-  }
-
-  function applyAppSettings(settings) {
-    if (!settings) return;
-    if (settings.bonusDays) {
-      bonusDaysSettings = settings.bonusDays;
-      localStorage.setItem(BONUS_DAYS_KEY, JSON.stringify(bonusDaysSettings));
-    }
-    if (settings.bonusAgainMode) {
-      bonusAgainMode = settings.bonusAgainMode;
-      localStorage.setItem(BONUS_AGAIN_MODE_KEY, bonusAgainMode);
-    }
-    if (Number.isFinite(settings.hibernateDays)) {
-      hibernateDays = clampHibernateDays(settings.hibernateDays, DEFAULT_HIBERNATE_DAYS);
-      localStorage.setItem(HIBERNATE_DAYS_KEY, String(hibernateDays));
-    }
-    if (Number.isFinite(settings.foodValue)) localStorage.setItem(TAMA_FOOD_VALUE_KEY, String(settings.foodValue));
-    if (Number.isFinite(settings.giftQtyMin)) localStorage.setItem(TAMA_GIFT_QTY_MIN_KEY, String(settings.giftQtyMin));
-    if (Number.isFinite(settings.giftQtyMax)) localStorage.setItem(TAMA_GIFT_QTY_MAX_KEY, String(settings.giftQtyMax));
-    if (settings.penColor) {
-      localStorage.setItem(TAMA_PEN_COLOR_KEY, settings.penColor);
-      applyPenColor();
-      renderPenColorSwatches();
-    }
-    if (settings.updatedAt) localStorage.setItem(APP_SETTINGS_TS_KEY, settings.updatedAt);
-    renderSettingsView();
-  }
-
-  /** Vrai tant que cet appareil n'a jamais terminé de premier tirage
-   *  ("pull") réussi de l'état distant. Sert de garde-fou au tout premier
-   *  branchement de la synchro sur un appareil neuf (ou après effacement
-   *  des données) : dans ce cas précis, on adopte TOUJOURS l'état distant
-   *  tel quel, sans comparaison de date — un foyer local qui vient d'être
-   *  créé localement (donc sans aucun historique réel) ne doit jamais
-   *  pouvoir "gagner" face à une vraie progression déjà synchronisée,
-   *  même si son horodatage local paraît plus récent. C'est précisément
-   *  ce qui provoquait la remise à zéro constatée en connectant un second
-   *  appareil : le foyer flambant neuf du second appareil écrasait le
-   *  foyer distant, qui écrasait ensuite le premier appareil à son tour. */
-  const TAMA_SYNCED_ONCE_KEY = "fiches_tama_synced_once";
-
-  async function pushTamaBlob() {
-    if (!Sync.isConfigured()) return false;
-    return Sync.pushTamaState({ pet: tamaState, goals: tamaGoals, settings: collectAppSettings() });
-  }
-
-  /** La simulation du foyer (déplacement, faim qui décroît, repas...) tourne
-   *  en continu toutes les 220ms (TAMA_TICK_MS) — pousser un blob complet à
-   *  chaque changement inonderait Supabase et gênerait la synchro des
-   *  fiches. `saveTamaState()` seul écrit en local à chaque tick, mais
-   *  jusqu'ici RIEN ne renvoyait ensuite ces changements vers le serveur :
-   *  décroissance de vie et repas ne se propageaient donc jamais à un autre
-   *  appareil (seuls les cadeaux ouverts et les réglages déclenchaient un
-   *  envoi). On regroupe donc les changements et on envoie au plus une fois
-   *  toutes les quelques secondes. */
-  const TAMA_PUSH_THROTTLE_MS = 6000;
-  let tamaPushTimer = null;
-  let tamaPushPending = false;
-  function scheduleTamaPush() {
-    if (!Sync.isConfigured()) return;
-    tamaPushPending = true;
-    if (tamaPushTimer) return; // déjà programmé, se déclenchera bientôt
-    tamaPushTimer = setTimeout(() => {
-      tamaPushTimer = null;
-      if (tamaPushPending) {
-        tamaPushPending = false;
-        pushTamaBlob();
-      }
-    }, TAMA_PUSH_THROTTLE_MS);
-  }
-  /** Envoie immédiatement s'il y a un changement en attente (ex. : la page
-   *  passe en arrière-plan) plutôt que d'attendre le prochain palier —
-   *  évite de perdre les toutes dernières secondes de simulation. */
-  function flushTamaPush() {
-    if (tamaPushTimer) {
-      clearTimeout(tamaPushTimer);
-      tamaPushTimer = null;
-    }
-    if (tamaPushPending) {
-      tamaPushPending = false;
-      pushTamaBlob();
-    }
-  }
-
-  async function pullAndMergeTama() {
-    if (!Sync.isConfigured()) return;
-    const remote = await Sync.pullTamaState();
-    const firstSyncOnThisDevice = !localStorage.getItem(TAMA_SYNCED_ONCE_KEY);
-
-    if (remote) {
-      mergeTamaGoals(remote.goals);
-      // État du foyer : on garde le plus récemment mis à jour dans son
-      // ensemble (compagnons + compteurs forment un tout cohérent, les
-      // fusionner champ à champ donnerait un état incohérent) — sauf lors
-      // du tout premier branchement sur cet appareil, où le distant gagne
-      // toujours (voir note ci-dessus).
-      const adoptRemotePet =
-        firstSyncOnThisDevice ||
-        new Date(remote.pet && remote.pet.updatedAt || 0) > new Date(tamaState.updatedAt || 0);
-      if (remote.pet && adoptRemotePet) {
-        tamaState = remote.pet;
-        if (!tamaState.foods) tamaState.foods = [];
-        if (!tamaState.memorial) tamaState.memorial = [];
-        saveTamaState();
-      }
-      // Réglages : même logique.
-      if (remote.settings) {
-        const adoptRemoteSettings =
-          firstSyncOnThisDevice ||
-          new Date(remote.settings.updatedAt || 0) > new Date(getAppSettingsTimestamp());
-        if (adoptRemoteSettings) applyAppSettings(remote.settings);
-      }
-    }
-
-    localStorage.setItem(TAMA_SYNCED_ONCE_KEY, "1");
-    await pushTamaBlob();
-  }
-
   const exportBtn = el("export-btn");
   const importInput = el("import-input");
   const importTargetSelect = el("import-target-select");
 
-  const subjectSelectEl = el("subject-select");
-  const addSubjectBtn = el("add-subject-btn");
-  const manageAddSubjectBtn = el("manage-add-subject-btn");
+
   const subjectListEl = el("subject-list");
+  const subjectBarCountEl = el("subject-bar-count");
 
   const uid = () =>
     `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
@@ -1363,6 +2126,8 @@
       reviewCount: 0,
       updatedAt: now,
       deleted: false,
+      // Chantier (item 16) : fiche marquée à corriger/compléter plus tard.
+      underConstruction: false,
       // Nouvel algorithme (remplace SM-2) : échéance initiale = 1 jour, non
       // arrondie (voir computeAlgoNext / currentDeadlineRaw).
       interval: 1,
@@ -1371,33 +2136,238 @@
   }
 
   /* ---------------------------------------------------------
-     Matières (subjects)
+     Boîtes (subjects) et dossiers (folders) — item 1 : arborescence
   --------------------------------------------------------- */
-  function newSubject(name) {
+  /** @type {Array<{id:string,name:string,parentId:string|null,createdAt:string,updatedAt:string}>} */
+  let folders = [];
+  const ROOT_FOLDER_ID = null;
+
+  function newFolder(name, parentId) {
     const now = new Date().toISOString();
-    return { id: uid(), name: name.trim(), createdAt: now, updatedAt: now };
+    return { id: uid(), name: name.trim(), parentId: parentId || ROOT_FOLDER_ID, createdAt: now, updatedAt: now };
+  }
+
+  function newSubject(name, folderId) {
+    const now = new Date().toISOString();
+    return { id: uid(), name: name.trim(), folderId: folderId || ROOT_FOLDER_ID, createdAt: now, updatedAt: now };
+  }
+
+  /** Tous les descendants (sous-dossiers, à tous les niveaux) d'un dossier. */
+  function folderDescendantIds(folderId) {
+    const out = [];
+    const stack = [folderId];
+    // Garde-fou (bug corrigé) : si un cycle de dossiers existe jamais
+    // (ex. via une fusion de synchro malheureuse — deux appareils qui
+    // déplacent des dossiers l'un dans l'autre en même temps), cette
+    // boucle tournait à l'infini et figeait l'appli. "visited" empêche de
+    // retraiter deux fois le même dossier, cycle ou pas.
+    const visited = new Set();
+    while (stack.length) {
+      const id = stack.pop();
+      if (visited.has(id)) continue;
+      visited.add(id);
+      folders.forEach((f) => {
+        if (f.parentId === id && !visited.has(f.id)) {
+          out.push(f.id);
+          stack.push(f.id);
+        }
+      });
+    }
+    return out;
+  }
+
+  /** Identifiants de toutes les boîtes contenues dans un dossier, y
+   *  compris dans ses sous-dossiers à n'importe quelle profondeur. */
+  function subjectIdsInFolder(folderId) {
+    const ids = new Set([folderId, ...folderDescendantIds(folderId)]);
+    return subjects.filter((s) => ids.has(s.folderId)).map((s) => s.id);
+  }
+
+  /* ---------------------------------------------------------
+     Item 1 : fusion dossier / boîte. On ne crée plus que des dossiers —
+     un dossier VIDE devient automatiquement une boîte dès qu'on y ajoute
+     une première fiche, et inversement redevient un dossier dès que sa
+     dernière fiche est supprimée. Pour rester à faible risque (ne pas
+     toucher à la programmation des révisions ni à la synchro, qui
+     reposent sur les boîtes existantes), une boîte "née" de cette façon
+     PARTAGE le même identifiant que son dossier (deux enregistrements
+     distincts — un dossier, une boîte — juste avec le même id) plutôt que
+     d'être une nouvelle entité à part. Les boîtes créées avant cet item
+     restent des entités indépendantes classiques ; les deux cohabitent
+     sans souci, chacune reconnue différemment (voir folderSelfSubject).
+  --------------------------------------------------------- */
+  /** La boîte "auto-liée" à ce dossier (même id), si elle existe. */
+  function folderSelfSubject(folderId) {
+    return subjects.find((s) => s.id === folderId) || null;
+  }
+  /** Ce dossier est-il actuellement affiché comme une boîte (a une boîte
+   *  auto-liée ET au moins une fiche) ? */
+  function isFolderABoite(folderId) {
+    const s = folderSelfSubject(folderId);
+    if (!s) return false;
+    return cards.some((c) => !c.deleted && c.subject === s.id);
+  }
+  /** Un dossier est "vide" (éligible pour devenir une boîte) s'il n'a NI
+   *  sous-dossier NI boîte parmi ses enfants directs. */
+  function folderIsEmpty(folderId) {
+    const hasSubFolders = folders.some((f) => f.parentId === folderId);
+    const hasSubjectChildren = subjects.some((s) => s.folderId === folderId && !folders.some((f) => f.id === s.id));
+    return !hasSubFolders && !hasSubjectChildren;
+  }
+  /** Crée (si besoin) la boîte auto-liée à un dossier vide, prête à
+   *  recevoir des fiches — c'est cet appel qui fait "devenir boîte" un
+   *  dossier au sens de l'item 1. */
+  async function ensureFolderIsBoite(folderId) {
+    const existing = folderSelfSubject(folderId);
+    if (existing) return existing;
+    const f = folders.find((x) => x.id === folderId);
+    if (!f) return null;
+    const now = new Date().toISOString();
+    const s = { id: f.id, name: f.name, folderId: f.parentId, createdAt: now, updatedAt: now };
+    await persistSubject(s);
+    subjects.push(s);
+    return s;
+  }
+  /** Après suppression/déplacement d'une fiche : si la boîte concernée
+   *  est une boîte auto-liée et n'a plus aucune fiche, on la supprime pour
+   *  que son dossier redevienne un dossier normal (item 1, dernier point).
+   *  Ne touche jamais aux boîtes "classiques" (créées avant cet item),
+   *  qui peuvent rester vides sans redevenir quoi que ce soit d'autre. */
+  async function revertFolderIfBoiteEmptied(subjectId) {
+    const isSelfLinked = folders.some((f) => f.id === subjectId);
+    if (!isSelfLinked) return;
+    const stillHasCards = cards.some((c) => !c.deleted && c.subject === subjectId);
+    if (stillHasCards) return;
+    const idx = subjects.findIndex((s) => s.id === subjectId);
+    if (idx === -1) return;
+    const s = subjects[idx];
+    subjects.splice(idx, 1);
+    await DB.removeSubject(subjectId);
+    await pushSubjectDeleted(s);
+    if (currentSubjectId === subjectId && subjects.length > 0) {
+      currentSubjectId = subjects[0].id;
+      localStorage.setItem(CURRENT_SUBJECT_KEY, currentSubjectId);
+    }
+  }
+
+  /** Score moyen d'une boîte (item 2) : moyenne des scores de ses fiches
+   *  (non supprimées). null si la boîte n'a aucune fiche — pas de score
+   *  à afficher dans ce cas plutôt qu'un 0% trompeur. */
+  function computeSubjectScore(subjectId) {
+    const own = cards.filter((c) => !c.deleted && c.subject === subjectId);
+    if (own.length === 0) return null;
+    const sum = own.reduce((acc, c) => acc + computeCardScore(c), 0);
+    return Math.round(sum / own.length);
+  }
+
+  /** Score moyen d'un dossier (item 2) : moyenne des scores de TOUTES les
+   *  fiches des boîtes qu'il contient, y compris dans ses sous-dossiers
+   *  — pas une moyenne des scores de boîtes (ce qui pondérerait à tort
+   *  une boîte à 2 fiches autant qu'une à 200). */
+  function computeFolderScore(folderId) {
+    const subjectIds = subjectIdsInFolder(folderId);
+    const own = cards.filter((c) => !c.deleted && subjectIds.includes(c.subject));
+    if (own.length === 0) return null;
+    const sum = own.reduce((acc, c) => acc + computeCardScore(c), 0);
+    return Math.round(sum / own.length);
+  }
+
+  /** Lit le résultat RÉEL d'un picker multi-boîtes/dossiers (bug corrigé
+   *  — items 2/4) : jusqu'ici, le résultat final était recalculé en
+   *  ré-étendant chaque dossier COCHÉ à toutes ses boîtes, ignorant
+   *  silencieusement toute boîte qu'on avait décochée individuellement à
+   *  l'intérieur — décocher une boîte précise pendant qu'un dossier
+   *  reste coché n'avait donc AUCUN effet. La seule source de vérité est
+   *  maintenant l'état réel de CHAQUE case à cocher "boîte" (déjà
+   *  répercuté correctement par la cascade dossier -> descendants) ; les
+   *  dossiers cochés ne servent plus qu'à décider l'AFFICHAGE (le nom du
+   *  dossier si sa sélection correspond exactement à tout son contenu). */
+  function readMultiPickerResult(list) {
+    const resultIds = [...list.querySelectorAll('input[data-kind="subject"]:checked')].map((cb) => cb.value);
+    const checkedFolders = [...list.querySelectorAll('input[data-kind="folder"]:checked')];
+    let label = "";
+    // Bug corrigé (item 2) : un dossier qui ne contient qu'UNE seule boîte
+    // tombait dans le cas "une seule boîte cochée" ci-dessous AVANT même
+    // d'être reconnu comme un dossier — le sélecteur affichait alors le
+    // nom de la boîte à l'intérieur plutôt que celui du dossier choisi.
+    // Il faut donc vérifier le dossier D'ABORD.
+    if (checkedFolders.length === 1) {
+      const folderSubjectIds = subjectIdsInFolder(checkedFolders[0].value);
+      const matchesExactly =
+        resultIds.length === folderSubjectIds.length && folderSubjectIds.every((id) => resultIds.includes(id));
+      if (matchesExactly) {
+        const f = folders.find((x) => x.id === checkedFolders[0].value);
+        label = f ? f.name : "";
+      }
+    }
+    if (!label && resultIds.length === 1) {
+      label = null; // signale "une seule boîte" à l'appelant (bascule directe)
+    }
+    return { resultIds, singleSubjectId: resultIds.length === 1 && label === null ? resultIds[0] : null, label };
+  }
+
+  /** Un dossier ne peut être supprimé que s'il est vide (item 1) : ni
+   *  sous-dossier, ni boîte directement dedans. */
+  function folderIsEmpty(folderId) {
+    return (
+      !folders.some((f) => f.parentId === folderId) &&
+      !subjects.some((s) => s.folderId === folderId)
+    );
   }
 
   function subjectName(id) {
+    if (id === ALL_SUBJECTS_ID) return "Toutes les boîtes";
+    if (id === MULTI_SUBJECTS_ID) {
+      // Item 18 : le nom du dossier si un seul dossier a été sélectionné,
+      // sinon le libellé générique.
+      return loadMultiSelectionLabel() || "Sélection de boîtes";
+    }
     const s = subjects.find((x) => x.id === id);
-    return s ? s.name : "Matière inconnue";
+    return s ? s.name : "Boîte inconnue";
   }
 
-  /** Exposé pour que sync.js puisse dénormaliser le nom de la matière sur chaque ligne envoyée. */
+  /** Affiche la question d'une fiche — précédée de "Nom de la boîte :" +
+   *  deux sauts de ligne UNIQUEMENT quand on révise plusieurs boîtes
+   *  confondues (item 2) : ça n'a pas d'intérêt quand une seule boîte est
+   *  affichée à la fois, et ça ne doit jamais apparaître côté réponse.
+   *  Rafraîchit aussi le bouton mode d'apprentissage sur CETTE fiche
+   *  précise (sa propre boîte), pas sur la sélection globale — utile en
+   *  mode "toutes boîtes"/"sélection", où chaque fiche peut appartenir à
+   *  une boîte différente avec son propre mode. */
+  function renderQuestionText(card) {
+    if (!card) return;
+    // Le préfixe "Nom de la boîte :" reste toujours en texte échappé (pas
+    // question qu'un nom de boîte contenant "<" casse l'affichage) ; la
+    // question elle-même passe par toDisplayHtml (item 13 : contenu riche).
+    questionTextEl.innerHTML = isSentinelSubject(currentSubjectId)
+      ? `<strong class="card-subject-hint">${escapeHtml(subjectName(card.subject))}</strong><br><br>${toDisplayHtml(card.question)}`
+      : toDisplayHtml(card.question);
+    renderSubjectAlgoBadge(card.subject);
+    const constructionBtn = el("construction-current-btn");
+    if (constructionBtn) {
+      constructionBtn.hidden = false;
+      constructionBtn.classList.toggle("is-active-construction", !!card.underConstruction);
+    }
+  }
+
+  /** Exposé pour que sync.js puisse dénormaliser le nom de la boîte sur chaque ligne envoyée. */
   window.getSubjectName = subjectName;
 
-  /** Charge les matières depuis IndexedDB ; en crée une par défaut si aucune n'existe encore. */
+  /** Charge les boîtes depuis IndexedDB ; en crée une par défaut si aucune n'existe encore. */
   async function loadSubjects() {
     subjects = await DB.getAllSubjects();
+    folders = await DB.getAllFolders();
+    subjects.forEach((s) => { if (s.folderId === undefined) s.folderId = ROOT_FOLDER_ID; });
     if (subjects.length === 0) {
       const general = newSubject("Général");
-      await DB.putSubject(general);
+      await persistSubject(general);
       subjects = [general];
     }
+    await migrateSubjectModesIfNeeded();
     subjects.sort((a, b) => a.name.localeCompare(b.name, "fr"));
 
     const saved = localStorage.getItem(CURRENT_SUBJECT_KEY);
-    if (saved && subjects.some((s) => s.id === saved)) {
+    if (saved && (isSentinelSubject(saved) || subjects.some((s) => s.id === saved))) {
       currentSubjectId = saved;
     } else {
       currentSubjectId = subjects[0].id;
@@ -1405,9 +2375,9 @@
     }
   }
 
-  /** Fiches créées avant l'introduction des matières (ou reçues d'un vieil export) :
-   *  on les rattache à une matière fixe et déterministe (la première par ordre
-   *  alphabétique) plutôt qu'à "la matière actuellement affichée", qui peut varier
+  /** Fiches créées avant l'introduction des boîtes (ou reçues d'un vieil export) :
+   *  on les rattache à une boîte fixe et déterministe (la première par ordre
+   *  alphabétique) plutôt qu'à "la boîte actuellement affichée", qui peut varier
    *  d'un appareil à l'autre et provoquer des reclassements imprévisibles lors
    *  de la synchronisation. */
   async function migrateOrphanCards() {
@@ -1422,11 +2392,11 @@
     }
   }
 
-  /** Nettoyage ponctuel (exécuté à chaque démarrage) : fusionne les matières
+  /** Nettoyage ponctuel (exécuté à chaque démarrage) : fusionne les boîtes
    *  strictement homonymes lorsque certaines n'ont aucune fiche — séquelle du
-   *  bug de synchronisation ci-dessus, qui pouvait laisser une matière
+   *  bug de synchronisation ci-dessus, qui pouvait laisser une boîte
    *  "Général" fantôme et vide sur un appareil après une synchro. On ne
-   *  touche jamais à une matière qui contient des fiches. */
+   *  touche jamais à une boîte qui contient des fiches. */
   async function dedupeEmptySubjects() {
     const byName = new Map();
     for (const s of subjects) {
@@ -1458,11 +2428,24 @@
           `<option value="${s.id}" ${s.id === currentSubjectId ? "selected" : ""}>${escapeHtml(s.name)}</option>`
       )
       .join("");
-    subjectSelectEl.innerHTML = opts;
+    // Réviser (item 18) : le bouton affiche le nom courant (boîte,
+    // dossier, "Toutes les boîtes" ou "Sélection de boîtes") — plus de
+    // liste déroulante native listant chaque boîte une par une, voir le
+    // menu à 3 choix (#subject-choice-menu) ouvert au clic.
+    if (subjectSelectBtn) subjectSelectBtn.textContent = subjectName(currentSubjectId);
+    // Second sélecteur, en tête de la page Fiches (item 2) : boîtes
+    // réelles uniquement (pas de dossier ni de mode "toutes boîtes"),
+    // même mise en forme que les autres boutons de sélection mais choix
+    // unique direct (pas de "toutes"/"sélection", ça n'aurait pas de sens
+    // pour la boîte où atterrit une nouvelle fiche).
+    const cardsSubjectSelectBtnEl = el("cards-subject-select-btn");
+    if (cardsSubjectSelectBtnEl) {
+      cardsSubjectSelectBtnEl.textContent = newCardSubjectId ? subjectName(newCardSubjectId) : "Sélection de la boîte";
+    }
 
-    // Le sélecteur d'import propose en plus la création d'une nouvelle matière à la volée.
+    // Le sélecteur d'import propose en plus la création d'une nouvelle boîte à la volée.
     const importOpts =
-      opts + `<option value="__new__">+ Nouvelle matière…</option>`;
+      opts + `<option value="__new__">+ Nouvelle boîte…</option>`;
     const prevImportTarget = importTargetSelect.value || currentSubjectId;
     importTargetSelect.innerHTML = importOpts;
     if ([...importTargetSelect.options].some((o) => o.value === prevImportTarget)) {
@@ -1470,6 +2453,8 @@
     } else {
       importTargetSelect.value = currentSubjectId;
     }
+
+    renderExportSubjectSelect();
   }
 
   function escapeHtml(str) {
@@ -1478,145 +2463,1051 @@
     return div.innerHTML;
   }
 
+  /** Mise en forme riche (item 13) : question/réponse sont désormais du
+   *  HTML (produit par les champs contenteditable), pas du texte brut.
+   *  `toDisplayHtml` protège la compatibilité avec les fiches créées AVANT
+   *  ce changement — leur contenu, du texte brut, pourrait contenir des
+   *  caractères spéciaux HTML ("<", "&"...) qui casseraient l'affichage
+   *  s'ils étaient interprétés tels quels. Détecte si le contenu ressemble
+   *  déjà à du HTML volontaire (balises reconnues) ; sinon l'échappe et
+   *  convertit ses retours à la ligne en <br>. */
+  function looksLikeHtml(str) {
+    return /<\/?(b|i|u|s|strong|em|span|br|div|mark|font)\b/i.test(str || "");
+  }
+  function toDisplayHtml(raw) {
+    if (!raw) return "";
+    if (looksLikeHtml(raw)) return raw;
+    return escapeHtml(raw).replace(/\n/g, "<br>");
+  }
+  /** Texte brut d'un contenu HTML — pour l'export en clair et la
+   *  vérification "champ vide", jamais pour l'affichage. */
+  function stripHtml(html) {
+    const div = document.createElement("div");
+    div.innerHTML = html || "";
+    return div.textContent || "";
+  }
+  /** Version rapide (regex, sans toucher au DOM) du même besoin, réservée
+   *  au filtrage de recherche (item 10) : `stripHtml` recréait un élément
+   *  DOM pour CHAQUE fiche à CHAQUE frappe, perceptible comme un
+   *  ralentissement dès que la boîte contient beaucoup de fiches. Le
+   *  décodage d'entités reste volontairement sommaire — largement
+   *  suffisant pour un filtre de recherche. */
+  function stripHtmlFast(html) {
+    if (!html) return "";
+    return html
+      .replace(/<[^>]*>/g, " ")
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'");
+  }
+  function isRichEditorEmpty(el) {
+    return !el || stripHtml(el.innerHTML).trim() === "";
+  }
+
+  function folderPath(folderId) {
+    const path = [];
+    let cur = folderId;
+    // Même garde-fou anti-cycle qu'au-dessus (bug corrigé — c'est CETTE
+    // fonction précisément qui figeait l'appli sur la page Fiches : elle
+    // est appelée pour CHAQUE dossier à chaque fois que le sélecteur de
+    // périmètre de recherche se redessine).
+    const visited = new Set();
+    while (cur && !visited.has(cur)) {
+      visited.add(cur);
+      const f = folders.find((x) => x.id === cur);
+      if (!f) break;
+      path.unshift(f);
+      cur = f.parentId;
+    }
+    return path;
+  }
+
+  /** Rendu en arborescence avec indentation, mais repliable (item 8) : un
+   *  compromis entre le picker toujours déplié (peu lisible dès qu'il y a
+   *  plusieurs niveaux) et la navigation dossier par dossier d'avant (un
+   *  clic pour "entrer", rien vu d'autre à la fois) — les dossiers sont
+   *  repliés par défaut, un clic sur leur nom les déplie ou replie sur
+   *  place, sans changer de page. Les nouvelles boîtes/dossiers sont
+   *  créés à la racine (déplaçables ensuite via ↔️). */
+  const expandedManageFolders = new Set();
+
   function renderSubjectManageList() {
     subjectListEl.innerHTML = "";
-    for (const s of subjects) {
+    renderTreeLevel(ROOT_FOLDER_ID, 0, subjectListEl);
+    if (folders.length === 0 && subjects.length === 0) {
+      const empty = document.createElement("p");
+      empty.className = "field-hint";
+      empty.textContent = "Aucune boîte pour l'instant.";
+      subjectListEl.appendChild(empty);
+    }
+    // Item 4 (dernier lot) : les blocs enfants restent visuellement
+    // contenus dans leur parent (légèrement plus étroits, en particulier
+    // à droite) — ce calcul recale juste l'emplacement nombre/mode/jauge
+    // de chaque ligne pour qu'il tombe pile à la même position partout,
+    // sans avoir à sacrifier cet effet de blocs imbriqués.
+    requestAnimationFrame(alignOrgInfoSlots);
+  }
+
+  function alignOrgInfoSlots() {
+    if (!subjectListEl) return;
+    const rootRight = subjectListEl.getBoundingClientRect().right;
+    subjectListEl.querySelectorAll(".org-info-slot").forEach((slot) => {
+      slot.style.marginRight = "0px";
+      const rowMain = slot.closest(".org-row-main");
+      if (!rowMain) return;
+      const diff = rootRight - rowMain.getBoundingClientRect().right;
+      if (diff > 0.5) slot.style.marginRight = `-${diff.toFixed(1)}px`;
+    });
+  }
+
+  /** Icône sobre pour un des 3 boutons d'action de l'Organisation, reprend
+   *  le même principe que getIconMarkupFor : reste en émoticône si jamais
+   *  personnalisée en tant que telle, sinon SVG de la banque. */
+  function orgIconMarkup(key) {
+    const iconId = loadDevSettings().orgIconBank[key];
+    if (iconId && ICON_LIBRARY[iconId]) return iconSvgMarkup(iconId, "icon-inline-svg");
+    return escapeHtml(DEFAULT_ORG_ICON_BANK_CHOICES[key] || "");
+  }
+
+  // Ferme n'importe quel popover d'actions ouvert (item 4) quand on clique
+  // ailleurs, ou avant d'en ouvrir un autre.
+  function closeAllOrgActionPopovers() {
+    document.querySelectorAll(".org-actions-popover").forEach((p) => (p.hidden = true));
+  }
+  document.addEventListener("pointerdown", (e) => {
+    if (e.target.closest(".org-deploy-btn") || e.target.closest(".org-actions-popover")) return;
+    closeAllOrgActionPopovers();
+  });
+
+  /** Ligne unique (item 4) pour un dossier ou une boîte : à gauche
+   *  triangle/flèche de dépli (dossiers), icône + nom, nombre de
+   *  fiches/boîtes ; à droite (de droite à gauche) le bouton de dépli des
+   *  actions (éditer/déplacer/supprimer, empilées verticalement dans un
+   *  petit panneau), la jauge (plus courte/fine), le picto du mode. */
+  function buildRowBody({ nameBtnEl, expandBtnEl, countLabel, score, mode, onRename, onMove, onDelete, onAlgo, deleteTitle }) {
+    const main = document.createElement("div");
+    main.className = "org-row-main";
+    if (expandBtnEl) {
+      expandBtnEl.classList.add("org-expand-btn");
+      main.appendChild(expandBtnEl);
+    }
+    main.appendChild(nameBtnEl);
+
+    const spacer = document.createElement("span");
+    spacer.className = "org-row-spacer";
+    main.appendChild(spacer);
+
+    // Item 4 (dernier lot) : le nombre, le mode et la jauge ne tiennent
+    // plus tous les trois à la fois — ils se relaient chacun leur tour,
+    // synchronisés sur toutes les lignes à la fois (voir orgCarouselSlot),
+    // pour laisser bien plus de place au nom du dossier/de la boîte.
+    const slot = document.createElement("span");
+    slot.className = "org-info-slot";
+
+    const countEl = document.createElement("span");
+    countEl.className = "org-info-slot-item org-count";
+    countEl.dataset.slot = "0";
+    countEl.textContent = countLabel;
+    slot.appendChild(countEl);
+
+    const algoWrap = document.createElement("span");
+    algoWrap.className = "org-info-slot-item";
+    algoWrap.dataset.slot = "1";
+    const algoBtn = document.createElement("button");
+    algoBtn.type = "button";
+    algoBtn.className = "subject-row-algo-btn subject-row-algo-btn--compact org-mode-icon";
+    algoBtn.innerHTML = iconSvgMarkup("gradCap", "icon-inline-svg");
+    algoBtn.title = `Mode d'apprentissage : ${modeDisplayName(mode)}`;
+    algoBtn.addEventListener("click", onAlgo);
+    applyModeBadgeStyle(algoBtn, mode);
+    algoWrap.appendChild(algoBtn);
+    slot.appendChild(algoWrap);
+
+    if (score !== null) {
+      const gaugeEl = document.createElement("span");
+      gaugeEl.className = "org-info-slot-item org-gauge-inline";
+      gaugeEl.dataset.slot = "2";
+      gaugeEl.innerHTML = buildLinearGaugeSvg(score, { width: 70, barHeight: 8, scoreFontSize: 11 });
+      slot.appendChild(gaugeEl);
+    }
+    main.appendChild(slot);
+
+    const deployBtn = document.createElement("button");
+    deployBtn.type = "button";
+    deployBtn.className = "org-deploy-btn";
+    deployBtn.title = "Actions";
+    deployBtn.innerHTML = iconSvgMarkup("chevronDown", "icon-inline-svg");
+    const popover = document.createElement("div");
+    popover.className = "org-actions-popover";
+    popover.hidden = true;
+    const renameBtn = document.createElement("button");
+    renameBtn.type = "button";
+    renameBtn.className = "org-actions-popover-item";
+    renameBtn.innerHTML = `${orgIconMarkup("orgRename")}<span>Éditer</span>`;
+    renameBtn.addEventListener("click", () => {
+      closeAllOrgActionPopovers();
+      onRename();
+    });
+    const moveBtn = document.createElement("button");
+    moveBtn.type = "button";
+    moveBtn.className = "org-actions-popover-item";
+    moveBtn.innerHTML = `${orgIconMarkup("orgMove")}<span>Déplacer</span>`;
+    moveBtn.addEventListener("click", () => {
+      closeAllOrgActionPopovers();
+      onMove();
+    });
+    const delBtn = document.createElement("button");
+    delBtn.type = "button";
+    delBtn.className = "org-actions-popover-item org-actions-popover-item--danger";
+    delBtn.innerHTML = `${orgIconMarkup("orgDelete")}<span>Supprimer</span>`;
+    delBtn.title = deleteTitle;
+    delBtn.addEventListener("click", () => {
+      closeAllOrgActionPopovers();
+      onDelete();
+    });
+    popover.appendChild(renameBtn);
+    popover.appendChild(moveBtn);
+    popover.appendChild(delBtn);
+    deployBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const willOpen = popover.hidden;
+      closeAllOrgActionPopovers();
+      popover.hidden = !willOpen;
+    });
+    main.appendChild(deployBtn);
+
+    const wrap = document.createElement("div");
+    wrap.className = "org-row-wrap";
+    wrap.appendChild(main);
+    wrap.appendChild(popover);
+    return wrap;
+  }
+
+  function renderTreeLevel(parentId, depth, container) {
+    const childFolders = folders
+      .filter((f) => f.parentId === parentId)
+      .sort((a, b) => a.name.localeCompare(b.name, "fr"));
+    // Item 1 : une boîte "auto-liée" (même id qu'un dossier) ne doit
+    // jamais être rendue ici comme boîte indépendante — c'est le dossier
+    // correspondant, plus bas, qui la représente.
+    const childSubjects = subjects
+      .filter((s) => s.folderId === parentId && !folders.some((f) => f.id === s.id))
+      .sort((a, b) => a.name.localeCompare(b.name, "fr"));
+
+    /** Ligne "boîte" (item 1) — utilisée aussi bien pour une boîte
+     *  classique (entité indépendante) que pour un dossier devenu boîte
+     *  (même id qu'une boîte auto-liée) : dans les deux cas, le nom, le
+     *  score, le mode et les actions viennent de l'ENTITÉ BOÎTE, mais une
+     *  boîte auto-liée supprime aussi son dossier associé. */
+    function appendBoiteRow(subjectId, displayName, isSelfLinkedFolder) {
       const li = document.createElement("li");
-      li.className = "subject-row" + (s.id === currentSubjectId ? " is-active" : "");
+      li.className = "subject-row" + (subjectId === currentSubjectId ? " is-active" : "");
 
       const nameBtn = document.createElement("button");
       nameBtn.type = "button";
       nameBtn.className = "subject-row-name";
-      nameBtn.textContent = s.name;
-      nameBtn.title = "Renommer";
-      nameBtn.addEventListener("click", () => renameSubject(s.id));
+      nameBtn.innerHTML = `${iconSvgMarkup("stackedSheets", "icon-inline-svg")} <span>${escapeHtml(displayName)}</span>`;
+      nameBtn.addEventListener("click", () => {
+        switchSubject(subjectId);
+        cardsScopeFilter = CARDS_SCOPE_CURRENT;
+        cardsEntryFromManage = true;
+        const tab = document.querySelector('.tab[data-view="cards"]');
+        if (tab) tab.click();
+      });
 
-      const count = document.createElement("span");
-      count.className = "subject-row-count";
-      const n = cards.filter((c) => !c.deleted && c.subject === s.id).length;
-      count.textContent = `${n} fiche${n > 1 ? "s" : ""}`;
+      const n = cards.filter((c) => !c.deleted && c.subject === subjectId).length;
+      const subjScore = computeSubjectScore(subjectId);
+      const body = buildRowBody({
+        nameBtnEl: nameBtn,
+        countLabel: `${n} fiche${n > 1 ? "s" : ""}`,
+        score: subjScore,
+        mode: getSubjectAlgoMode(subjectId),
+        onRename: () => (isSelfLinkedFolder ? renameFolder(subjectId) : renameSubject(subjectId)),
+        onMove: () => openMovePicker(isSelfLinkedFolder ? "folder" : "subject", subjectId),
+        onDelete: () => deleteSubject(subjectId),
+        onAlgo: () => openSubjectAlgoView(subjectId),
+        deleteTitle: "Supprimer cette boîte",
+      });
+      li.appendChild(body);
+      container.appendChild(li);
+    }
 
-      const actions = document.createElement("div");
-      actions.className = "row-actions";
+    childFolders.forEach((f) => {
+      // Item 1 : ce dossier a une fiche → il EST une boîte, rendu comme
+      // telle (nom, score, mode, actions de boîte) plutôt que comme
+      // dossier — jamais de sous-dossier ni de repli pour une boîte.
+      if (isFolderABoite(f.id)) {
+        appendBoiteRow(f.id, f.name, true);
+        return;
+      }
 
-      const algoBtn = document.createElement("button");
-      algoBtn.type = "button";
-      algoBtn.className = "icon-btn";
-      algoBtn.textContent = "🎓 mode";
-      algoBtn.title = "Mode d'apprentissage de cette matière";
-      algoBtn.addEventListener("click", () => openSubjectAlgoView(s.id));
+      const expanded = expandedManageFolders.has(f.id);
+      const li = document.createElement("li");
+      li.className = `subject-row folder-row folder-row-depth-${Math.min(depth, 3)}`;
 
-      const delBtn = document.createElement("button");
-      delBtn.type = "button";
-      delBtn.className = "icon-btn icon-btn--danger";
-      delBtn.textContent = "suppr.";
-      delBtn.addEventListener("click", () => deleteSubject(s.id));
+      // Item 4 : flèche de dépli plus grosse et épurée (banque d'icônes),
+      // à la place du triangle texte.
+      const expandBtn = document.createElement("button");
+      expandBtn.type = "button";
+      expandBtn.title = expanded ? "Replier ce dossier" : "Déplier ce dossier";
+      expandBtn.innerHTML = iconSvgMarkup(expanded ? "chevronDown" : "chevronRight", "icon-inline-svg");
+      expandBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (expandedManageFolders.has(f.id)) expandedManageFolders.delete(f.id);
+        else expandedManageFolders.add(f.id);
+        renderSubjectManageList();
+      });
 
-      actions.appendChild(algoBtn);
-      actions.appendChild(delBtn);
+      const nameBtn = document.createElement("button");
+      nameBtn.type = "button";
+      nameBtn.className = "subject-row-name";
+      nameBtn.title = "Voir les fiches de ce dossier";
+      nameBtn.innerHTML = `${iconSvgMarkup("folder", "icon-inline-svg")} <span>${escapeHtml(f.name)}</span>`;
+      nameBtn.addEventListener("click", () => {
+        cardsScopeFilter = `folder:${f.id}`;
+        cardsEntryFromManage = true;
+        renderManageList();
+        const tab = document.querySelector('.tab[data-view="cards"]');
+        if (tab) tab.click();
+      });
 
-      li.appendChild(nameBtn);
-      li.appendChild(count);
-      li.appendChild(actions);
-      subjectListEl.appendChild(li);
+      const childCount = folders.filter((x) => x.parentId === f.id).length + subjects.filter((x) => x.folderId === f.id).length;
+      // Item 5 : effet de pile quand ce dossier est replié ET n'est pas
+      // vide, pour montrer qu'il contient bien quelque chose en dessous.
+      if (!expanded && childCount > 0) li.classList.add("folder-row--stacked");
+
+      const n = subjectIdsInFolder(f.id).length;
+      const folderScore = computeFolderScore(f.id);
+      const body = buildRowBody({
+        nameBtnEl: nameBtn,
+        expandBtnEl: expandBtn,
+        countLabel: `${n} boîte${n > 1 ? "s" : ""}`,
+        score: folderScore,
+        mode: "normal",
+        onRename: () => renameFolder(f.id),
+        onMove: () => openMovePicker("folder", f.id),
+        onDelete: () => deleteFolder(f.id),
+        onAlgo: () => openAssignView("folder", f.id, "manage"),
+        deleteTitle: "Supprimer ce dossier (doit être vide)",
+      });
+      li.appendChild(body);
+
+      // Item 2 : les enfants sont maintenant imbriqués VISUELLEMENT dans le
+      // bloc du dossier parent (une <ul> nichée dedans), plutôt qu'une
+      // simple indentation à plat dans la même liste.
+      if (expanded) {
+        const childrenUl = document.createElement("ul");
+        childrenUl.className = "org-children";
+        li.appendChild(childrenUl);
+        renderTreeLevel(f.id, depth + 1, childrenUl);
+      }
+
+      container.appendChild(li);
+    });
+
+    for (const s of childSubjects) {
+      appendBoiteRow(s.id, s.name, false);
     }
   }
 
-  /* ---------------------------------------------------------
-     Vue "Mode d'apprentissage" (par matière, ouverte depuis Gérer)
-  --------------------------------------------------------- */
-  let algoEditingSubjectId = null;
 
-  function loadAlgoFormIntoInputs(settings) {
-    el("algo-ka").value = settings.Ka;
-    el("algo-kh").value = settings.Kh;
-    el("algo-kg").value = settings.Kg;
-    el("algo-ke").value = settings.Ke;
-    el("algo-ma").value = settings.Ma;
-    el("algo-mh").value = settings.Mh;
-    el("algo-mg").value = settings.Mg;
-    el("algo-me").value = settings.Me;
-    el("algo-mode-label").textContent = `Mode actuel : ${algoModeName(settings)}`;
+  /* ---------------------------------------------------------
+     Gestion des dossiers (créer, renommer, supprimer, déplacer) — item 1
+  --------------------------------------------------------- */
+  async function createFolderFlow() {
+    const name = prompt("Nom du nouveau dossier :");
+    if (!name || !name.trim()) return;
+    const folder = newFolder(name, ROOT_FOLDER_ID);
+    await persistFolder(folder);
+    folders.push(folder);
+    renderSubjectManageList();
+    // Item 8 : demande tout de suite où le ranger, plutôt que de le créer
+    // silencieusement à la racine en laissant l'utilisateur le déplacer
+    // ensuite lui-même via ↔️.
+    openMovePicker("folder", folder.id);
+  }
+
+  async function renameFolder(folderId) {
+    const f = folders.find((x) => x.id === folderId);
+    if (!f) return;
+    const name = prompt("Nouveau nom du dossier :", f.name);
+    if (!name || !name.trim() || name.trim() === f.name) return;
+    f.name = name.trim();
+    f.updatedAt = new Date().toISOString();
+    await persistFolder(f);
+    // Item 1 : si ce dossier est actuellement une boîte (même id), son nom
+    // doit rester synchronisé avec elle.
+    const selfSubject = folderSelfSubject(folderId);
+    if (selfSubject) {
+      selfSubject.name = f.name;
+      selfSubject.updatedAt = f.updatedAt;
+      await persistSubject(selfSubject);
+    }
+    renderSubjectManageList();
+  }
+
+  async function deleteFolder(folderId) {
+    // Item 1 : un dossier devenu boîte se supprime via deleteSubject (qui
+    // nettoie aussi ce dossier) — garde-fou si jamais atteint autrement.
+    if (isFolderABoite(folderId)) {
+      await deleteSubject(folderId);
+      return;
+    }
+    if (!folderIsEmpty(folderId)) {
+      alert("Ce dossier n'est pas vide : déplace ou supprime d'abord ce qu'il contient.");
+      return;
+    }
+    const f = folders.find((x) => x.id === folderId);
+    if (!confirm(`Supprimer le dossier « ${f ? f.name : ""} » ?`)) return;
+    folders = folders.filter((x) => x.id !== folderId);
+    if (f) await pushFolderDeleted(f);
+    await DB.removeFolder(folderId);
+    renderSubjectManageList();
+  }
+
+  /* ---------------------------------------------------------
+     Déplacer un dossier ou une boîte vers un autre dossier
+  --------------------------------------------------------- */
+  let movePickerKind = null; // "folder" | "subject"
+  let movePickerTargetId = null;
+
+  function openMovePicker(kind, targetId) {
+    movePickerKind = kind;
+    movePickerTargetId = targetId;
+    const picker = el("move-picker");
+    const list = el("move-picker-list");
+    const title = el("move-picker-title");
+    if (!picker || !list) return;
+
+    // Pour un dossier, on exclut lui-même et tous ses descendants de la
+    // liste des destinations possibles (on ne peut pas le déplacer dans
+    // lui-même ou l'un de ses propres sous-dossiers).
+    const excluded = kind === "folder" ? new Set([targetId, ...folderDescendantIds(targetId)]) : new Set();
+    const name = kind === "folder" ? (folders.find((f) => f.id === targetId) || {}).name : (subjects.find((s) => s.id === targetId) || {}).name;
+    if (title) title.textContent = `Déplacer « ${name || ""} » vers :`;
+
+    list.innerHTML = "";
+    const rootLabel = document.createElement("label");
+    rootLabel.className = "multi-subject-picker-item";
+    rootLabel.innerHTML = `<input type="radio" name="move-target" value="" checked /> <span>🗂️ Racine</span>`;
+    list.appendChild(rootLabel);
+
+    folders
+      .filter((f) => !excluded.has(f.id) && !isFolderABoite(f.id))
+      .sort((a, b) => a.name.localeCompare(b.name, "fr"))
+      .forEach((f) => {
+        const label = document.createElement("label");
+        label.className = "multi-subject-picker-item";
+        const path = folderPath(f.id).map((p) => p.name).join(" / ");
+        label.innerHTML = `<input type="radio" name="move-target" value="${f.id}" /> <span>${folderIcon()} ${escapeHtml(path)}</span>`;
+        list.appendChild(label);
+      });
+
+    picker.hidden = false;
+  }
+
+  function closeMovePicker() {
+    const picker = el("move-picker");
+    if (picker) picker.hidden = true;
+    movePickerKind = null;
+    movePickerTargetId = null;
+  }
+
+  const movePickerCancelBtn = el("move-picker-cancel");
+  if (movePickerCancelBtn) movePickerCancelBtn.addEventListener("click", closeMovePicker);
+
+  const movePickerConfirmBtn = el("move-picker-confirm");
+  if (movePickerConfirmBtn) {
+    movePickerConfirmBtn.addEventListener("click", async () => {
+      const checked = document.querySelector('input[name="move-target"]:checked');
+      const destId = checked && checked.value ? checked.value : ROOT_FOLDER_ID;
+      if (movePickerKind === "folder") {
+        const f = folders.find((x) => x.id === movePickerTargetId);
+        if (f) {
+          f.parentId = destId;
+          f.updatedAt = new Date().toISOString();
+          await persistFolder(f);
+        }
+      } else if (movePickerKind === "subject") {
+        const s = subjects.find((x) => x.id === movePickerTargetId);
+        if (s) {
+          s.folderId = destId;
+          s.updatedAt = new Date().toISOString();
+          await persistSubject(s);
+        }
+      }
+      closeMovePicker();
+      renderSubjectManageList();
+    });
+  }
+
+  const manageAddFolderBtn = el("manage-add-folder-btn");
+  if (manageAddFolderBtn) manageAddFolderBtn.addEventListener("click", createFolderFlow);
+
+  /* ---------------------------------------------------------
+     Vue globale "Modes d'apprentissage" (item 2) : édite un mode (3 fixes +
+     personnalisés créables/renommables/supprimables) — les réglages sont
+     globaux, partagés par toutes les boîtes qui utilisent ce mode.
+  --------------------------------------------------------- */
+  let algoEditingModeId = "normal";
+  /** État coché/décoché des 4 courbes (item 3), partagé par les deux
+   *  graphiques (édition globale + aperçu d'affectation). */
+  let algoChartVisible = { again: true, hard: true, good: true, easy: true };
+
+  const ALGO_MODE_COLORS = { cool: "var(--sage)", normal: "var(--amber)", renforce: "var(--terracotta)", custom: "#e8c84a" };
+  function algoSliderIdxForMode(modeId) {
+    const i = BUILTIN_MODE_IDS.indexOf(modeId);
+    return i === -1 ? 3 : i;
+  }
+  function updateAlgoModeTicksHighlight(idx) {
+    document.querySelectorAll("#algo-mode-ticks span").forEach((tick) => {
+      tick.classList.toggle("is-active", Number(tick.dataset.idx) === idx);
+    });
+    const slider = el("algo-mode-slider");
+    const key = ALGO_MODE_ORDER[idx];
+    // Bug corrigé (item 2) : reprenait une constante figée (ALGO_MODE_COLORS),
+    // jamais connectée aux couleurs réellement réglables — le curseur
+    // ignorait donc toute personnalisation des couleurs de mode.
+    const settings = loadDevSettings();
+    const color = key === "custom" ? getCustomModeColor(algoEditingModeId) : settings.modeColors[key];
+    if (slider) slider.style.setProperty("--algo-slider-color", color);
+    const ticksWrap = el("algo-mode-ticks");
+    if (ticksWrap) ticksWrap.style.setProperty("--algo-tick-color", color);
+  }
+
+  function renderCustomPickerList() {
+    const list = el("algo-custom-picker-list");
+    if (!list) return;
+    const modes = loadLearningModes();
+    const customs = Object.values(modes).filter((m) => !m.builtin).sort((a, b) => a.name.localeCompare(b.name, "fr"));
+    list.innerHTML = "";
+    if (customs.length === 0) {
+      const p = document.createElement("p");
+      p.className = "field-hint";
+      p.textContent = "Aucun mode personnalisé pour l'instant.";
+      list.appendChild(p);
+      return;
+    }
+    customs.forEach((m) => {
+      const label = document.createElement("label");
+      label.className = "multi-subject-picker-item";
+      const cb = document.createElement("input");
+      cb.type = "radio";
+      cb.name = "custom-mode-pick";
+      cb.value = m.id;
+      cb.checked = m.id === algoEditingModeId;
+      const span = document.createElement("span");
+      span.textContent = m.name;
+      label.appendChild(cb);
+      label.appendChild(span);
+      // Couleur propre à ce mode (item : réglable directement ici plutôt
+      // que seulement dans la page Développeur).
+      const colorInput = document.createElement("input");
+      colorInput.type = "text";
+      colorInput.className = "algo-custom-picker-color dev-color-value";
+      colorInput.value = getCustomModeColor(m.id);
+      colorInput.title = `Couleur du mode « ${m.name} »`;
+      colorInput.addEventListener("click", (e) => e.stopPropagation());
+      colorInput.addEventListener("input", () => {
+        setCustomModeColor(m.id, colorInput.value);
+        renderSubjectManageList();
+        renderSubjectAlgoBadge(currentCard ? currentCard.subject : undefined);
+      });
+      label.appendChild(colorInput);
+      list.appendChild(label);
+      cb.addEventListener("change", () => loadModeFormIntoInputs(m.id));
+    });
+    enhanceColorInputsWithHsl();
+  }
+
+  /** Place la valeur d'un mode sur son curseur discret (item 9) et met à
+   *  jour le texte affiché (préfixe × pour les coefficients, &lt; jours
+   *  pour les maximums). */
+  function setSliderField(id, value, list, prefix, suffix) {
+    const input = el(id);
+    const valueEl = el(`${id}-value`);
+    if (!input) return;
+    const idx = list.indexOf(value);
+    input.value = String(idx === -1 ? 0 : idx);
+    if (valueEl) valueEl.textContent = `${prefix} ${value}${suffix}`;
+  }
+
+  /** Couleur d'accent des curseurs de réglage d'un mode (item 6 — bug
+   *  corrigé) : reprend la couleur du mode en cours d'édition (Cool/
+   *  Normal/Renforcé/personnalisé), posée comme variable CSS sur le
+   *  conteneur des curseurs, plutôt que 4 couleurs fixes par note qui
+   *  n'avaient aucun rapport avec le mode affecté. */
+  function applyModeSliderColor(modeId) {
+    const panel = el("algo-advanced-panel");
+    if (!panel) return;
+    const key = algoModeCssKey(modeId);
+    const settings = loadDevSettings();
+    const color = key === "custom" ? getCustomModeColor(modeId) : settings.modeColors[key];
+    panel.style.setProperty("--mode-editing-color", color);
+  }
+
+  function loadModeFormIntoInputs(modeId) {
+    const modes = loadLearningModes();
+    const m = modes[modeId] || modes.normal;
+    algoEditingModeId = m.id;
+    // Les curseurs reprennent la couleur du mode en cours d'édition (item
+    // 6 — bug corrigé : ils étaient colorés par note (Encore/Difficile/
+    // Bien/Facile), sans rapport avec le mode réellement affecté).
+    applyModeSliderColor(m.id);
+    setSliderField("algo-ka", m.Ka, ALGO_K_VALUES, "×", "");
+    setSliderField("algo-kh", m.Kh, ALGO_K_VALUES, "×", "");
+    setSliderField("algo-kg", m.Kg, ALGO_K_VALUES, "×", "");
+    setSliderField("algo-ke", m.Ke, ALGO_K_VALUES, "×", "");
+    setSliderField("algo-ma", m.Ma, ALGO_M_VALUES, "<", " j");
+    setSliderField("algo-mh", m.Mh, ALGO_M_VALUES, "<", " j");
+    setSliderField("algo-mg", m.Mg, ALGO_M_VALUES, "<", " j");
+    setSliderField("algo-me", m.Me, ALGO_M_VALUES, "<", " j");
+    const idx = algoSliderIdxForMode(m.id);
+    const slider = el("algo-mode-slider");
+    if (slider) slider.value = String(idx);
+    updateAlgoModeTicksHighlight(idx);
+    const customPicker = el("algo-custom-picker");
+    if (customPicker) customPicker.hidden = idx !== 3;
+    if (idx === 3) renderCustomPickerList();
+    const resetBtn = el("algo-reset-btn");
+    if (resetBtn) resetBtn.hidden = !m.builtin;
+    renderAlgoPreviewChart();
+  }
+
+  /** Construit le HTML (légende + SVG) d'un graphique d'aperçu pour un jeu
+   *  de réglages donné — partagé entre la page d'édition globale et la
+   *  page d'affectation (lecture seule). Échelle LINÉAIRE (pas log, item 5
+   *  d'une demande précédente), valeur écrite à côté de chaque point. */
+  const ALGO_CHART_COLORS = {
+    again: "var(--rating-again-color, var(--terracotta))",
+    hard: "var(--rating-hard-color, var(--amber))",
+    good: "var(--rating-good-color, var(--sage))",
+    easy: "var(--rating-easy-color, var(--teal))",
+  };
+  // Le graphique d'aperçu de la page "Modes d'apprentissage" garde ses
+  // couleurs par défaut (item 2e), indépendamment du réglage "Couleurs des
+  // notes" qui ne doit affecter QUE les boutons d'évaluation.
+  const ALGO_PREVIEW_CHART_COLORS = {
+    again: "var(--terracotta)",
+    hard: "var(--amber)",
+    good: "var(--sage)",
+    easy: "var(--teal)",
+  };
+  const ALGO_CHART_RATING_LABELS = { again: "Encore", hard: "Difficile", good: "Bien", easy: "Facile" };
+  function computeAlgoPreviewSeries(settings, rating, n) {
+    let raw = 1;
+    const out = [];
+    for (let i = 0; i < n; i++) {
+      raw = computeNextDeadlineRaw(raw, rating, settings);
+      out.push(Math.max(1, Math.round(raw)));
+    }
+    return out;
+  }
+  /** Étend le nombre de points du graphique (item 9) jusqu'à ce que les
+   *  courbes affichées atteignent leur plafond (deux valeurs arrondies
+   *  identiques de suite), plutôt qu'un nombre de points fixe — plafonné à
+   *  40 pour éviter un graphique interminable si un maximum est très élevé
+   *  par rapport à son coefficient. */
+  /** Étend le nombre de points du graphique (item 4/10) jusqu'à ce que les
+   *  courbes affichées atteignent leur plafond — calculé analytiquement
+   *  (résout K^n ≥ M) plutôt qu'en itérant avec un plafond fixe : un
+   *  plafond fixe trop bas coupait certaines courbes à croissance lente
+   *  (petit coefficient, maximum élevé — ex. ×1,1 plafonné à 300 jours a
+   *  besoin d'une soixantaine de points pour vraiment atteindre son
+   *  plateau) avant qu'elles n'aient eu le temps de vraiment se stabiliser
+   *  — bug corrigé (item 10). */
+  function computeNeededSteps(settings, ratings) {
+    const ABSOLUTE_CAP = 64;
+    let needed = 4;
+    ratings.forEach((r) => {
+      const [kKey, mKey] = ALGO_RATING_KEYS[r];
+      const k = settings[kKey];
+      const m = settings[mKey];
+      // Coefficient ~1 : l'échéance ne grandit quasiment pas, le "plateau"
+      // est atteint dès le premier point.
+      const n = k <= 1.0001 ? 1 : Math.ceil(Math.log(m) / Math.log(k));
+      // +2 points au-delà du début du plateau, pour bien montrer que la
+      // courbe est devenue horizontale plutôt que de s'arrêter net pile au
+      // moment où elle se stabilise.
+      needed = Math.max(needed, Math.min(ABSOLUTE_CAP, n + 2));
+    });
+    return Math.max(4, Math.min(ABSOLUTE_CAP, needed));
+  }
+
+  function buildPreviewChartHtml(settings) {
+    const ratings = ["again", "hard", "good", "easy"];
+    const visibleRatings = ratings.filter((r) => algoChartVisible[r]);
+    const legend = ratings
+      .map(
+        (r) => `<label class="algo-chart-legend-item">
+          <input type="checkbox" class="algo-chart-legend-checkbox" data-rating="${r}" ${algoChartVisible[r] ? "checked" : ""} />
+          <span class="algo-chart-legend-dot" style="background:${ALGO_PREVIEW_CHART_COLORS[r]}"></span>${ALGO_CHART_RATING_LABELS[r]}
+        </label>`
+      )
+      .join("");
+
+    if (visibleRatings.length === 0) {
+      return `<div class="algo-chart-legend">${legend}</div><p class="field-hint algo-chart-empty">Coche au moins une courbe pour l'afficher.</p>`;
+    }
+
+    const N = computeNeededSteps(settings, visibleRatings);
+    const seriesByRating = {};
+    ratings.forEach((r) => {
+      seriesByRating[r] = computeAlgoPreviewSeries(settings, r, N);
+    });
+    let maxVal = 1;
+    visibleRatings.forEach((r) => { maxVal = Math.max(maxVal, ...seriesByRating[r]); });
+
+    const W = 320, H = 260, padL = 30, padB = 22, padT = 14, padR = 12;
+    const plotW = W - padL - padR;
+    const plotH = H - padT - padB;
+    const xPos = (i) => padL + (i / (N - 1)) * plotW;
+    const yMax = Math.max(10, Math.ceil((maxVal * 1.08) / 10) * 10);
+    const yPos = (v) => padT + (1 - v / yMax) * plotH;
+    // Au-delà d'une quinzaine de points, on n'étiquette plus qu'un point sur
+    // deux (ou plus) en abscisse pour ne pas les faire se chevaucher.
+    const xLabelStep = N <= 15 ? 1 : Math.ceil(N / 15);
+
+    let svg = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;background:var(--svg-chart-bg-color, var(--desk));border-radius:8px;">`;
+    svg += `<line x1="${padL}" y1="${padT}" x2="${padL}" y2="${H - padB}" stroke="rgba(31,41,55,0.3)" stroke-width="1"/>`;
+    svg += `<line x1="${padL}" y1="${H - padB}" x2="${W - padR}" y2="${H - padB}" stroke="rgba(31,41,55,0.3)" stroke-width="1"/>`;
+
+    [0, yMax / 3, (2 * yMax) / 3, yMax].forEach((t) => {
+      const y = yPos(t);
+      svg += `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="rgba(31,41,55,0.1)" stroke-width="1"/>`;
+      svg += `<text x="${padL - 4}" y="${y + 3}" font-size="8" fill="var(--chart-value-color, #6b7280)" text-anchor="end">${Math.round(t)}</text>`;
+    });
+
+    const labelDx = { again: -9, hard: -3, good: 3, easy: 9 };
+    visibleRatings.forEach((r) => {
+      const s = seriesByRating[r];
+      const pts = s.map((v, i) => `${xPos(i)},${yPos(v)}`).join(" ");
+      svg += `<polyline points="${pts}" fill="none" stroke="${ALGO_PREVIEW_CHART_COLORS[r]}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+      s.forEach((v, i) => {
+        // Sur les longs graphiques, on n'étiquette la valeur qu'aux mêmes
+        // points que l'axe, plus le tout dernier (le plafond atteint).
+        if (i % xLabelStep !== 0 && i !== s.length - 1) return;
+        const x = xPos(i), y = yPos(v);
+        svg += `<circle cx="${x}" cy="${y}" r="2.4" fill="${ALGO_PREVIEW_CHART_COLORS[r]}"/>`;
+        svg += `<text x="${x + labelDx[r]}" y="${y - 5}" font-size="7.5" fill="${ALGO_PREVIEW_CHART_COLORS[r]}" text-anchor="middle" font-family="var(--font-mono)">${v}</text>`;
+      });
+    });
+    for (let i = 0; i < N; i += xLabelStep) {
+      svg += `<text x="${xPos(i)}" y="${H - padB + 12}" font-size="8" fill="var(--chart-label-color, #6b7280)" text-anchor="middle">${i + 1}</text>`;
+    }
+    svg += `</svg>`;
+
+    // Ordonnée verticale à gauche du graphique (item 4), plutôt qu'une
+    // légende horizontale sous le graphique.
+    const body =
+      `<div class="algo-chart-body">` +
+      `<span class="algo-chart-axis-y">Délai d'interrogation en jours</span>` +
+      `<div class="algo-chart-svg-col">${svg}</div>` +
+      `</div>` +
+      `<div class="algo-chart-axis-x">Nombre de fois qu'une fiche a été évaluée</div>`;
+
+    return `<div class="algo-chart-legend">${legend}</div>${body}`;
+  }
+
+  function wireChartCheckboxes(wrap, onToggle) {
+    wrap.querySelectorAll(".algo-chart-legend-checkbox").forEach((cb) => {
+      cb.addEventListener("change", () => {
+        algoChartVisible[cb.dataset.rating] = cb.checked;
+        onToggle();
+      });
+    });
+  }
+
+  function renderAlgoPreviewChart() {
+    const wrap = el("algo-chart-wrap");
+    if (!wrap) return;
+    wrap.innerHTML = buildPreviewChartHtml(readAlgoFormSettings());
+    wireChartCheckboxes(wrap, renderAlgoPreviewChart);
   }
 
   function readAlgoFormSettings() {
+    const idx = (id) => Math.round(Number(el(id).value)) || 0;
     return {
-      Ka: clampAlgoK(el("algo-ka").value, ALGO_PRESETS.normal.Ka),
-      Kh: clampAlgoK(el("algo-kh").value, ALGO_PRESETS.normal.Kh),
-      Kg: clampAlgoK(el("algo-kg").value, ALGO_PRESETS.normal.Kg),
-      Ke: clampAlgoK(el("algo-ke").value, ALGO_PRESETS.normal.Ke),
-      Ma: clampAlgoM(el("algo-ma").value, ALGO_PRESETS.normal.Ma),
-      Mh: clampAlgoM(el("algo-mh").value, ALGO_PRESETS.normal.Mh),
-      Mg: clampAlgoM(el("algo-mg").value, ALGO_PRESETS.normal.Mg),
-      Me: clampAlgoM(el("algo-me").value, ALGO_PRESETS.normal.Me),
+      Ka: ALGO_K_VALUES[idx("algo-ka")] ?? 1,
+      Kh: ALGO_K_VALUES[idx("algo-kh")] ?? 1,
+      Kg: ALGO_K_VALUES[idx("algo-kg")] ?? 1,
+      Ke: ALGO_K_VALUES[idx("algo-ke")] ?? 1,
+      Ma: ALGO_M_VALUES[idx("algo-ma")] ?? 1,
+      Mh: ALGO_M_VALUES[idx("algo-mh")] ?? 1,
+      Mg: ALGO_M_VALUES[idx("algo-mg")] ?? 1,
+      Me: ALGO_M_VALUES[idx("algo-me")] ?? 1,
     };
   }
 
-  function saveAlgoFormAndRefresh() {
-    if (!algoEditingSubjectId) return;
-    const settings = readAlgoFormSettings();
-    setSubjectAlgoSettings(algoEditingSubjectId, settings);
-    loadAlgoFormIntoInputs(getSubjectAlgoSettings(algoEditingSubjectId));
-    updateRatingPreviews();
+  function saveModeFormAndRefresh() {
+    updateModeProfile(algoEditingModeId, readAlgoFormSettings());
+    loadModeFormIntoInputs(algoEditingModeId);
     renderSubjectAlgoBadge();
+    renderSubjectManageList();
   }
 
-  function openSubjectAlgoView(subjectId) {
-    algoEditingSubjectId = subjectId;
-    const subject = subjects.find((s) => s.id === subjectId);
-    el("algo-subject-title").textContent = `Mode d'apprentissage — ${subject ? subject.name : ""}`;
-    loadAlgoFormIntoInputs(getSubjectAlgoSettings(subjectId));
-    document.querySelectorAll(".view").forEach((v) => v.classList.remove("is-active"));
-    el("view-subject-algo").classList.add("is-active");
+  const algoModeSliderEl = el("algo-mode-slider");
+  if (algoModeSliderEl) {
+    algoModeSliderEl.addEventListener("input", () => {
+      const idx = Number(algoModeSliderEl.value);
+      updateAlgoModeTicksHighlight(idx);
+      const customPicker = el("algo-custom-picker");
+      if (idx < 3) {
+        if (customPicker) customPicker.hidden = true;
+        loadModeFormIntoInputs(BUILTIN_MODE_IDS[idx]);
+        return;
+      }
+      if (customPicker) customPicker.hidden = false;
+      const customs = Object.values(loadLearningModes()).filter((m) => !m.builtin);
+      if (customs.length === 0) {
+        const name = prompt("Nom du nouveau mode personnalisé :", "Mon mode");
+        if (name && name.trim()) {
+          const id = createCustomMode(name, algoEditingModeId);
+          renderCustomPickerList();
+          loadModeFormIntoInputs(id);
+        } else {
+          const prevIdx = algoSliderIdxForMode(algoEditingModeId);
+          algoModeSliderEl.value = String(prevIdx);
+          updateAlgoModeTicksHighlight(prevIdx);
+          if (customPicker) customPicker.hidden = true;
+        }
+      } else {
+        renderCustomPickerList();
+        loadModeFormIntoInputs(customs[0].id);
+      }
+    });
   }
 
-  function closeSubjectAlgoView() {
+  const algoCustomNewBtn = el("algo-custom-new-btn");
+  if (algoCustomNewBtn) {
+    algoCustomNewBtn.addEventListener("click", () => {
+      const name = prompt("Nom du nouveau mode personnalisé :");
+      if (!name || !name.trim()) return;
+      const id = createCustomMode(name, algoEditingModeId);
+      renderCustomPickerList();
+      loadModeFormIntoInputs(id);
+    });
+  }
+  const algoCustomRenameBtn = el("algo-custom-rename-btn");
+  if (algoCustomRenameBtn) {
+    algoCustomRenameBtn.addEventListener("click", () => {
+      const modes = loadLearningModes();
+      const m = modes[algoEditingModeId];
+      if (!m || m.builtin) return;
+      const name = prompt("Nouveau nom du mode :", m.name);
+      if (!name || !name.trim()) return;
+      renameCustomMode(algoEditingModeId, name);
+      renderCustomPickerList();
+      renderSubjectAlgoBadge();
+      renderSubjectManageList();
+    });
+  }
+  const algoCustomDeleteBtn = el("algo-custom-delete-btn");
+  if (algoCustomDeleteBtn) {
+    algoCustomDeleteBtn.addEventListener("click", async () => {
+      const modes = loadLearningModes();
+      const m = modes[algoEditingModeId];
+      if (!m || m.builtin) return;
+      if (!confirm(`Supprimer le mode « ${m.name} » ? Les boîtes qui l'utilisent repasseront en mode Normal.`)) return;
+      await deleteCustomMode(algoEditingModeId);
+      const remaining = Object.values(loadLearningModes()).filter((x) => !x.builtin);
+      if (remaining.length > 0) {
+        renderCustomPickerList();
+        loadModeFormIntoInputs(remaining[0].id);
+      } else {
+        loadModeFormIntoInputs("normal");
+      }
+      renderSubjectManageList();
+      renderSubjectAlgoBadge();
+    });
+  }
+
+  const ALGO_FIELD_META = {
+    "algo-ka": { list: ALGO_K_VALUES, prefix: "×", suffix: "" },
+    "algo-kh": { list: ALGO_K_VALUES, prefix: "×", suffix: "" },
+    "algo-kg": { list: ALGO_K_VALUES, prefix: "×", suffix: "" },
+    "algo-ke": { list: ALGO_K_VALUES, prefix: "×", suffix: "" },
+    "algo-ma": { list: ALGO_M_VALUES, prefix: "<", suffix: " j" },
+    "algo-mh": { list: ALGO_M_VALUES, prefix: "<", suffix: " j" },
+    "algo-mg": { list: ALGO_M_VALUES, prefix: "<", suffix: " j" },
+    "algo-me": { list: ALGO_M_VALUES, prefix: "<", suffix: " j" },
+  };
+  Object.keys(ALGO_FIELD_META).forEach((id) => {
+    const input = el(id);
+    if (!input) return;
+    const meta = ALGO_FIELD_META[id];
+    const valueEl = el(`${id}-value`);
+    const updateReadout = () => {
+      const v = meta.list[Math.round(Number(input.value)) || 0];
+      if (valueEl) valueEl.textContent = `${meta.prefix} ${v}${meta.suffix}`;
+    };
+    input.addEventListener("input", () => {
+      updateReadout();
+      renderAlgoPreviewChart();
+    });
+    input.addEventListener("change", saveModeFormAndRefresh);
+  });
+
+  const algoResetBtn = el("algo-reset-btn");
+  if (algoResetBtn) {
+    algoResetBtn.addEventListener("click", () => {
+      const modes = loadLearningModes();
+      const m = modes[algoEditingModeId];
+      if (!m || !m.builtin) return;
+      if (!confirm(`Remettre le mode ${m.name} à ses valeurs d'origine ? Toutes les boîtes qui l'utilisent seront concernées.`)) return;
+      updateModeProfile(algoEditingModeId, getFactoryDefaults()[algoEditingModeId]);
+      loadModeFormIntoInputs(algoEditingModeId);
+      renderSubjectAlgoBadge();
+    });
+  }
+
+  const algoAdvancedToggle = el("algo-advanced-toggle");
+  const algoAdvancedPanel = el("algo-advanced-panel");
+  if (algoAdvancedToggle && algoAdvancedPanel) {
+    algoAdvancedToggle.addEventListener("click", () => {
+      const willShow = algoAdvancedPanel.hidden;
+      algoAdvancedPanel.hidden = !willShow;
+      algoAdvancedToggle.textContent = willShow ? "Paramétrages avancés ▴" : "Paramétrages avancés ▾";
+    });
+  }
+
+  /* ---------------------------------------------------------
+     Vue "Affecter un mode" (par boîte OU par dossier entier — item 1/2),
+     ouverte depuis la page Gérer. Simple sélection parmi les modes déjà
+     définis (édités globalement sur la page Modes d'apprentissage) — plus
+     aucun réglage éditable ici.
+  --------------------------------------------------------- */
+  let algoOpenedFromView = "manage";
+  let assignTargetKind = null; // "subject" | "folder"
+  let assignTargetId = null;
+  let assignCurrentModeId = "normal";
+
+  function renderAssignChart(modeId) {
+    const wrap = el("assign-chart-wrap");
+    if (!wrap) return;
+    const modes = loadLearningModes();
+    const settings = modes[modeId] || modes.normal;
+    wrap.innerHTML = buildPreviewChartHtml(settings);
+    wireChartCheckboxes(wrap, () => renderAssignChart(assignCurrentModeId));
+  }
+
+  function renderAssignModeList(currentModeId) {
+    const list = el("assign-mode-list");
+    if (!list) return;
+    const modes = loadLearningModes();
+    const all = [
+      ...BUILTIN_MODE_IDS.map((id) => modes[id]),
+      ...Object.values(modes).filter((m) => !m.builtin).sort((a, b) => a.name.localeCompare(b.name, "fr")),
+    ];
+    list.innerHTML = "";
+    all.forEach((m) => {
+      const label = document.createElement("label");
+      label.className = "multi-subject-picker-item";
+      const cb = document.createElement("input");
+      cb.type = "radio";
+      cb.name = "assign-mode-pick";
+      cb.value = m.id;
+      cb.checked = m.id === currentModeId;
+      const span = document.createElement("span");
+      span.textContent = m.name;
+      label.appendChild(cb);
+      label.appendChild(span);
+      list.appendChild(label);
+      cb.addEventListener("change", async () => {
+        assignCurrentModeId = m.id;
+        if (assignTargetKind === "subject") {
+          await assignModeToSubject(assignTargetId, m.id);
+        } else if (assignTargetKind === "folder") {
+          await assignModeToFolder(assignTargetId, m.id);
+        }
+        renderAssignChart(m.id);
+        renderSubjectManageList();
+        renderSubjectAlgoBadge();
+      });
+    });
+  }
+
+  function openAssignView(kind, targetId, fromView) {
+    assignTargetKind = kind;
+    assignTargetId = targetId;
+    algoOpenedFromView = fromView === "review" ? "review" : "manage";
+    algoChartVisible = { again: true, hard: true, good: true, easy: true };
+
+    let title, currentModeId;
+    if (kind === "subject") {
+      const s = subjects.find((x) => x.id === targetId);
+      title = `Affecter un mode — ${s ? s.name : ""}`;
+      currentModeId = getSubjectAlgoMode(targetId);
+    } else {
+      // Pas de présélection pour un dossier (bug corrigé — item 3) : les
+      // boîtes qu'il contient peuvent très bien ne pas être en "Normal"
+      // du tout, présélectionner ce mode par défaut était trompeur.
+      const f = folders.find((x) => x.id === targetId);
+      title = `Affecter un mode — ${folderIcon()} ${f ? f.name : ""}`;
+      currentModeId = null;
+    }
+    const titleEl = el("assign-target-title");
+    if (titleEl) titleEl.textContent = title;
+    assignCurrentModeId = currentModeId;
+    renderAssignModeList(currentModeId);
+    if (currentModeId) {
+      renderAssignChart(currentModeId);
+    } else {
+      const wrap = el("assign-chart-wrap");
+      if (wrap) wrap.innerHTML = `<p class="field-hint">Choisis un mode ci-dessus pour l'affecter à tout le dossier.</p>`;
+    }
+    const reviewOldBlock = el("assign-review-old-block");
+    if (reviewOldBlock) reviewOldBlock.hidden = kind !== "subject";
+
+    const backBtn = el("assign-back-btn");
+    if (backBtn) backBtn.textContent = algoOpenedFromView === "review" ? "← Retour à Réviser" : "← Retour à Gérer";
+
     document.querySelectorAll(".view").forEach((v) => v.classList.remove("is-active"));
-    el("view-manage").classList.add("is-active");
+    el("view-mode-assign").classList.add("is-active");
+  }
+
+  // Conservé pour compatibilité avec les anciens appels (page Réviser) —
+  // ouvre désormais la vue d'affectation plutôt que d'édition directe,
+  // puisque les réglages ne se modifient plus boîte par boîte.
+  function openSubjectAlgoView(subjectId, fromView) {
+    openAssignView("subject", subjectId, fromView);
+  }
+
+  function closeAssignView() {
+    const targetView = algoOpenedFromView === "review" ? "review" : "manage";
+    document.querySelectorAll(".view").forEach((v) => v.classList.remove("is-active"));
+    el(`view-${targetView}`).classList.add("is-active");
+    if (targetView === "manage") renderSubjectManageList();
     document.querySelectorAll(".tab").forEach((t) => {
       t.classList.remove("is-active");
       t.setAttribute("aria-selected", "false");
     });
-    const manageTab = document.querySelector('.tab[data-view="manage"]');
-    if (manageTab) {
-      manageTab.classList.add("is-active");
-      manageTab.setAttribute("aria-selected", "true");
+    const targetTab = document.querySelector(`.tab[data-view="${targetView}"]`);
+    if (targetTab) {
+      targetTab.classList.add("is-active");
+      targetTab.setAttribute("aria-selected", "true");
     }
   }
 
-  const algoBackBtn = el("algo-back-btn");
-  if (algoBackBtn) algoBackBtn.addEventListener("click", closeSubjectAlgoView);
-
-  ["cool", "normal", "renforce"].forEach((key) => {
-    const btn = el(`algo-preset-${key}`);
-    if (!btn) return;
-    btn.addEventListener("click", () => {
-      if (!algoEditingSubjectId) return;
-      setSubjectAlgoSettings(algoEditingSubjectId, { ...ALGO_PRESETS[key] });
-      loadAlgoFormIntoInputs(getSubjectAlgoSettings(algoEditingSubjectId));
-      updateRatingPreviews();
-      renderSubjectAlgoBadge();
-    });
-  });
-
-  ["algo-ka", "algo-kh", "algo-kg", "algo-ke", "algo-ma", "algo-mh", "algo-mg", "algo-me"].forEach((id) => {
-    const input = el(id);
-    if (input) input.addEventListener("change", saveAlgoFormAndRefresh);
-  });
+  const assignBackBtn = el("assign-back-btn");
+  if (assignBackBtn) assignBackBtn.addEventListener("click", closeAssignView);
 
   const algoReviewOldBtn = el("algo-review-old-btn");
   if (algoReviewOldBtn) {
     algoReviewOldBtn.addEventListener("click", async () => {
-      if (!algoEditingSubjectId) return;
-      const subject = subjects.find((s) => s.id === algoEditingSubjectId);
+      if (assignTargetKind !== "subject" || !assignTargetId) return;
+      const subject = subjects.find((s) => s.id === assignTargetId);
       const today = startOfDay(new Date());
       const targets = cards.filter((c) => {
-        if (c.deleted || c.subject !== algoEditingSubjectId || !c.dueDate) return false;
+        if (c.deleted || c.subject !== assignTargetId || !c.dueDate) return false;
         const daysAhead = Math.round((startOfDay(new Date(c.dueDate)).getTime() - today.getTime()) / 86400000);
         return daysAhead > 10;
       });
       if (targets.length === 0) {
-        alert("Aucune fiche de cette matière n'a une prochaine interrogation prévue dans plus de 10 jours.");
+        alert("Aucune fiche de cette boîte n'a une prochaine interrogation prévue dans plus de 10 jours.");
         return;
       }
       const msg =
@@ -1641,11 +3532,12 @@
     });
   }
 
+
   async function createSubjectFlow() {
-    const name = prompt("Nom de la nouvelle matière :");
+    const name = prompt("Nom de la nouvelle boîte :");
     if (!name || !name.trim()) return null;
-    const subject = newSubject(name);
-    await DB.putSubject(subject);
+    const subject = newSubject(name, ROOT_FOLDER_ID);
+    await persistSubject(subject);
     subjects.push(subject);
     subjects.sort((a, b) => a.name.localeCompare(b.name, "fr"));
     renderStatsSubjectSelect();
@@ -1655,11 +3547,11 @@
   async function renameSubject(id) {
     const s = subjects.find((x) => x.id === id);
     if (!s) return;
-    const name = prompt("Nouveau nom de la matière :", s.name);
+    const name = prompt("Nouveau nom de la boîte :", s.name);
     if (!name || !name.trim() || name.trim() === s.name) return;
     s.name = name.trim();
     s.updatedAt = new Date().toISOString();
-    await DB.putSubject(s);
+    await persistSubject(s);
     subjects.sort((a, b) => a.name.localeCompare(b.name, "fr"));
     renderSubjectSelect();
     renderSubjectManageList();
@@ -1669,7 +3561,7 @@
 
   async function deleteSubject(id) {
     if (subjects.length <= 1) {
-      alert("Impossible de supprimer la dernière matière restante.");
+      alert("Impossible de supprimer la dernière boîte restante.");
       return;
     }
     const s = subjects.find((x) => x.id === id);
@@ -1677,11 +3569,11 @@
     const n = cards.filter((c) => !c.deleted && c.subject === id).length;
     const confirmMsg =
       n > 0
-        ? `Supprimer la matière « ${s.name} » et ses ${n} fiche(s) ? Cette action est irréversible.`
-        : `Supprimer la matière « ${s.name} » ?`;
+        ? `Supprimer la boîte « ${s.name} » et ses ${n} fiche(s) ? Cette action est irréversible.`
+        : `Supprimer la boîte « ${s.name} » ?`;
     if (!confirm(confirmMsg)) return;
 
-    // Suppression douce des fiches de cette matière (cohérent avec la sync).
+    // Suppression douce des fiches de cette boîte (cohérent avec la sync).
     const toDelete = cards.filter((c) => !c.deleted && c.subject === id);
     for (const c of toDelete) {
       const updated = touch({ ...c, deleted: true });
@@ -1692,6 +3584,16 @@
 
     await DB.removeSubject(id);
     subjects = subjects.filter((x) => x.id !== id);
+    await pushSubjectDeleted(s);
+    // Item 1 : si cette boîte était auto-liée à un dossier (même id), on
+    // supprime aussi ce dossier — les deux ne font qu'un pour qui l'a
+    // créée.
+    const linkedFolder = folders.find((x) => x.id === id);
+    if (linkedFolder) {
+      folders = folders.filter((x) => x.id !== id);
+      await pushFolderDeleted(linkedFolder);
+      await DB.removeFolder(id);
+    }
 
     if (currentSubjectId === id) {
       currentSubjectId = subjects[0].id;
@@ -1710,12 +3612,13 @@
     if (el("view-stats").classList.contains("is-active")) renderStats();
   }
 
-  function switchSubject(id) {
-    if (id === currentSubjectId || !subjects.some((s) => s.id === id)) return;
+  function switchSubject(id, force) {
+    const sentinel = isSentinelSubject(id);
+    if ((id === currentSubjectId && !force) || (!sentinel && !subjects.some((s) => s.id === id))) return;
     currentSubjectId = id;
     localStorage.setItem(CURRENT_SUBJECT_KEY, id);
 
-    // On repart d'une session de révision propre pour la nouvelle matière.
+    // On repart d'une session de révision propre pour la nouvelle boîte.
     reviewSessionStarted = false;
     reviewQueue = [];
     currentCard = null;
@@ -1723,6 +3626,8 @@
 
     renderSubjectSelect();
     renderAll();
+    renderReviewSubjectScore();
+    renderReviewGauge();
 
     if (el("view-review").classList.contains("is-active")) {
       startReviewSession();
@@ -1732,22 +3637,270 @@
     }
   }
 
-  subjectSelectEl.addEventListener("change", () => {
-    switchSubject(subjectSelectEl.value);
+  const subjectSelectBtn = el("subject-select-btn");
+  const subjectChoiceMenu = el("subject-choice-menu");
+
+  function openSubjectChoiceMenu() {
+    if (subjectChoiceMenu) subjectChoiceMenu.hidden = false;
+  }
+  function closeSubjectChoiceMenu() {
+    if (subjectChoiceMenu) subjectChoiceMenu.hidden = true;
+  }
+  if (subjectSelectBtn) {
+    subjectSelectBtn.addEventListener("click", () => {
+      closeMultiSubjectPicker();
+      openSubjectChoiceMenu();
+    });
+  }
+  const subjectChoiceAllBtn = el("subject-choice-all");
+  if (subjectChoiceAllBtn) {
+    subjectChoiceAllBtn.addEventListener("click", () => {
+      closeSubjectChoiceMenu();
+      switchSubject(ALL_SUBJECTS_ID, true);
+    });
+  }
+  const subjectChoiceSelectionBtn = el("subject-choice-selection");
+  if (subjectChoiceSelectionBtn) {
+    subjectChoiceSelectionBtn.addEventListener("click", () => {
+      closeSubjectChoiceMenu();
+      openMultiSubjectPicker();
+    });
+  }
+  const subjectChoiceCancelBtn = el("subject-choice-cancel");
+  if (subjectChoiceCancelBtn) {
+    subjectChoiceCancelBtn.addEventListener("click", () => closeSubjectChoiceMenu());
+  }
+  // Cliquer n'importe où en dehors du menu le referme (item 6 : comportement
+  // attendu d'un vrai menu déroulant), sans rien changer au choix précédent.
+  document.addEventListener("pointerdown", (e) => {
+    if (!subjectChoiceMenu || subjectChoiceMenu.hidden) return;
+    if (subjectChoiceMenu.contains(e.target) || e.target === subjectSelectBtn) return;
+    closeSubjectChoiceMenu();
   });
 
-  addSubjectBtn.addEventListener("click", async () => {
-    const s = await createSubjectFlow();
-    if (s) switchSubject(s.id);
+  /* ---------------------------------------------------------
+     Sélection de plusieurs boîtes confondues (item 1)
+  --------------------------------------------------------- */
+  /** Construit récursivement l'arbre dossiers/boîtes dans le sélecteur
+   *  multi-boîtes (item 1) : cocher un dossier inclut TOUTES les boîtes
+   *  qu'il contient (y compris dans ses sous-dossiers), sans avoir besoin
+   *  de les cocher une par une. */
+  function renderFolderTreeForPicker(container, parentId, depth, selectedSubjectIds) {
+    const childFolders = folders.filter((f) => f.parentId === parentId).sort((a, b) => a.name.localeCompare(b.name, "fr"));
+    const childSubjects = subjects.filter((s) => s.folderId === parentId).sort((a, b) => a.name.localeCompare(b.name, "fr"));
+    childFolders.forEach((f) => {
+      const ids = subjectIdsInFolder(f.id);
+      const label = document.createElement("label");
+      label.className = "multi-subject-picker-item";
+      label.style.paddingLeft = `${depth * 18}px`;
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.dataset.kind = "folder";
+      cb.value = f.id;
+      cb.checked = ids.length > 0 && ids.every((id) => selectedSubjectIds.has(id));
+      // Cocher/décocher un dossier répercute le même état sur tout ce
+      // qu'il contient — sous-dossiers et boîtes, à toute profondeur
+      // (item 7).
+      cb.addEventListener("change", () => {
+        const descendantFolderIds = new Set(folderDescendantIds(f.id));
+        const descendantSubjectIds = new Set(subjectIdsInFolder(f.id));
+        container.querySelectorAll('input[type="checkbox"]').forEach((other) => {
+          if (other === cb) return;
+          if (other.dataset.kind === "folder" && descendantFolderIds.has(other.value)) {
+            other.checked = cb.checked;
+          } else if (other.dataset.kind === "subject" && descendantSubjectIds.has(other.value)) {
+            other.checked = cb.checked;
+          }
+        });
+      });
+      const span = document.createElement("span");
+      span.textContent = `${folderIcon()} ${f.name}`;
+      label.appendChild(cb);
+      label.appendChild(span);
+      container.appendChild(label);
+      renderFolderTreeForPicker(container, f.id, depth + 1, selectedSubjectIds);
+    });
+    childSubjects.forEach((s) => {
+      const label = document.createElement("label");
+      label.className = "multi-subject-picker-item";
+      label.style.paddingLeft = `${depth * 18}px`;
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.dataset.kind = "subject";
+      cb.value = s.id;
+      cb.checked = selectedSubjectIds.has(s.id);
+      const span = document.createElement("span");
+      span.textContent = s.name;
+      label.appendChild(cb);
+      label.appendChild(span);
+      container.appendChild(label);
+    });
+  }
+
+  function openMultiSubjectPicker() {
+    const picker = el("multi-subject-picker");
+    const list = el("multi-subject-picker-list");
+    if (!picker || !list) return;
+    const selected = new Set(loadMultiSelection());
+    list.innerHTML = "";
+    renderFolderTreeForPicker(list, ROOT_FOLDER_ID, 0, selected);
+    picker.hidden = false;
+  }
+
+  function closeMultiSubjectPicker() {
+    const picker = el("multi-subject-picker");
+    if (picker) picker.hidden = true;
+  }
+
+  const multiPickerCancelBtn = el("multi-subject-picker-cancel");
+  if (multiPickerCancelBtn) {
+    // "Annuler" (item 18) : referme la fenêtre et reste sur le choix
+    // précédent, sans rien modifier.
+    multiPickerCancelBtn.addEventListener("click", () => closeMultiSubjectPicker());
+  }
+
+  const multiPickerConfirmBtn = el("multi-subject-picker-confirm");
+  if (multiPickerConfirmBtn) {
+    multiPickerConfirmBtn.addEventListener("click", () => {
+      const list = el("multi-subject-picker-list");
+      const { resultIds, singleSubjectId, label } = readMultiPickerResult(list);
+      if (resultIds.length === 0) {
+        alert("Choisis au moins une boîte ou un dossier.");
+        return;
+      }
+      closeMultiSubjectPicker();
+
+      // Affichage intelligent (item 18) : une seule boîte au final -> on
+      // bascule directement dessus (son nom s'affiche naturellement,
+      // inutile de passer par le mode "sélection"). Sélection qui
+      // correspond exactement à un seul dossier -> son nom. Sinon,
+      // libellé générique "Sélection de boîtes".
+      if (singleSubjectId) {
+        switchSubject(singleSubjectId, true);
+        return;
+      }
+      saveMultiSelection(resultIds);
+      saveMultiSelectionLabel(label || "");
+      switchSubject(MULTI_SUBJECTS_ID, true);
+    });
+  }
+
+  /** Arbre à choix unique (item : boîte de création d'une nouvelle fiche
+   *  dans Fiches) — dossiers en simples en-têtes non cliquables, boîtes
+   *  en boutons ; clic = choix immédiat, pas de coche ni de confirmation. */
+  /** Item 1 : un dossier vide devient sélectionnable (il deviendra une
+   *  boîte au moment où on y ajoute la fiche), une boîte existante reste
+   *  sélectionnable comme avant, et un dossier non vide (qui contient déjà
+   *  un sous-dossier ou une boîte) n'apparaît plus du tout comme
+   *  destination possible — juste un repère non cliquable, comme avant. */
+  function renderSubjectTreeForSingleChoice(container, parentId, depth, onPick) {
+    const childFolders = folders
+      .filter((f) => f.parentId === parentId)
+      .sort((a, b) => a.name.localeCompare(b.name, "fr"));
+    const childSubjects = subjects
+      .filter((s) => s.folderId === parentId && !folders.some((f) => f.id === s.id))
+      .sort((a, b) => a.name.localeCompare(b.name, "fr"));
+    childFolders.forEach((f) => {
+      if (isFolderABoite(f.id)) {
+        // Ce dossier EST une boîte (auto-liée) : un item cliquable, comme
+        // n'importe quelle autre boîte.
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "subject-choice-tree-item";
+        btn.style.paddingLeft = `${12 + depth * 14}px`;
+        btn.textContent = f.name;
+        btn.addEventListener("click", () => onPick(f.id));
+        container.appendChild(btn);
+        return;
+      }
+      if (folderIsEmpty(f.id)) {
+        // Dossier vide : sélectionnable, deviendra une boîte à cet instant.
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "subject-choice-tree-item subject-choice-tree-item--empty-folder";
+        btn.style.paddingLeft = `${12 + depth * 14}px`;
+        btn.innerHTML = `${folderIcon()} ${escapeHtml(f.name)} <span class="field-hint" style="display:inline;">(dossier vide)</span>`;
+        btn.addEventListener("click", async () => {
+          const s = await ensureFolderIsBoite(f.id);
+          if (s) onPick(s.id);
+        });
+        container.appendChild(btn);
+        return;
+      }
+      // Dossier non vide (sous-dossiers et/ou boîtes dedans) : simple
+      // repère, on ne peut pas y ranger une fiche directement (item 1).
+      const header = document.createElement("div");
+      header.className = "subject-choice-tree-folder";
+      header.style.paddingLeft = `${10 + depth * 14}px`;
+      header.textContent = `${folderIcon()} ${f.name}`;
+      container.appendChild(header);
+      renderSubjectTreeForSingleChoice(container, f.id, depth + 1, onPick);
+    });
+    childSubjects.forEach((s) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "subject-choice-tree-item";
+      btn.style.paddingLeft = `${12 + depth * 14}px`;
+      btn.textContent = s.name;
+      btn.addEventListener("click", () => onPick(s.id));
+      container.appendChild(btn);
+    });
+  }
+
+  function openCardsSubjectChoiceMenu() {
+    const menu = el("cards-subject-choice-menu");
+    const tree = el("cards-subject-choice-tree");
+    if (!menu || !tree) return;
+    tree.innerHTML = "";
+    renderSubjectTreeForSingleChoice(tree, ROOT_FOLDER_ID, 0, (subjectId) => {
+      closeCardsSubjectChoiceMenu();
+      saveNewCardSubjectId(subjectId);
+      const btn = el("cards-subject-select-btn");
+      if (btn) btn.textContent = subjectName(subjectId);
+    });
+    menu.hidden = false;
+  }
+  function closeCardsSubjectChoiceMenu() {
+    const menu = el("cards-subject-choice-menu");
+    if (menu) menu.hidden = true;
+  }
+  const cardsSubjectSelectBtn = el("cards-subject-select-btn");
+  if (cardsSubjectSelectBtn) {
+    cardsSubjectSelectBtn.addEventListener("click", () => openCardsSubjectChoiceMenu());
+  }
+  document.addEventListener("pointerdown", (e) => {
+    const menu = el("cards-subject-choice-menu");
+    if (!menu || menu.hidden) return;
+    if (menu.contains(e.target) || e.target === cardsSubjectSelectBtn) return;
+    closeCardsSubjectChoiceMenu();
   });
 
-  manageAddSubjectBtn.addEventListener("click", async () => {
-    const s = await createSubjectFlow();
-    if (s) {
-      switchSubject(s.id);
-      renderSubjectManageList();
-    }
-  });
+  const cardsSearchInputEl = el("cards-search-input");
+  if (cardsSearchInputEl) {
+    // Débounce (item 10) : sans lui, chaque frappe relançait un filtrage +
+    // un rendu complet de la liste — perceptible comme un ralentissement
+    // sur une boîte avec beaucoup de fiches, en tapant vite.
+    let cardsSearchDebounce = null;
+    cardsSearchInputEl.addEventListener("input", () => {
+      clearTimeout(cardsSearchDebounce);
+      cardsSearchDebounce = setTimeout(() => {
+        cardsSearchQuery = cardsSearchInputEl.value.trim();
+        renderManageList();
+      }, 180);
+    });
+  }
+
+  const constructionFilterBtn = el("construction-filter-btn");
+  if (constructionFilterBtn) {
+    constructionFilterBtn.addEventListener("click", () => {
+      cardsConstructionFilter = !cardsConstructionFilter;
+      renderManageList();
+    });
+  }
+
+  // Item 1 : "+ Nouvelle boîte" retiré — une boîte ne naît plus que d'un
+  // dossier vide auquel on ajoute une première fiche (voir
+  // ensureFolderIsBoite, utilisé par le sélecteur de la page Fiches).
 
   importTargetSelect.addEventListener("change", async () => {
     if (importTargetSelect.value === "__new__") {
@@ -1769,6 +3922,37 @@
     }
   }
 
+  /** Même principe que `persist` pour les fiches, mais pour les boîtes et
+   *  les dossiers (item 1/8) : jusqu'ici jamais vraiment synchronisés (une
+   *  boîte créée ou déplacée sur un appareil n'apparaissait jamais, ou
+   *  pas correctement, sur les autres). */
+  async function persistSubject(subject) {
+    await DB.putSubject(subject);
+    if (Sync.isConfigured()) {
+      Sync.pushSubject(subject).finally(updateSyncStatus);
+    }
+  }
+  async function persistFolder(folder) {
+    await DB.putFolder(folder);
+    if (Sync.isConfigured()) {
+      Sync.pushFolder(folder).finally(updateSyncStatus);
+    }
+  }
+  /** Suppression douce envoyée aux autres appareils AVANT le retrait local
+   *  (voir schéma Supabase : "deleted": true plutôt qu'un vrai DELETE, pour
+   *  que le pull suivant sache retirer la boîte/le dossier au lieu de le
+   *  voir réapparaître). */
+  async function pushSubjectDeleted(subject) {
+    if (Sync.isConfigured()) {
+      await Sync.pushSubject({ ...subject, deleted: true, updatedAt: new Date().toISOString() });
+    }
+  }
+  async function pushFolderDeleted(folder) {
+    if (Sync.isConfigured()) {
+      await Sync.pushFolder({ ...folder, deleted: true, updatedAt: new Date().toISOString() });
+    }
+  }
+
   /** Répercute la version à jour d'une fiche partout où une copie ancienne
    *  pourrait encore traîner (la fiche affichée, et la file de révision en
    *  cours). Sans ça, `currentCard` et `reviewQueue` gardent l'instantané
@@ -1786,8 +3970,8 @@
     if (currentCard && currentCard.id === updated.id) {
       currentCard = updated;
       if (el("view-review").classList.contains("is-active")) {
-        questionTextEl.textContent = currentCard.question;
-        answerTextEl.textContent = currentCard.answer;
+        renderQuestionText(currentCard);
+        answerTextEl.innerHTML = toDisplayHtml(currentCard.answer);
         updateRatingPreviews();
       }
     }
@@ -1814,25 +3998,228 @@
     renderManageList();
     renderStats();
     renderReviewChart();
-    renderSubjectAlgoBadge();
-    refreshTamaTabIcon();
+    renderReviewSubjectScore();
+    renderReviewGauge();
+    // Passe systématiquement la boîte de la fiche AFFICHÉE (item 2 —
+    // bug corrigé) : sans ça, en mode "toutes boîtes"/"sélection",
+    // l'appel masquait le badge de mode faute de savoir quelle boîte
+    // afficher, avant qu'un autre rendu ne le réaffiche juste après — d'où
+    // le clignotement observé (par ex. en appuyant sur "chantier").
+    renderSubjectAlgoBadge(currentCard ? currentCard.subject : undefined);
   }
 
-  /** Badge "mode d'apprentissage" de la matière active, affiché dans la
-   *  barre déjà existante en haut (voir item 7) — jamais de ligne en plus. */
-  function renderSubjectAlgoBadge() {
-    const badge = el("subject-algo-badge");
-    if (!badge) return;
-    badge.textContent = currentSubjectId ? algoModeName(getSubjectAlgoSettings(currentSubjectId)) : "";
+  /** Badge "mode d'apprentissage" de la boîte active, affiché dans la
+   *  barre déjà existante en haut (voir item 7) — jamais de ligne en plus.
+   *  Libellé court (juste "Normal", pas "Apprentissage normal") : la place
+   *  disponible à côté du sélecteur est trop réduite pour le nom complet,
+   *  qui se faisait tronquer en "Apprentissage n…", peu lisible. */
+  const ALGO_MODE_KEY_TO_CLASS = { cool: "is-cool", normal: "is-normal", renforce: "is-renforce", custom: "is-custom" };
+  /** Rafraîchit tout ce qui dépend de la boîte active en dehors de sa
+   *  propre page : le nombre de fiches + bouton mode dans la barre de
+   *  Réviser (item 1, mêmes couleurs que le curseur du mode d'apprentissage
+   *  — voir ALGO_MODE_COLORS), et le récapitulatif d'export/import dans
+   *  Réglages (item 6). */
+  /** `cardSubjectId` (optionnel) : quand on révise "toutes boîtes" ou une
+   *  "sélection", chaque fiche affichée a sa propre boîte — c'est ELLE
+   *  qui doit déterminer le mode affiché/édité par le bouton, pas la
+   *  sélection globale (item 2). Sans cet argument (autres pages, ou mode
+   *  normal), on retombe sur `currentSubjectId` comme avant. */
+  const cardAlgoBtn = el("card-algo-btn");
+
+  function renderSubjectAlgoBadge(cardSubjectId) {
+    const sentinel = isSentinelSubject(currentSubjectId);
+    const n = currentSubjectId ? subjectCards().length : 0;
+    const effectiveSubjectId = sentinel && cardSubjectId ? cardSubjectId : currentSubjectId;
+
+    if (subjectBarCountEl) subjectBarCountEl.textContent = `${n} fiche${n > 1 ? "s" : ""}`;
+    // Un vrai identifiant de boîte (jamais un sentinel) est toujours
+    // disponible dès qu'une fiche est affichée à l'écran (item 17 : le
+    // badge de mode vit maintenant sur la fiche elle-même, plus à côté du
+    // sélecteur de boîte — ça n'avait plus de sens avec le multi-boîtes).
+    const showBtn = !sentinel || !!cardSubjectId;
+    if (cardAlgoBtn) cardAlgoBtn.hidden = !showBtn;
+    if (showBtn && effectiveSubjectId) {
+      const key = getSubjectAlgoMode(effectiveSubjectId);
+      if (cardAlgoBtn) {
+        // Item 13 : icône épurée (banque) plutôt que l'émoticône 🎓, comme
+        // sur la page Organisation.
+        cardAlgoBtn.innerHTML = iconSvgMarkup("gradCap", "icon-inline-svg");
+        applyModeBadgeStyle(cardAlgoBtn, key);
+        cardAlgoBtn.dataset.subjectId = effectiveSubjectId;
+        cardAlgoBtn.title = `Mode d'apprentissage : ${modeDisplayName(key)}`;
+      }
+    }
   }
 
-  /** Toutes les fiches non supprimées de la matière actuellement active. */
+  if (cardAlgoBtn) {
+    cardAlgoBtn.addEventListener("click", () => {
+      // En mode "toutes boîtes"/"sélection", `dataset.subjectId` porte la
+      // vraie boîte de la fiche actuellement affichée (voir
+      // renderSubjectAlgoBadge) ; sinon, la boîte active classique.
+      const targetId = cardAlgoBtn.dataset.subjectId || currentSubjectId;
+      if (targetId && !isSentinelSubject(targetId)) openSubjectAlgoView(targetId, "review");
+    });
+  }
+
+  /** Toutes les fiches non supprimées de la boîte actuellement active —
+   *  gère aussi les deux modes "toutes boîtes" / "sélection de boîtes"
+   *  (item 1), chaque fiche gardant alors le mode d'apprentissage de SA
+   *  propre boîte (voir computeAlgoNext, qui utilise card.subject). */
   function subjectCards() {
+    if (currentSubjectId === ALL_SUBJECTS_ID) {
+      return cards.filter((c) => !c.deleted);
+    }
+    if (currentSubjectId === MULTI_SUBJECTS_ID) {
+      const set = new Set(loadMultiSelection());
+      return cards.filter((c) => !c.deleted && set.has(c.subject));
+    }
     return cards.filter((c) => !c.deleted && c.subject === currentSubjectId);
   }
 
   function dueCards() {
     return subjectCards().filter((c) => SM2.isDue(c));
+  }
+
+  /** Score de la boîte/sélection en cours sur Réviser (item 2), à côté
+   *  du sélecteur — masquable depuis le mode développeur. */
+  function renderReviewSubjectScore() {
+    const el2 = el("review-subject-score");
+    if (!el2) return;
+    const settings = loadDevSettings().cardScore;
+    if (settings.hideSubjectScoreOnReview) {
+      el2.hidden = true;
+      return;
+    }
+    const pool = subjectCards();
+    if (pool.length === 0) {
+      el2.hidden = true;
+      return;
+    }
+    const avg = Math.round(pool.reduce((acc, c) => acc + computeCardScore(c), 0) / pool.length);
+    el2.hidden = false;
+    el2.textContent = `${avg}`;
+  }
+
+  /** Item 4 : toutes les jauges (Organisation, Programme de révision,
+   *  Réviser) sont désormais des barres linéaires horizontales plutôt que
+   *  des anneaux/demi-cercles — même principe partout (couleur = zone
+   *  actuelle du score, remplissage proportionnel), avec en option les
+   *  points de zone + intitulés (Réviser) et/ou un repère d'objectif
+   *  (Programme de révision). */
+  /** Limites (en %) des 6 zones de la jauge, à partir des seuils réglés
+   *  dans le mode développeur. */
+  function gaugeBounds(cardScoreSettings) {
+    return [0, cardScoreSettings.v1, cardScoreSettings.v2, cardScoreSettings.v3, cardScoreSettings.v4, cardScoreSettings.v5, 100];
+  }
+  function currentGaugeZoneColor(score, colors, bounds) {
+    let zoneKey = GAUGE_ZONE_DEFS[0].key;
+    for (let i = 0; i < GAUGE_ZONE_DEFS.length; i++) {
+      if (score >= bounds[i]) zoneKey = GAUGE_ZONE_DEFS[i].key;
+    }
+    return colors[zoneKey] || DEFAULT_GAUGE_COLORS[zoneKey];
+  }
+  function buildLinearGaugeSvg(score, { width = 200, barHeight = 14, showZoneLabels = false, targetValue = null, targetFontSize = 8, scoreFontSize = 15, scoreOnLeft = false, targetLabel = "Objectif : ", targetStyle = "circle" } = {}) {
+    const settings = loadDevSettings().cardScore;
+    const colors = effectiveColors(loadDevSettings()).gaugeColors;
+    const bounds = gaugeBounds(settings);
+    const color = currentGaugeZoneColor(score, colors, bounds);
+    const clampedScore = Math.max(0, Math.min(100, score));
+    // Item 10 : le "objectif du jour" (triangle + texte au-dessus) a besoin
+    // de plus de marge en haut que le simple repère en cercle.
+    const topPad = targetValue !== null && targetStyle === "triangle" ? 34 : 20;
+    const bottomPad = showZoneLabels ? 30 : 4;
+    const height = topPad + barHeight + bottomPad;
+    const barY = topPad;
+    // Item 10 : le score se lit à gauche de la jauge — la barre elle-même
+    // est donc décalée pour lui laisser la place, plutôt que d'écrire le
+    // score PAR-DESSUS le début de la barre.
+    const leftPad = scoreOnLeft ? Math.max(28, scoreFontSize * 1.8) : 0;
+    const barX0 = leftPad;
+    const barWidth = width - leftPad;
+    const pctX = (pct) => barX0 + (Math.max(0, Math.min(100, pct)) / 100) * barWidth;
+    const fillW = Math.max((clampedScore / 100) * barWidth, clampedScore > 0 ? barHeight : 0);
+
+    let svg = `<svg viewBox="0 0 ${width} ${height}" class="linear-gauge-svg">`;
+    svg += `<rect x="${barX0}" y="${barY}" width="${barWidth}" height="${barHeight}" rx="${barHeight / 2}" fill="rgba(0,0,0,0.08)" />`;
+    if (fillW > 0) svg += `<rect x="${barX0}" y="${barY}" width="${fillW}" height="${barHeight}" rx="${barHeight / 2}" fill="${color}" />`;
+    if (scoreOnLeft) {
+      svg += `<text x="0" y="${barY + barHeight / 2 + scoreFontSize * 0.35}" text-anchor="start" font-size="${scoreFontSize}" font-weight="700" fill="${color}" font-family="sans-serif">${score}</text>`;
+    } else {
+      const scoreX = Math.min(Math.max(barX0 + fillW, barX0 + 22), width - 4);
+      svg += `<text x="${scoreX}" y="${barY - 6}" text-anchor="middle" font-size="${scoreFontSize}" font-weight="700" fill="${color}" font-family="sans-serif">${score}</text>`;
+    }
+
+    if (showZoneLabels) {
+      // Item 10 : les traits de niveau deviennent des ronds DIRECTEMENT sur
+      // la jauge (même diamètre que son épaisseur), contour noir, remplis
+      // de la couleur de la zone qu'ils terminent — avec les étoiles
+      // centrées horizontalement au-dessus de chaque rond (item 8).
+      const cr = barHeight / 2;
+      for (let i = 0; i < GAUGE_ZONE_DEFS.length; i++) {
+        const boundary = bounds[i + 1];
+        if (boundary === undefined) continue;
+        const cx = pctX(boundary);
+        const zc = colors[GAUGE_ZONE_DEFS[i].key] || DEFAULT_GAUGE_COLORS[GAUGE_ZONE_DEFS[i].key];
+        const clampedCx = Math.max(barX0 + cr, Math.min(barX0 + barWidth - cr, cx));
+        svg += `<circle cx="${clampedCx.toFixed(1)}" cy="${barY + barHeight / 2}" r="${cr}" fill="${zc}" stroke="#000" stroke-width="1.2" />`;
+        svg += `<text x="${clampedCx.toFixed(1)}" y="${barY + barHeight + 14}" text-anchor="middle" font-size="7" font-family="sans-serif" fill="${zc}">${gaugeZoneStarText(GAUGE_ZONE_DEFS[i].stars)}</text>`;
+      }
+    }
+    if (targetValue !== null) {
+      const tx = pctX(targetValue);
+      if (targetStyle === "triangle") {
+        // Item 10 : triangle noir juste au-dessus de la jauge, avec
+        // "Objectif du jour : X" écrit au-dessus du triangle.
+        const triY = barY - 4;
+        svg += `<polygon points="${tx.toFixed(1)},${triY} ${(tx - 6).toFixed(1)},${triY - 9} ${(tx + 6).toFixed(1)},${triY - 9}" fill="#000" />`;
+        const anchor = tx > barX0 + barWidth - 60 ? "end" : tx < barX0 + 60 ? "start" : "middle";
+        svg += `<text x="${tx.toFixed(1)}" y="${triY - 13}" text-anchor="${anchor}" font-size="${targetFontSize}" font-weight="700" fill="var(--ink, #1f2937)" font-family="sans-serif">${targetLabel}${targetValue}</text>`;
+      } else {
+        // Item 9 : simple rond noir directement sur la jauge, de diamètre
+        // égal à son épaisseur — sans trait en dessous.
+        svg += `<circle cx="${tx.toFixed(1)}" cy="${barY + barHeight / 2}" r="${barHeight / 2}" fill="#000" />`;
+        const anchor = tx > barX0 + barWidth - 45 ? "end" : tx < barX0 + 45 ? "start" : "middle";
+        svg += `<text x="${tx.toFixed(1)}" y="${barY - 6}" text-anchor="${anchor}" font-size="${targetFontSize}" font-weight="700" fill="var(--ink-soft, #64748b)" font-family="sans-serif">${targetLabel}${targetValue}</text>`;
+      }
+    }
+    svg += `</svg>`;
+    return svg;
+  }
+  /** Jauge compacte (Organisation) : juste la barre + le score, sans
+   *  point de zone ni objectif. */
+  function renderMiniGaugeRing(score) {
+    return buildLinearGaugeSvg(score, { width: 120, barHeight: 12, scoreFontSize: 13 });
+  }
+  /** Même jauge, avec en plus un repère indiquant le score OBJECTIF à
+   *  atteindre — utilisée dans le Programme de révision. */
+  function renderMiniGaugeRingWithTarget(score, target) {
+    const fontSize = loadDevSettings().cardScore.programTargetFontSize;
+    return buildLinearGaugeSvg(score, { width: 190, barHeight: 12, scoreFontSize: 13, targetValue: target, targetFontSize: fontSize });
+  }
+  /** Grande jauge de la page Réviser : les 6 points de zone avec leurs
+   *  intitulés (Débutant, Fragile, etc.), comme le demandait l'item 4. */
+  /** Item 10 : "objectif du jour" pour la jauge de Réviser — reprend la
+   *  même logique que le Programme de révision (échéance la plus proche
+   *  liée à la boîte actuellement révisée), affiché seulement quand une
+   *  boîte précise (pas "toutes"/sélection) est en cours et qu'elle a
+   *  effectivement une échéance à venir. */
+  function computeTodayTargetForCurrentSubject() {
+    if (!currentSubjectId || currentSubjectId === ALL_SUBJECTS_ID || currentSubjectId === MULTI_SUBJECTS_ID) return null;
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const linkId = `subject:${currentSubjectId}`;
+    const upcoming = loadCalendarEvents()
+      .filter((ev) => ev.linkId === linkId && ev.date >= todayStr)
+      .sort((a, b) => a.date.localeCompare(b.date));
+    if (upcoming.length === 0) return null;
+    return REVISION_PROGRAM_TARGET_SCORE;
+  }
+  function renderReviewGauge() {
+    const wrap = el("review-gauge-wrap");
+    if (!wrap) return;
+    const pool = subjectCards();
+    const score = pool.length > 0 ? Math.round(pool.reduce((acc, c) => acc + computeCardScore(c), 0) / pool.length) : 0;
+    const target = computeTodayTargetForCurrentSubject();
+    wrap.innerHTML = buildLinearGaugeSvg(score, { width: 300, barHeight: 18, showZoneLabels: true, scoreFontSize: 20, scoreOnLeft: true, targetValue: target, targetLabel: "Objectif du jour : ", targetStyle: "triangle" });
   }
 
   function renderDuePill() {
@@ -1863,6 +4250,11 @@
     reviewSessionStarted = true;
     reviewQueue = shuffle(dueCards());
     sessionTotalDue = reviewQueue.length;
+    // Une nouvelle session invalide l'annulation en attente (item 2) : la
+    // fiche à restaurer n'est plus forcément dans la nouvelle file.
+    lastRatingSnapshot = null;
+    const undoBtn = el("undo-rating-btn");
+    if (undoBtn) undoBtn.hidden = true;
     showNextCard();
   }
 
@@ -1887,8 +4279,8 @@
       return;
     }
     currentCard = fresh;
-    questionTextEl.textContent = currentCard.question;
-    answerTextEl.textContent = currentCard.answer;
+    renderQuestionText(currentCard);
+    answerTextEl.innerHTML = toDisplayHtml(currentCard.answer);
     updateRatingPreviews();
   }
 
@@ -1917,7 +4309,7 @@
   /** Mode bonus : pioche en priorité parmi les fiches du jour le plus chargé
    *  à venir, pour lisser la charge de révision future. Si aucun pic net ne
    *  se dégage, on retombe sur un tirage aléatoire classique sur toute la
-   *  matière. */
+   *  boîte. */
   function pickRandomBonusCard(pool, excludeId) {
     const busiestDay = findBusiestUpcomingDay(pool);
     if (busiestDay !== null) {
@@ -1939,9 +4331,27 @@
   }
 
   function showNextCard() {
+    const wasFlipped = isFlipped;
     isFlipped = false;
-    flipCardEl.classList.remove("is-flipped");
 
+    if (wasFlipped) {
+      // Item 2 : le contenu change au MILIEU du retournement (la fiche est
+      // alors de profil, aucune face n'est vraiment visible) plutôt qu'à
+      // la toute fin — on ne voit donc plus le changement de question se
+      // produire, la fiche semble "révéler" la nouvelle question en
+      // continuant simplement son mouvement.
+      flipCardEl.classList.remove("is-flipped");
+      setTimeout(finishShowNextCard, getFlipDurationMs() / 2);
+    } else {
+      flipCardEl.classList.add("no-flip-transition");
+      flipCardEl.classList.remove("is-flipped");
+      void flipCardEl.offsetWidth; // force l'application de la classe avant la suite
+      requestAnimationFrame(() => flipCardEl.classList.remove("no-flip-transition"));
+      finishShowNextCard();
+    }
+  }
+
+  function finishShowNextCard() {
     if (reviewQueue.length > 0) {
       isBonusMode = false;
       currentCard = reviewQueue[0];
@@ -1952,8 +4362,8 @@
       // Les boutons d'évaluation restent affichés en permanence (côté
       // question comme côté réponse) : on ne les cache plus au retournement.
       ratingRowEl.hidden = false;
-      questionTextEl.textContent = currentCard.question;
-      answerTextEl.textContent = currentCard.answer;
+      renderQuestionText(currentCard);
+      answerTextEl.innerHTML = toDisplayHtml(currentCard.answer);
 
       const doneToday = sessionTotalDue - reviewQueue.length;
       reviewProgressEl.textContent = `${doneToday}/${sessionTotalDue} fiches revues aujourd'hui`;
@@ -1961,6 +4371,8 @@
       updateRatingPreviews();
       renderDuePill();
       renderReviewChart();
+      renderReviewSubjectScore();
+      renderReviewGauge();
       return;
     }
 
@@ -1973,10 +4385,15 @@
       cardStackEl.hidden = true;
       editCurrentBtn.hidden = true;
       if (hibernateCurrentBtn) hibernateCurrentBtn.hidden = true;
+      if (el("construction-current-btn")) el("construction-current-btn").hidden = true;
+      if (cardAlgoBtn) cardAlgoBtn.hidden = true;
       ratingRowEl.hidden = true;
+      if (el("review-score-info")) el("review-score-info").hidden = true;
       reviewProgressEl.textContent = "";
       renderDuePill();
       renderReviewChart();
+      renderReviewSubjectScore();
+      renderReviewGauge();
       return;
     }
 
@@ -1991,16 +4408,18 @@
     editCurrentBtn.hidden = false;
     if (hibernateCurrentBtn) hibernateCurrentBtn.hidden = false;
     ratingRowEl.hidden = false;
-    questionTextEl.textContent = currentCard.question;
-    answerTextEl.textContent = currentCard.answer;
+    renderQuestionText(currentCard);
+    answerTextEl.innerHTML = toDisplayHtml(currentCard.answer);
     reviewProgressEl.textContent = "Fiches du jour terminées — révision libre";
     if (enteringBonusMode) {
-      showTamaToast("🔁 Fiches du jour terminées — passage en révision libre", false);
+      showCenterToast("🔁 Fiches du jour terminées — passage en révision libre");
     }
 
     updateRatingPreviews();
     renderDuePill();
     renderReviewChart();
+    renderReviewSubjectScore();
+    renderReviewGauge();
   }
 
   function updateRatingPreviews() {
@@ -2011,26 +4430,60 @@
       el("sub-hard").textContent = `+${bonusDaysSettings.hard} j`;
       el("sub-good").textContent = `+${bonusDaysSettings.good} j`;
       el("sub-easy").textContent = `+${bonusDaysSettings.easy} j`;
+      updateReviewScoreInfo({
+        again: bonusAgainMode === "increment" ? 1 : 1,
+        hard: bonusDaysSettings.hard,
+        good: bonusDaysSettings.good,
+        easy: bonusDaysSettings.easy,
+      });
       return;
     }
     el("sub-again").textContent = "< 1 j";
     const previews = {};
+    const futureIntervals = {};
     for (const rating of ["again", "hard", "good", "easy"]) {
       const next = computeAlgoNext(currentCard, rating, currentCard.subject);
       previews[rating] = formatInterval(next.interval);
+      futureIntervals[rating] = next.interval;
     }
     el("sub-again").textContent = previews.again;
     el("sub-hard").textContent = previews.hard;
     el("sub-good").textContent = previews.good;
     el("sub-easy").textContent = previews.easy;
+    updateReviewScoreInfo(futureIntervals);
+  }
+
+  /** Item 1d : délai précédent, score actuel, et pour chaque note le futur
+   *  délai + futur score associé — masquable depuis le mode développeur. */
+  function updateReviewScoreInfo(futureIntervals) {
+    const wrap = el("review-score-info");
+    if (!wrap || !currentCard) return;
+    const settings = loadDevSettings().cardScore;
+    if (settings.hideReviewScoreInfo) {
+      wrap.hidden = true;
+      return;
+    }
+    wrap.hidden = false;
+    const prevDelay = Math.max(1, currentCard.interval || 1);
+    const currentScore = computeCardScore(currentCard);
+    el("score-info-prev-delay").textContent = `${prevDelay} j`;
+    el("score-info-current").textContent = `${currentScore}`;
+    const labels = { again: "Encore", hard: "Difficile", good: "Bien", easy: "Facile" };
+    ["again", "hard", "good", "easy"].forEach((r) => {
+      const cell = el(`score-info-${r}`);
+      if (!cell) return;
+      const futureScore = computeCardScore(currentCard, futureIntervals[r]);
+      cell.textContent = `${labels[r]} : ${formatInterval(futureIntervals[r])} (${futureScore})`;
+    });
   }
 
   function formatInterval(days) {
     if (days < 1) return "< 1 j";
-    if (days === 1) return "1 j";
-    if (days < 30) return `${days} j`;
-    if (days < 365) return `${Math.round(days / 30)} mois`;
-    return `${Math.round(days / 365)} an(s)`;
+    // Toujours en jours, même au-delà d'1 mois — demandé explicitement
+    // (item 3) : convertir en mois/ans faisait perdre en précision visuelle
+    // exactement là où l'écart entre Encore/Difficile/Bien/Facile compte le
+    // plus (voir aussi la correction de l'algorithme SM-2 plus haut).
+    return `${Math.round(days)} j`;
   }
 
   let editReturnToReview = false;
@@ -2039,7 +4492,6 @@
     if (!currentCard) return;
     editReturnToReview = true;
     enterEditMode(currentCard);
-    document.querySelector('.tab[data-view="manage"]').click();
     inputQuestion.focus();
   });
 
@@ -2056,13 +4508,103 @@
     await rateCurrentCard(rating);
   });
 
-  async function rateCurrentCard(rating) {
-    if (isBonusMode) {
-      await rateBonusCard(rating);
-    } else {
-      await rateScheduledCard(rating);
+  /** Journal des notes données (item 15) : un evénement par notation, quel
+   *  que soit le mode (file du jour ou révision libre) — sert uniquement
+   *  aux statistiques "Notes données" de la page Stats, jamais à la
+   *  planification elle-même. */
+  let ratingLog = [];
+  async function logRating(card, rating) {
+    const entry = { id: uid(), cardId: card.id, subjectId: card.subject, rating, at: new Date().toISOString() };
+    ratingLog.push(entry);
+    await DB.addRatingLog(entry);
+    return entry.id;
+  }
+
+  /** Annuler la dernière évaluation (item 2) : un seul niveau d'annulation
+   *  (pas d'historique complet), écrasé à chaque nouvelle notation.
+   *  Capture tout ce qui est modifié par une notation, pour tout restaurer
+   *  à l'identique : la fiche elle-même (avant notation), la file de
+   *  révision, le mode bonus, le compteur de fiches dues, et l'entrée du
+   *  journal des notes (pour ne pas fausser les statistiques après coup). */
+  let lastRatingSnapshot = null;
+  /** Jeton incrémenté à chaque nouvelle vague déclenchée (item 1 — bug
+   *  corrigé) : si une deuxième notation arrive avant que l'animation de la
+   *  première ne soit terminée, les callbacks de fin d'animation de
+   *  l'ancienne vague se reconnaissent périmés et n'agissent plus (ne
+   *  remettent pas le graphique à l'échelle normale ni ne re-scrollent),
+   *  pour ne jamais interférer avec la vague la plus récente en cours. */
+  let reviewWaveToken = 0;
+
+  function captureRatingSnapshot(ratingLogId) {
+    lastRatingSnapshot = {
+      card: { ...currentCard },
+      reviewQueue: reviewQueue.map((c) => ({ ...c })),
+      isBonusMode,
+      sessionTotalDue,
+      ratingLogId,
+    };
+    const undoBtn = el("undo-rating-btn");
+    if (undoBtn) undoBtn.hidden = false;
+  }
+
+  async function undoLastRating() {
+    const snap = lastRatingSnapshot;
+    if (!snap) return;
+    lastRatingSnapshot = null;
+    const undoBtn = el("undo-rating-btn");
+    if (undoBtn) undoBtn.hidden = true;
+
+    // Restaure la fiche à son état d'avant notation.
+    await persist(snap.card);
+    const idx = cards.findIndex((c) => c.id === snap.card.id);
+    if (idx >= 0) cards[idx] = snap.card;
+
+    // Retire l'entrée correspondante du journal des notes (item 15/stats),
+    // pour qu'une évaluation annulée n'y apparaisse pas comme si elle avait
+    // eu lieu.
+    if (snap.ratingLogId) {
+      ratingLog = ratingLog.filter((e) => e.id !== snap.ratingLogId);
+      await DB.removeFromRatingLog(snap.ratingLogId);
     }
+
+    reviewQueue = snap.reviewQueue;
+    isBonusMode = snap.isBonusMode;
+    sessionTotalDue = snap.sessionTotalDue;
+    currentCard = snap.card;
+
+    flipCardEl.classList.add("no-flip-transition");
+    flipCardEl.classList.remove("is-flipped");
+    void flipCardEl.offsetWidth;
+    requestAnimationFrame(() => flipCardEl.classList.remove("no-flip-transition"));
+    isFlipped = false;
+    renderQuestionText(currentCard);
+    answerTextEl.innerHTML = toDisplayHtml(currentCard.answer);
+    updateRatingPreviews();
+    renderReviewChart();
+    renderStats();
+    renderManageList();
+    renderDuePill();
+  }
+
+  const undoRatingBtn = el("undo-rating-btn");
+  if (undoRatingBtn) {
+    undoRatingBtn.addEventListener("click", undoLastRating);
+  }
+
+  async function rateCurrentCard(rating) {
+    if (!currentCard) return;
+    const ratingLogId = await logRating(currentCard, rating);
+    captureRatingSnapshot(ratingLogId);
+    const updated = isBonusMode ? await rateBonusCard(rating) : await rateScheduledCard(rating);
     showNextCard();
+    // Anime le mini graphique (item 9) : la barre "aujourd'hui" et toutes
+    // les barres jusqu'à la nouvelle date de la fiche s'allument en vague,
+    // de gauche à droite. `requestAnimationFrame` laisse le temps au
+    // graphique (redessiné par showNextCard -> renderReviewChart) d'exister
+    // dans le DOM avant qu'on n'essaie de lui appliquer l'animation.
+    if (updated) {
+      requestAnimationFrame(() => triggerReviewChartWave(0, updated.interval));
+    }
   }
 
   async function rateScheduledCard(rating) {
@@ -2085,9 +4627,9 @@
       reviewQueue.push(updated);
     }
 
-    refreshTamaTabIcon();
     renderStats();
     renderManageList();
+    return updated;
   }
 
   /** Calcule la nouvelle échéance quand on répond "Encore" en mode bonus,
@@ -2155,9 +4697,9 @@
       sessionTotalDue += 1;
     }
 
-    refreshTamaTabIcon();
     renderStats();
     renderManageList();
+    return updated;
   }
 
   /** Bouton "hibernation" : repousse la prochaine interrogation d'une fiche
@@ -2167,6 +4709,10 @@
   async function hibernateCurrentCard() {
     const card = currentCard;
     if (!card) return;
+    // Annulable comme une notation (item 9 — bug corrigé : jusqu'ici
+    // l'hibernation n'était pas du tout capturée par "Annuler la dernière
+    // évaluation", qui restaurait alors le mauvais état).
+    captureRatingSnapshot(null);
     const today = startOfDay(new Date());
     const base = card.dueDate ? startOfDay(new Date(card.dueDate)) : today;
     const start = base.getTime() > today.getTime() ? base : today;
@@ -2188,6 +4734,9 @@
     renderManageList();
     renderDuePill();
     showNextCard();
+    // Même animation que pour une notation (item 9 — bug corrigé :
+    // l'hibernation n'animait jamais le graphique).
+    requestAnimationFrame(() => triggerReviewChartWave(0, updated.interval));
   }
 
   if (hibernateCurrentBtn) {
@@ -2205,14 +4754,62 @@
     });
   }
 
+  const constructionCurrentBtn = el("construction-current-btn");
+  if (constructionCurrentBtn) {
+    constructionCurrentBtn.addEventListener("click", async () => {
+      if (!currentCard) return;
+      await toggleUnderConstruction(currentCard.id);
+      constructionCurrentBtn.classList.toggle("is-active-construction", !!currentCard.underConstruction);
+    });
+  }
+
+  /** cardForm.reset() natif ne touche pas les champs contenteditable (item
+   *  13) — seuls les vrais éléments de formulaire (input/textarea/select).
+   *  On les vide donc à la main partout où l'ancien reset() était appelé. */
+  /** Retenu pour "Retour" (item 2) : permet de revenir à l'onglet d'où on
+   *  venait, plutôt que toujours atterrir sur Fiches. */
+  let previousViewBeforeNewCard = "review";
+  function openNewCardView() {
+    const activeTab = document.querySelector(".tab.is-active");
+    // Par défaut "home" (pas de tab actif = on venait de l'accueil, seul
+    // point d'entrée normal désormais vers "+ Ajouter une fiche").
+    previousViewBeforeNewCard = activeTab ? activeTab.dataset.view : "home";
+    document.querySelectorAll(".view").forEach((v) => v.classList.remove("is-active"));
+    const target = el("view-new-card");
+    if (target) target.classList.add("is-active");
+    const homeBtnEl = el("home-btn");
+    if (homeBtnEl) homeBtnEl.hidden = false;
+  }
+  function closeNewCardView(toView) {
+    const dest = toView || previousViewBeforeNewCard || "home";
+    if (dest === "home") {
+      goHome();
+      return;
+    }
+    document.querySelectorAll(".view").forEach((v) => v.classList.remove("is-active"));
+    const target = el(`view-${dest}`);
+    if (target) target.classList.add("is-active");
+    document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("is-active", t.dataset.view === dest));
+  }
+
+  function resetCardForm() {
+    cardForm.reset();
+    if (inputQuestion) inputQuestion.innerHTML = "";
+    if (inputAnswer) inputAnswer.innerHTML = "";
+  }
+
   /* ---------------------------------------------------------
      Vue Gérer : formulaire + liste
   --------------------------------------------------------- */
   cardForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const question = inputQuestion.value.trim();
-    const answer = inputAnswer.value.trim();
-    if (!question || !answer) return;
+    // Les champs contenteditable ne supportent pas l'attribut HTML
+    // `required` natif : on vérifie donc à la main qu'ils ne sont pas vides
+    // (au sens texte, une fiche entièrement blanche ou juste un <br> ne
+    // doit pas compter comme "remplie").
+    if (isRichEditorEmpty(inputQuestion) || isRichEditorEmpty(inputAnswer)) return;
+    const question = inputQuestion.innerHTML.trim();
+    const answer = inputAnswer.innerHTML.trim();
 
     if (editingId) {
       const idx = cards.findIndex((c) => c.id === editingId);
@@ -2223,35 +4820,70 @@
         syncCardEverywhere(updated);
       }
       exitEditMode();
+      resetCardForm();
+      renderAll();
+      if (editReturnToReview) {
+        editReturnToReview = false;
+        closeNewCardView("review");
+      } else {
+        closeNewCardView();
+      }
     } else {
-      const card = newCard(question, answer);
+      // Item 5 : la boîte est désormais obligatoire et explicite (bug
+      // corrigé — la fiche partait auparavant toujours dans la boîte
+      // active de Réviser, sans lien avec ce sélecteur).
+      if (!newCardSubjectId || !subjects.some((s) => s.id === newCardSubjectId)) {
+        alert("Choisis d'abord une boîte pour cette fiche.");
+        return;
+      }
+      const card = newCard(question, answer, newCardSubjectId);
       await persist(card);
       cards.push(card);
-    }
-
-    cardForm.reset();
-    renderAll();
-
-    if (editReturnToReview) {
-      editReturnToReview = false;
-      document.querySelector('.tab[data-view="review"]').click();
-    } else if (!currentCard) {
-      startReviewSession();
+      renderAll();
+      // Item 5 : on reste sur cette page pour enchaîner la création d'une
+      // autre fiche, la boîte choisie est conservée.
+      resetCardForm();
+      showToast("Fiche ajoutée");
+      if (inputQuestion) inputQuestion.focus();
+      if (!currentCard) startReviewSession();
     }
   });
+
+  const newCardBackBtn = el("new-card-back-btn");
+  if (newCardBackBtn) {
+    newCardBackBtn.addEventListener("click", () => {
+      editReturnToReview = false;
+      exitEditMode();
+      resetCardForm();
+      closeNewCardView();
+    });
+  }
 
   cancelEditBtn.addEventListener("click", () => {
-    editReturnToReview = false;
-    exitEditMode();
-    cardForm.reset();
+    if (editingId) {
+      // Annuler une MODIFICATION : rien à garder, on repart d'où on venait.
+      editReturnToReview = false;
+      exitEditMode();
+      resetCardForm();
+      closeNewCardView();
+    } else {
+      // Item 7 : annuler une CRÉATION efface juste le contenu (question/
+      // réponse), garde la boîte choisie, et reste sur cette page.
+      resetCardForm();
+      if (inputQuestion) inputQuestion.focus();
+    }
   });
 
+  const deleteEditingCardBtn = el("delete-editing-card");
+
   function enterEditMode(card) {
+    openNewCardView();
     editingId = card.id;
-    inputQuestion.value = card.question;
-    inputAnswer.value = card.answer;
+    inputQuestion.innerHTML = toDisplayHtml(card.question);
+    inputAnswer.innerHTML = toDisplayHtml(card.answer);
     submitBtn.textContent = "Enregistrer les modifications";
     cancelEditBtn.hidden = false;
+    if (deleteEditingCardBtn) deleteEditingCardBtn.hidden = false;
     inputQuestion.focus();
   }
 
@@ -2259,18 +4891,257 @@
     editingId = null;
     submitBtn.textContent = "Ajouter à la pile";
     cancelEditBtn.hidden = true;
+    if (deleteEditingCardBtn) deleteEditingCardBtn.hidden = true;
+  }
+
+  if (deleteEditingCardBtn) {
+    deleteEditingCardBtn.addEventListener("click", async () => {
+      if (!editingId) return;
+      if (!confirm("Supprimer définitivement cette fiche ? Cette action est irréversible.")) return;
+      const id = editingId;
+      editReturnToReview = false;
+      exitEditMode();
+      resetCardForm();
+      await deleteCard(id, true);
+      closeNewCardView();
+    });
+  }
+
+  const CARDS_SCOPE_CURRENT = "__current__";
+  const CARDS_SCOPE_MULTI = "__cards_multi__";
+  const CARDS_SCOPE_MULTI_KEY = "fiches_cards_multi_ids";
+  let cardsScopeFilter = CARDS_SCOPE_CURRENT;
+  let cardsSearchQuery = "";
+  let cardsConstructionFilter = false;
+
+  function loadCardsMultiSelection() {
+    try {
+      const raw = localStorage.getItem(CARDS_SCOPE_MULTI_KEY);
+      const ids = raw ? JSON.parse(raw) : [];
+      return Array.isArray(ids) ? ids.filter((id) => subjects.some((s) => s.id === id)) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+  function saveCardsMultiSelection(ids) {
+    localStorage.setItem(CARDS_SCOPE_MULTI_KEY, JSON.stringify(ids));
+  }
+
+  /** Périmètre d'affichage/recherche de la page Fiches (item 12) — distinct
+   *  de la boîte choisie pour la CRÉATION d'une nouvelle fiche
+   *  (`cardsSubjectSelectEl`, qui doit toujours rester une boîte réelle
+   *  unique) : par défaut "cette boîte" suit ce choix, mais peut être
+   *  élargi à un dossier entier, toutes les boîtes, ou une sélection
+   *  libre, sans changer où atterrit une nouvelle fiche. */
+  function cardsScopeCards() {
+    if (cardsScopeFilter === CARDS_SCOPE_CURRENT) return subjectCards();
+    if (cardsScopeFilter === ALL_SUBJECTS) return cards.filter((c) => !c.deleted);
+    if (cardsScopeFilter === CARDS_SCOPE_MULTI) {
+      const set = new Set(loadCardsMultiSelection());
+      return cards.filter((c) => !c.deleted && set.has(c.subject));
+    }
+    if (typeof cardsScopeFilter === "string" && cardsScopeFilter.startsWith("folder:")) {
+      const set = new Set(subjectIdsInFolder(cardsScopeFilter.slice(7)));
+      return cards.filter((c) => !c.deleted && set.has(c.subject));
+    }
+    return cards.filter((c) => !c.deleted && c.subject === cardsScopeFilter);
+  }
+
+  const CARDS_SCOPE_MULTI_LABEL_KEY = "fiches_cards_multi_label";
+  function loadCardsMultiLabel() {
+    return localStorage.getItem(CARDS_SCOPE_MULTI_LABEL_KEY) || "";
+  }
+  function saveCardsMultiLabel(label) {
+    localStorage.setItem(CARDS_SCOPE_MULTI_LABEL_KEY, label || "");
+  }
+
+  /** Libellé affiché sur le bouton de périmètre (item : même principe que
+   *  Réviser). */
+  function cardsScopeLabel() {
+    if (cardsScopeFilter === CARDS_SCOPE_CURRENT) return subjectName(currentSubjectId);
+    if (cardsScopeFilter === ALL_SUBJECTS) return "Toutes les boîtes";
+    if (cardsScopeFilter === CARDS_SCOPE_MULTI) return loadCardsMultiLabel() || "Sélection de boîtes";
+    if (typeof cardsScopeFilter === "string" && cardsScopeFilter.startsWith("folder:")) {
+      const f = folders.find((x) => x.id === cardsScopeFilter.slice(7));
+      return f ? f.name : "Dossier inconnu";
+    }
+    const s = subjects.find((x) => x.id === cardsScopeFilter);
+    return s ? s.name : "Cette boîte";
+  }
+
+  function renderCardsScopeSelect() {
+    const btn = el("cards-scope-select-btn");
+    if (!btn) return;
+    // Valide encore le périmètre choisi (dossier/boîte supprimé entre
+    // temps ?), comme le faisait l'ancien <select>.
+    const isFolderOpt =
+      typeof cardsScopeFilter === "string" &&
+      cardsScopeFilter.startsWith("folder:") &&
+      folders.some((f) => `folder:${f.id}` === cardsScopeFilter);
+    const valid =
+      cardsScopeFilter === CARDS_SCOPE_CURRENT ||
+      cardsScopeFilter === ALL_SUBJECTS ||
+      cardsScopeFilter === CARDS_SCOPE_MULTI ||
+      isFolderOpt ||
+      subjects.some((s) => s.id === cardsScopeFilter);
+    if (!valid) cardsScopeFilter = CARDS_SCOPE_CURRENT;
+    btn.textContent = cardsScopeLabel();
+    // Item 10 : rappel des boîtes/dossiers réellement choisis quand la
+    // combinaison ne rentre pas dans un simple nom (le bouton lui-même
+    // affiche alors juste "Sélection de boîtes", trop vague).
+    const summaryEl = el("cards-scope-summary");
+    if (summaryEl) {
+      if (cardsScopeFilter === CARDS_SCOPE_MULTI) {
+        const names = loadCardsMultiSelection().map((id) => subjectName(id)).filter(Boolean);
+        // Item 11 : chaque dossier/boîte choisi sur sa propre ligne (liste
+        // verticale), plutôt qu'une seule ligne avec des virgules.
+        summaryEl.innerHTML = names.length > 0 ? names.map((n) => `<span class="cards-scope-summary-item">${escapeHtml(n)}</span>`).join("") : "";
+        summaryEl.hidden = names.length === 0;
+      } else {
+        summaryEl.hidden = true;
+      }
+    }
+  }
+
+  function openCardsScopeChoiceMenu() {
+    const menu = el("cards-scope-choice-menu");
+    if (menu) menu.hidden = false;
+  }
+  function closeCardsScopeChoiceMenu() {
+    const menu = el("cards-scope-choice-menu");
+    if (menu) menu.hidden = true;
+  }
+  const cardsScopeSelectBtn = el("cards-scope-select-btn");
+  if (cardsScopeSelectBtn) {
+    cardsScopeSelectBtn.addEventListener("click", () => {
+      openCardsScopeChoiceMenu();
+    });
+  }
+  const cardsScopeChoiceCurrentBtn = el("cards-scope-choice-current");
+  if (cardsScopeChoiceCurrentBtn) {
+    cardsScopeChoiceCurrentBtn.addEventListener("click", () => {
+      closeCardsScopeChoiceMenu();
+      cardsScopeFilter = CARDS_SCOPE_CURRENT;
+      renderManageList();
+    });
+  }
+  const cardsScopeChoiceAllBtn = el("cards-scope-choice-all");
+  if (cardsScopeChoiceAllBtn) {
+    cardsScopeChoiceAllBtn.addEventListener("click", () => {
+      closeCardsScopeChoiceMenu();
+      cardsScopeFilter = ALL_SUBJECTS;
+      renderManageList();
+    });
+  }
+  const cardsScopeChoiceSelectionBtn = el("cards-scope-choice-selection");
+  if (cardsScopeChoiceSelectionBtn) {
+    cardsScopeChoiceSelectionBtn.addEventListener("click", () => {
+      closeCardsScopeChoiceMenu();
+      // Reste affiché tant que ce périmètre est actif (voir
+      // renderCardsMultiPickerIfActive, appelé depuis renderManageList) —
+      // plus besoin de "Valider" pour VALIDER la sélection (mise à jour en
+      // direct), juste pour refermer le panneau plein écran (bug corrigé).
+      cardsScopeFilter = CARDS_SCOPE_MULTI;
+      const picker = el("cards-multi-picker");
+      if (picker) delete picker.dataset.opened;
+      renderManageList();
+    });
+  }
+  const cardsMultiPickerDoneBtn = el("cards-multi-picker-done");
+  if (cardsMultiPickerDoneBtn) {
+    cardsMultiPickerDoneBtn.addEventListener("click", () => {
+      const picker = el("cards-multi-picker");
+      if (picker) picker.hidden = true;
+    });
+  }
+  const cardsScopeChoiceCancelBtn = el("cards-scope-choice-cancel");
+  if (cardsScopeChoiceCancelBtn) {
+    cardsScopeChoiceCancelBtn.addEventListener("click", () => closeCardsScopeChoiceMenu());
+  }
+  document.addEventListener("pointerdown", (e) => {
+    const menu = el("cards-scope-choice-menu");
+    if (!menu || menu.hidden) return;
+    if (menu.contains(e.target) || e.target === cardsScopeSelectBtn) return;
+    closeCardsScopeChoiceMenu();
+  });
+
+  /** Contrairement aux autres pickers de l'appli (qui se ferment après un
+   *  "Valider"), celui-ci reste affiché tant que le périmètre "Sélection de
+   *  boîtes et dossiers" est actif — cocher/décocher met à jour les
+   *  résultats de recherche tout de suite, sans étape de confirmation.
+   *  Bug corrigé : depuis que ce panneau occupe tout l'écran (comme les
+   *  deux autres), il fallait quand même un bouton pour le refermer et
+   *  retrouver la liste filtrée en dessous — "Valider" ici ne fait que
+   *  refermer le panneau, la sélection est déjà enregistrée au fil de l'eau. */
+  function renderCardsMultiPickerIfActive() {
+    const picker = el("cards-multi-picker");
+    const list = el("cards-multi-picker-list");
+    if (!picker || !list) return;
+    if (cardsScopeFilter !== CARDS_SCOPE_MULTI) {
+      picker.hidden = true;
+      return;
+    }
+    if (!picker.dataset.opened) {
+      picker.hidden = false;
+      picker.dataset.opened = "1";
+    }
+    const selected = new Set(loadCardsMultiSelection());
+    list.innerHTML = "";
+    renderFolderTreeForPicker(list, ROOT_FOLDER_ID, 0, selected);
+    list.querySelectorAll("input").forEach((cb) => {
+      cb.addEventListener("change", () => {
+        const { resultIds, singleSubjectId, label } = readMultiPickerResult(list);
+        saveCardsMultiSelection(resultIds);
+        // Une seule boîte au final -> son nom directement (readMultiPickerResult
+        // renvoie label=null dans ce cas précis, réservé ailleurs à un vrai
+        // changement de boîte active — ici on reste en mode "sélection"
+        // puisque les résultats se mettent à jour en direct, donc on
+        // affiche juste son nom au lieu du libellé générique).
+        saveCardsMultiLabel(singleSubjectId ? subjectName(singleSubjectId) : label || "");
+        renderManageList();
+      });
+    });
   }
 
   function renderManageList() {
-    const visible = subjectCards();
+    renderCardsScopeSelect();
+    renderCardsMultiPickerIfActive();
+    let visible = cardsScopeCards();
+    const showSubjectNames = cardsScopeFilter !== CARDS_SCOPE_CURRENT;
+    if (cardsConstructionFilter) {
+      visible = visible.filter((c) => c.underConstruction);
+    }
+    if (cardsSearchQuery) {
+      const q = cardsSearchQuery.toLowerCase();
+      // Recherche sur le texte brut (item 13 : question/réponse sont
+      // maintenant du HTML) — sinon une mise en forme au milieu du mot
+      // recherché (ex. "Pa<b>ri</b>s") empêcherait de le retrouver.
+      visible = visible.filter(
+        (c) => stripHtmlFast(c.question).toLowerCase().includes(q) || stripHtmlFast(c.answer).toLowerCase().includes(q)
+      );
+    }
     totalCountEl.textContent = String(visible.length);
     cardListEl.innerHTML = "";
     renderSubjectManageList();
 
+    // Badge de la pastille 🚧 : nombre de fiches "chantier" dans le
+    // périmètre actuel (avant filtrage recherche/chantier, pour rester stable).
+    const constructionCount = cardsScopeCards().filter((c) => c.underConstruction).length;
+    const badge = el("construction-filter-badge");
+    if (badge) {
+      badge.hidden = constructionCount === 0;
+      badge.textContent = String(constructionCount);
+    }
+    if (constructionFilterBtn) constructionFilterBtn.classList.toggle("is-active", cardsConstructionFilter);
+
     if (visible.length === 0) {
       const li = document.createElement("li");
       li.className = "list-empty";
-      li.textContent = "Aucune fiche pour l'instant. Ajoute la première ci-dessus.";
+      li.textContent = cardsSearchQuery
+        ? "Aucune fiche ne correspond à cette recherche."
+        : cardsConstructionFilter
+        ? "Aucune fiche « chantier » dans ce périmètre."
+        : "Aucune fiche pour l'instant. Ajoute la première ci-dessus.";
       cardListEl.appendChild(li);
       return;
     }
@@ -2283,22 +5154,32 @@
       const li = document.createElement("li");
       li.className = "card-row";
 
+      // Score d'apprentissage (item 1c), coin supérieur droit de la ligne.
+      const scoreBadge = document.createElement("span");
+      scoreBadge.className = "card-row-score";
+      scoreBadge.textContent = `${computeCardScore(card)}`;
+      li.appendChild(scoreBadge);
+
       const main = document.createElement("div");
       main.className = "card-row-main";
 
       const q = document.createElement("p");
       q.className = "card-row-q";
-      q.textContent = card.question;
+      q.innerHTML = (card.underConstruction ? "🚧 " : "") + toDisplayHtml(card.question);
 
       const a = document.createElement("p");
       a.className = "card-row-a";
-      a.textContent = card.answer;
+      a.innerHTML = toDisplayHtml(card.answer);
 
       const meta = document.createElement("p");
       meta.className = "card-row-meta";
-      meta.textContent = SM2.isDue(card)
+      // Nom de la boîte (item 11) : seulement utile quand la liste mélange
+      // plusieurs boîtes (dossier / toutes / sélection) — inutile et
+      // redondant quand on est déjà filtré sur "cette boîte".
+      const dueLabel = SM2.isDue(card)
         ? "à revoir aujourd'hui"
         : `prochaine question dans ${formatInterval(daysUntil(card.dueDate))}`;
+      meta.textContent = showSubjectNames ? `${subjectName(card.subject)} — ${dueLabel}` : dueLabel;
 
       main.appendChild(q);
       main.appendChild(a);
@@ -2313,6 +5194,13 @@
       editBtn.textContent = "éditer";
       editBtn.addEventListener("click", () => enterEditMode(card));
 
+      const constructionBtn = document.createElement("button");
+      constructionBtn.className = "icon-btn" + (card.underConstruction ? " is-active-construction" : "");
+      constructionBtn.type = "button";
+      constructionBtn.innerHTML = getIconMarkupFor("construction");
+      constructionBtn.title = card.underConstruction ? "Retirer le signalement « à corriger »" : "Signaler comme fiche à corriger";
+      constructionBtn.addEventListener("click", () => toggleUnderConstruction(card.id));
+
       const delBtn = document.createElement("button");
       delBtn.className = "icon-btn icon-btn--danger";
       delBtn.type = "button";
@@ -2320,11 +5208,12 @@
       delBtn.addEventListener("click", () => deleteCard(card.id));
 
       actions.appendChild(editBtn);
+      actions.appendChild(constructionBtn);
 
       if (subjects.length > 1) {
         const moveSelect = document.createElement("select");
         moveSelect.className = "icon-btn card-row-move";
-        moveSelect.title = "Déplacer vers une autre matière";
+        moveSelect.title = "Déplacer vers une autre boîte";
         moveSelect.innerHTML =
           `<option value="">déplacer…</option>` +
           subjects
@@ -2351,7 +5240,7 @@
     return Math.max(0, Math.ceil(ms / 86400000));
   }
 
-  /** Reclasse manuellement une fiche vers une autre matière (utile pour
+  /** Reclasse manuellement une fiche vers une autre boîte (utile pour
    *  corriger un classement erroné, ex. après une synchronisation). */
   async function moveCardToSubject(id, newSubjectId) {
     const card = cards.find((c) => c.id === id);
@@ -2368,15 +5257,34 @@
     renderAll();
   }
 
-  async function deleteCard(id) {
+  /** Bascule le statut "chantier" (item 16) : fiche à corriger, signalée
+   *  par une petite barrière 🚧 partout où elle apparaît. */
+  async function toggleUnderConstruction(id) {
     const card = cards.find((c) => c.id === id);
     if (!card) return;
+    const updated = touch({ ...card, underConstruction: !card.underConstruction });
+    await persist(updated);
+    const idx = cards.findIndex((c) => c.id === id);
+    if (idx >= 0) cards[idx] = updated;
+    syncCardEverywhere(updated);
+    renderAll();
+  }
+
+  async function deleteCard(id, skipConfirm) {
+    const card = cards.find((c) => c.id === id);
+    if (!card) return;
+    if (!skipConfirm && !confirm("Supprimer définitivement cette fiche ? Cette action est irréversible.")) {
+      return;
+    }
     const updated = touch({ ...card, deleted: true });
     await persist(updated);
 
     const idx = cards.findIndex((c) => c.id === id);
     if (idx >= 0) cards[idx] = updated;
     reviewQueue = reviewQueue.filter((c) => c.id !== id);
+    // Item 1 : si c'était la dernière fiche d'une boîte "née" d'un dossier
+    // vide, ce dossier redevient un dossier normal.
+    await revertFolderIfBoiteEmptied(card.subject);
     if (currentCard && currentCard.id === id) {
       showNextCard();
     }
@@ -2384,11 +5292,35 @@
   }
 
   /* ---------------------------------------------------------
-     Import / export JSON
+     Import / export JSON (item 8 : sélecteur de boîte dédié à l'export,
+     indépendant de la page Réviser).
   --------------------------------------------------------- */
+  const exportSubjectSelectEl = el("export-subject-select");
+  const settingsIoCountEl = el("settings-io-count");
+
+  function renderExportSubjectSelect() {
+    if (!exportSubjectSelectEl) return;
+    const prev = exportSubjectSelectEl.value;
+    exportSubjectSelectEl.innerHTML = subjects
+      .map((s) => `<option value="${s.id}">${escapeHtml(s.name)}</option>`)
+      .join("");
+    exportSubjectSelectEl.value = subjects.some((s) => s.id === prev) ? prev : currentSubjectId;
+    updateExportCount();
+  }
+  function updateExportCount() {
+    if (!settingsIoCountEl || !exportSubjectSelectEl) return;
+    const n = cards.filter((c) => !c.deleted && c.subject === exportSubjectSelectEl.value).length;
+    settingsIoCountEl.textContent = String(n);
+  }
+  if (exportSubjectSelectEl) {
+    exportSubjectSelectEl.addEventListener("change", updateExportCount);
+  }
+
   exportBtn.addEventListener("click", () => {
-    const subj = subjects.find((s) => s.id === currentSubjectId);
-    const blob = new Blob([JSON.stringify(subjectCards(), null, 2)], {
+    const exportSubjectId = exportSubjectSelectEl ? exportSubjectSelectEl.value : currentSubjectId;
+    const subj = subjects.find((s) => s.id === exportSubjectId);
+    const exportCards = cards.filter((c) => !c.deleted && c.subject === exportSubjectId);
+    const blob = new Blob([JSON.stringify(exportCards, null, 2)], {
       type: "application/json",
     });
     const url = URL.createObjectURL(blob);
@@ -2452,17 +5384,58 @@
   /* ---------------------------------------------------------
      Vue Stats
   --------------------------------------------------------- */
+  const STATS_MULTI_ID = "__stats_multi__";
+  const STATS_MULTI_SELECTION_KEY = "fiches_stats_multi_ids";
+  function loadStatsMultiSelection() {
+    try {
+      const raw = localStorage.getItem(STATS_MULTI_SELECTION_KEY);
+      const ids = raw ? JSON.parse(raw) : [];
+      return Array.isArray(ids) ? ids.filter((id) => subjects.some((s) => s.id === id)) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+  function saveStatsMultiSelection(ids) {
+    localStorage.setItem(STATS_MULTI_SELECTION_KEY, JSON.stringify(ids));
+  }
+
+  /** Étend le sélecteur Stats (item 15) : boîtes individuelles (comme
+   *  avant), mais aussi des dossiers entiers ("folder:<id>", toutes les
+   *  boîtes qu'ils contiennent, sous-dossiers compris) et une sélection
+   *  libre combinant plusieurs boîtes et/ou dossiers. */
+  const STATS_MULTI_LABEL_KEY = "fiches_stats_multi_label";
+  function loadStatsMultiLabel() {
+    return localStorage.getItem(STATS_MULTI_LABEL_KEY) || "";
+  }
+  function saveStatsMultiLabel(label) {
+    localStorage.setItem(STATS_MULTI_LABEL_KEY, label || "");
+  }
+
+  function statsScopeLabel() {
+    if (statsSubjectFilter === ALL_SUBJECTS) return "Toutes les boîtes";
+    if (statsSubjectFilter === STATS_MULTI_ID) return loadStatsMultiLabel() || "Sélection de boîtes";
+    if (typeof statsSubjectFilter === "string" && statsSubjectFilter.startsWith("folder:")) {
+      const f = folders.find((x) => x.id === statsSubjectFilter.slice(7));
+      return f ? f.name : "Dossier inconnu";
+    }
+    const s = subjects.find((x) => x.id === statsSubjectFilter);
+    return s ? s.name : "Toutes les boîtes";
+  }
+
   function renderStatsSubjectSelect() {
-    if (!statsSubjectSelectEl) return;
-    const prev = statsSubjectSelectEl.value || statsSubjectFilter;
-    statsSubjectSelectEl.innerHTML =
-      `<option value="${ALL_SUBJECTS}">Toutes catégories confondues</option>` +
-      subjects
-        .map((s) => `<option value="${s.id}">${escapeHtml(s.name)}</option>`)
-        .join("");
-    const valid = prev === ALL_SUBJECTS || subjects.some((s) => s.id === prev);
-    statsSubjectFilter = valid ? prev : ALL_SUBJECTS;
-    statsSubjectSelectEl.value = statsSubjectFilter;
+    const btn = el("stats-subject-select-btn");
+    if (!btn) return;
+    const isFolderOpt =
+      typeof statsSubjectFilter === "string" &&
+      statsSubjectFilter.startsWith("folder:") &&
+      folders.some((f) => `folder:${f.id}` === statsSubjectFilter);
+    const valid =
+      statsSubjectFilter === ALL_SUBJECTS ||
+      statsSubjectFilter === STATS_MULTI_ID ||
+      isFolderOpt ||
+      subjects.some((s) => s.id === statsSubjectFilter);
+    if (!valid) statsSubjectFilter = ALL_SUBJECTS;
+    btn.textContent = statsScopeLabel();
   }
 
   /** Fiches (non supprimées) dans le périmètre choisi pour l'onglet Stats. */
@@ -2470,7 +5443,108 @@
     if (statsSubjectFilter === ALL_SUBJECTS) {
       return cards.filter((c) => !c.deleted);
     }
+    if (statsSubjectFilter === STATS_MULTI_ID) {
+      const set = new Set(loadStatsMultiSelection());
+      return cards.filter((c) => !c.deleted && set.has(c.subject));
+    }
+    if (typeof statsSubjectFilter === "string" && statsSubjectFilter.startsWith("folder:")) {
+      const set = new Set(subjectIdsInFolder(statsSubjectFilter.slice(7)));
+      return cards.filter((c) => !c.deleted && set.has(c.subject));
+    }
     return cards.filter((c) => !c.deleted && c.subject === statsSubjectFilter);
+  }
+
+  /** Mêmes identifiants de boîtes que statsScopeCards, mais pour filtrer
+   *  le journal des notes (ratingLog), qui référence subjectId et non les
+   *  fiches elles-mêmes (une fiche déplacée entre-temps ne fausse donc pas
+   *  l'historique : chaque entrée garde la boîte qu'elle avait au moment
+   *  de la notation). */
+  function statsScopeSubjectIds() {
+    if (statsSubjectFilter === ALL_SUBJECTS) return null; // signifie "toutes"
+    if (statsSubjectFilter === STATS_MULTI_ID) return new Set(loadStatsMultiSelection());
+    if (typeof statsSubjectFilter === "string" && statsSubjectFilter.startsWith("folder:")) {
+      return new Set(subjectIdsInFolder(statsSubjectFilter.slice(7)));
+    }
+    return new Set([statsSubjectFilter]);
+  }
+
+  function openStatsMultiPicker() {
+    const picker = el("stats-multi-picker");
+    const list = el("stats-multi-picker-list");
+    if (!picker || !list) return;
+    const selected = new Set(loadStatsMultiSelection());
+    list.innerHTML = "";
+    renderFolderTreeForPicker(list, ROOT_FOLDER_ID, 0, selected);
+    picker.hidden = false;
+  }
+  function closeStatsMultiPicker() {
+    const picker = el("stats-multi-picker");
+    if (picker) picker.hidden = true;
+  }
+
+  function openStatsScopeChoiceMenu() {
+    const menu = el("stats-scope-choice-menu");
+    if (menu) menu.hidden = false;
+  }
+  function closeStatsScopeChoiceMenu() {
+    const menu = el("stats-scope-choice-menu");
+    if (menu) menu.hidden = true;
+  }
+  const statsSubjectSelectBtn = el("stats-subject-select-btn");
+  if (statsSubjectSelectBtn) {
+    statsSubjectSelectBtn.addEventListener("click", () => {
+      closeStatsMultiPicker();
+      openStatsScopeChoiceMenu();
+    });
+  }
+  const statsScopeChoiceAllBtn = el("stats-scope-choice-all");
+  if (statsScopeChoiceAllBtn) {
+    statsScopeChoiceAllBtn.addEventListener("click", () => {
+      closeStatsScopeChoiceMenu();
+      statsSubjectFilter = ALL_SUBJECTS;
+      renderStats();
+    });
+  }
+  const statsScopeChoiceSelectionBtn = el("stats-scope-choice-selection");
+  if (statsScopeChoiceSelectionBtn) {
+    statsScopeChoiceSelectionBtn.addEventListener("click", () => {
+      closeStatsScopeChoiceMenu();
+      openStatsMultiPicker();
+    });
+  }
+  const statsScopeChoiceCancelBtn = el("stats-scope-choice-cancel");
+  if (statsScopeChoiceCancelBtn) {
+    statsScopeChoiceCancelBtn.addEventListener("click", () => closeStatsScopeChoiceMenu());
+  }
+  document.addEventListener("pointerdown", (e) => {
+    const menu = el("stats-scope-choice-menu");
+    if (!menu || menu.hidden) return;
+    if (menu.contains(e.target) || e.target === statsSubjectSelectBtn) return;
+    closeStatsScopeChoiceMenu();
+  });
+
+  const statsMultiPickerCancelBtn = el("stats-multi-picker-cancel");
+  if (statsMultiPickerCancelBtn) statsMultiPickerCancelBtn.addEventListener("click", closeStatsMultiPicker);
+  const statsMultiPickerConfirmBtn = el("stats-multi-picker-confirm");
+  if (statsMultiPickerConfirmBtn) {
+    statsMultiPickerConfirmBtn.addEventListener("click", () => {
+      const list = el("stats-multi-picker-list");
+      const { resultIds, singleSubjectId, label } = readMultiPickerResult(list);
+      if (resultIds.length === 0) {
+        alert("Choisis au moins une boîte ou un dossier.");
+        return;
+      }
+      closeStatsMultiPicker();
+      if (singleSubjectId) {
+        statsSubjectFilter = singleSubjectId;
+        renderStats();
+        return;
+      }
+      saveStatsMultiSelection(resultIds);
+      saveStatsMultiLabel(label || "");
+      statsSubjectFilter = STATS_MULTI_ID;
+      renderStats();
+    });
   }
 
   function startOfDay(date) {
@@ -2508,6 +5582,69 @@
     return buckets;
   }
 
+  /** Historique des fiches RÉVISÉES par jour passé (item 7) — analogue à
+   *  computeDueHistogram mais tournée vers le passé (index 0 = aujourd'hui,
+   *  index i = il y a i jours) et basée sur `lastReviewed` plutôt que
+   *  `dueDate`. Les dates portées par chaque case restent des vraies dates
+   *  (comme pour l'histogramme "à réviser"), donc `renderHistogramInto` -
+   *  qui ne fait que lire ces dates pour ses repères (Auj., jours de la
+   *  semaine, 1er du mois...) - fonctionne à l'identique sans rien changer. */
+  function computeReviewedHistogram(pool, days) {
+    const today = startOfDay(new Date());
+    const buckets = [];
+    for (let i = 0; i < days; i++) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      buckets.push({ date: d, count: 0 });
+    }
+    const horizon = new Date(today);
+    horizon.setDate(horizon.getDate() - days);
+
+    for (const c of pool) {
+      if (!c.lastReviewed) continue;
+      const rev = startOfDay(new Date(c.lastReviewed));
+      if (rev.getTime() > today.getTime()) continue;
+      if (rev.getTime() <= horizon.getTime()) continue;
+      const offset = Math.round((today.getTime() - rev.getTime()) / 86400000);
+      if (offset >= 0 && offset < days) buckets[offset].count += 1;
+    }
+    return buckets;
+  }
+
+  /** Fusionne les deux histogrammes (item 9) en un seul, "aujourd'hui" fixé
+   *  à l'extrémité GAUCHE de la zone visible par défaut (comme l'ancien
+   *  graphique "à revoir" seul) : les jours à venir (fiches dues) s'étalent
+   *  normalement vers la droite, et l'historique des fiches RÉVISÉES
+   *  s'étend vers la gauche, hors champ par défaut — on ne le découvre
+   *  qu'en faisant défiler le graphique vers la gauche (voir le scroll
+   *  initial appliqué après le rendu). */
+  function computeMergedHistogram(pool, futureDays, pastDays) {
+    const dueBuckets = computeDueHistogram(pool, futureDays);
+    const reviewedBuckets = computeReviewedHistogram(pool, pastDays);
+    const merged = [];
+    // Passé, du plus ancien au plus récent — on saute l'indice 0 de
+    // reviewedBuckets ("aujourd'hui" côté révisé) puisque le jour même est
+    // déjà représenté par le premier bucket "due" juste après.
+    for (let i = pastDays - 1; i >= 1; i--) {
+      merged.push({ date: reviewedBuckets[i].date, count: reviewedBuckets[i].count, kind: "reviewed" });
+    }
+    dueBuckets.forEach((b, i) => {
+      merged.push({ date: b.date, count: b.count, kind: i === 0 ? "today" : "due" });
+    });
+    return merged;
+  }
+
+  const MONTH_SHORT = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
+  // Index 0 = dimanche (convention JS Date#getDay()).
+  const WEEKDAY_SHORT = ["dim", "lun", "mar", "mer", "jeu", "ven", "sam"];
+  // Une seule lettre (item 13), utilisée à l'échelle "1 mois" spécifiquement
+  // — assez de colonnes sur cette échelle pour que "lun"/"mar" se chevauchent
+  // visuellement, une seule lettre reste lisible.
+  const WEEKDAY_SINGLE = ["D", "L", "M", "M", "J", "V", "S"];
+  function formatShortDateLabel(date) {
+    return `${date.getDate()} ${MONTH_SHORT[date.getMonth()]}`;
+  }
+
   /** Largeur de contenu réellement disponible dans une carte d'histogramme
    *  (clientWidth moins le padding horizontal), utilisée pour calculer la
    *  largeur de colonne qui fait tenir exactement N jours à l'écran. */
@@ -2521,33 +5658,39 @@
 
   /** Dessine un histogramme "fiches dues par jour" dans les éléments fournis.
    *  Factorisé pour être partagé entre le grand graphique de l'onglet Stats
-   *  et le mini graphique de la page Réviser (matière en cours). */
-  function renderHistogramInto(chartEl, emptyEl, wrapEl, pool, rangeKey, maxBarPx, giftOpts) {
+   *  et le mini graphique de la page Réviser (boîte en cours). */
+  function renderHistogramInto(chartEl, emptyEl, wrapEl, pool, rangeKey, maxBarPx, computeFn, todayAtEnd, suppressChangeFlash, mergedPastDays, minTotalDays) {
     if (!chartEl) return;
-    const cfg = RANGE_CONFIG[rangeKey] || { visible: rangeKey, total: rangeKey };
+    const baseCfg = RANGE_CONFIG[rangeKey] || { visible: rangeKey, total: rangeKey };
+    // Étend temporairement le nombre de colonnes générées (sans changer
+    // combien tiennent à l'écran) si on doit absolument pouvoir animer
+    // jusqu'à un jour au-delà de la fenêtre habituelle (voir
+    // triggerReviewChartWave) — sinon la vague ciblait la dernière colonne
+    // VISIBLE plutôt que la vraie nouvelle échéance de la fiche.
+    const cfg =
+      minTotalDays !== undefined && minTotalDays > baseCfg.total
+        ? { ...baseCfg, total: minTotalDays }
+        : baseCfg;
     const days = cfg.total;
-    const buckets = computeDueHistogram(pool, days);
-    const max = Math.max(0, ...buckets.map((b) => b.count));
-    // L'objectif-cadeau n'a de sens que sur les échelles rapprochées
-    // (15 / 30 jours) : au-delà, les colonnes sont trop tassées pour rester
-    // lisibles avec un repère en plus.
-    const showGoals = !!giftOpts && cfg.visible <= 31;
-    // Réinitialisé à chaque rendu (y compris quand giftOpts est absent, ex.
-    // hors révision libre) pour ne jamais laisser l'icône d'onglet Tamagotchi
-    // afficher un "cadeau prêt" qui ne correspond plus au graphique affiché.
-    reviewChartHasReadyGoal = false;
-
-    // Un seul objectif par matière, sur une fenêtre fixe de 16 jours,
-    // indépendante du zoom / de l'échelle actuellement affichée (sinon le
-    // seuil dépendrait de la portion défilée regardée sur le moment).
-    let goal = null;
-    let goalReady = false;
-    if (showGoals) {
-      const goalBuckets = computeDueHistogram(pool, 16);
-      goal = ensureSubjectGoal(giftOpts.subjectId, goalBuckets);
-      goalReady = goalBuckets.every((b) => b.count <= goal.threshold);
-      if (goalReady) reviewChartHasReadyGoal = true;
+    let buckets;
+    let todayIdx;
+    if (mergedPastDays !== undefined) {
+      // Histogramme fusionné (item 9) : "aujourd'hui" n'est ni au tout début
+      // ni à la toute fin du tableau, mais à un index calculé — voir
+      // computeMergedHistogram pour le détail de la construction.
+      buckets = computeMergedHistogram(pool, days, mergedPastDays);
+      todayIdx = mergedPastDays - 1;
+    } else {
+      buckets = (computeFn || computeDueHistogram)(pool, days);
+      // Historique des fiches révisées (item 21) : présent à droite, passé à
+      // gauche — sens inverse du graphique "à revoir" (présent à gauche,
+      // futur à droite). On inverse simplement l'ordre des colonnes déjà
+      // calculées (index 0 = aujourd'hui devient la DERNIÈRE colonne) plutôt
+      // que de dupliquer toute la logique de calcul.
+      if (todayAtEnd) buckets = [...buckets].reverse();
+      todayIdx = todayAtEnd ? buckets.length - 1 : 0;
     }
+    const max = Math.max(0, ...buckets.map((b) => b.count));
 
     // Compte précédent par jour (mémorisé sur l'élément lui-même) : sert à
     // repérer, après un nouveau rendu, quelles colonnes ont réellement changé
@@ -2610,10 +5753,15 @@
     // donc pas besoin de répéter chaque date individuelle ici.
     const frag = document.createDocumentFragment();
     buckets.forEach((b, i) => {
-      const changed = prevCounts !== null && prevCounts[i] !== b.count;
+      // Le mini graphique de Réviser (item 4) désactive ce flash "diff" :
+      // il a sa propre animation en vague bien plus riche (voir
+      // triggerReviewChartWave), et les deux en même temps se marchaient
+      // dessus — la case cible semblait "déjà" s'allumer dès le début,
+      // avant même que la vague ne l'atteigne.
+      const changed = !suppressChangeFlash && prevCounts !== null && prevCounts[i] !== b.count;
       const col = document.createElement("div");
       col.className =
-        "chart-col" + (i === 0 ? " is-today" : "") + (changed ? " chart-col--changed" : "");
+        "chart-col" + (i === todayIdx ? " is-today" : "") + (changed ? " chart-col--changed" : "");
       col.style.flex = `0 0 ${colWidth}px`;
       col.style.width = `${colWidth}px`;
 
@@ -2622,7 +5770,7 @@
       value.textContent = dense ? "" : b.count > 0 ? String(b.count) : "";
 
       const bar = document.createElement("div");
-      bar.className = "chart-bar" + (b.count === 0 ? " chart-bar--zero" : "");
+      bar.className = "chart-bar" + (b.count === 0 ? " chart-bar--zero" : "") + (b.kind === "reviewed" ? " chart-bar--reviewed" : "");
       // Les jours à zéro fiche gardent une petite barre témoin (couleur neutre)
       // pour rester visibles dans la grille, plutôt que de disparaître.
       const height =
@@ -2631,7 +5779,25 @@
 
       const label = document.createElement("span");
       label.className = "chart-label";
-      label.textContent = i === 0 ? "Auj." : "";
+      // "Auj." prioritaire sur la colonne d'aujourd'hui ; puis, sur les
+      // échelles rapprochées (15j / 1 mois), le jour de la semaine abrégé
+      // pour les 7 jours suivants (item 11) ; sinon, repères de date à date
+      // fixe pour se répérer dans le défilement : le 1er ET le 15 du mois
+      // sur les échelles rapprochées, seulement le 1er du mois sur les
+      // échelles larges (3 mois / 1 an) où le 15 ajouterait surtout du
+      // bruit visuel vu la densité des colonnes.
+      const dom = b.date.getDate();
+      const fineScale = rangeKey === 15 || rangeKey === 30;
+      const coarseScale = rangeKey === 90 || rangeKey === 365;
+      if (i === todayIdx) {
+        label.textContent = "Auj.";
+      } else if (fineScale && Math.abs(i - todayIdx) <= 7) {
+        label.textContent = rangeKey === 30 ? WEEKDAY_SINGLE[b.date.getDay()] : WEEKDAY_SHORT[b.date.getDay()];
+      } else if ((fineScale && (dom === 1 || dom === 15)) || (coarseScale && dom === 1)) {
+        label.textContent = formatShortDateLabel(b.date);
+      } else {
+        label.textContent = "";
+      }
 
       col.appendChild(value);
       col.appendChild(bar);
@@ -2641,52 +5807,48 @@
     });
     chartEl.appendChild(frag);
     chartEl._prevCounts = buckets.map((b) => b.count);
-
-    // Ligne d'objectif unique, sur toute la largeur du graphique (y compris
-    // la partie qui déborde hors écran si l'histogramme est plus large que
-    // sa carte) : cliquable dès que toutes les barres sont retombées à son
-    // niveau ou en dessous.
-    if (goal) {
-      // Position de la ligne : EXACTEMENT la même formule que celle utilisée
-      // pour dessiner une vraie barre de hauteur `goal.threshold` (valeur
-      // entière) sur l'échelle actuelle — plancher de 3px et arrondi
-      // identiques — pour que la ligne tombe pile à la hauteur où une barre
-      // de ce compte s'afficherait, plutôt qu'un calcul en deux temps qui
-      // dérivait légèrement de cet alignement pixel-perfect.
-      const targetPx =
-        goal.threshold === 0
-          ? 3
-          : Math.max(3, Math.round((goal.threshold / scaleMax) * maxBarPx));
-      const marker = document.createElement(goalReady ? "button" : "div");
-      if (goalReady) marker.type = "button";
-      marker.className = `chart-goal-bar ${goalReady ? "is-ready" : "is-locked"}`;
-      marker.style.bottom = `${targetPx}px`;
-      marker.title = goalReady
-        ? "Objectif atteint — touche pour envoyer le cadeau sur la page Tamagotchi"
-        : `Objectif : faire retomber toutes les barres à ${goal.threshold} fiche(s) ou moins`;
-
-      const emoji = document.createElement("span");
-      emoji.className = "chart-goal-bar-gift";
-      emoji.textContent = "🎁";
-      marker.appendChild(emoji);
-
-      if (goalReady) {
-        marker.addEventListener("click", (e) => {
-          e.stopPropagation();
-          collectSubjectGoal(giftOpts.subjectId);
-          if (giftOpts.onCollect) giftOpts.onCollect(marker);
-        });
-      }
-      chartEl.appendChild(marker);
-    }
-
-    refreshTamaTabIcon();
   }
 
   function renderDueChart() {
     const pool = statsScopeCards();
-    renderHistogramInto(dueChartEl, chartEmptyEl, el("chart-wrap"), pool, statsRangeDays, CHART_MAX_BAR_PX);
+    const cfg = RANGE_CONFIG[statsRangeDays] || { visible: statsRangeDays, total: statsRangeDays };
+    // Fenêtre d'historique (fiches révisées, vers la gauche) de la même
+    // ampleur que la fenêtre future (fiches à revoir, vers la droite) —
+    // item 9 : histogramme fusionné.
+    const pastDays = cfg.total;
+    renderHistogramInto(
+      dueChartEl,
+      chartEmptyEl,
+      el("chart-wrap"),
+      pool,
+      statsRangeDays,
+      CHART_MAX_BAR_PX,
+      undefined,
+      false,
+      false,
+      pastDays
+    );
+    // Cale "aujourd'hui" à l'extrémité GAUCHE de la zone visible par défaut
+    // (item 9) : l'historique des fiches révisées reste hors champ tant
+    // qu'on ne fait pas défiler volontairement vers la gauche.
+    requestAnimationFrame(() => {
+      const todayCol = dueChartEl.querySelector(".chart-col.is-today");
+      const wrap = el("chart-wrap");
+      if (todayCol && wrap) wrap.scrollLeft = todayCol.offsetLeft;
+    });
   }
+
+  /** Tape sur l'histogramme de la page Stats : passe à l'échelle
+   *  supérieure (boucle) — item 9 : plus de menu déroulant séparé, tout
+   *  se règle au tap, comme sur le mini graphique de la page Réviser. Sans
+   *  "1 an" (item 8, voir STATS_CHART_STEPS). */
+  function cycleStatsChartRange() {
+    const idx = STATS_CHART_STEPS.indexOf(statsRangeDays);
+    statsRangeDays = STATS_CHART_STEPS[(idx + 1) % STATS_CHART_STEPS.length];
+    renderDueChart();
+  }
+  const statsChartWrapEl = el("chart-wrap");
+  if (statsChartWrapEl) statsChartWrapEl.addEventListener("click", cycleStatsChartRange);
 
   /** Fiches (de `pool`) dont la dernière révision remonte à aujourd'hui. */
   function reviewedTodayCount(pool) {
@@ -2699,533 +5861,552 @@
 
   function renderStats() {
     renderStatsSubjectSelect();
-    const pool = statsScopeCards();
-    statTotal.textContent = String(pool.length);
-    if (statReviewedToday) statReviewedToday.textContent = String(reviewedTodayCount(pool));
+    renderStatsScaleSelect();
+    // 6a : toujours toutes boîtes confondues, indépendant du sélecteur
+    // de boîte ci-dessous (qui ne pilote que ce qui suit les flammes).
+    const allCards = cards.filter((c) => !c.deleted);
+    statTotal.textContent = String(allCards.length);
+    if (statReviewedToday) statReviewedToday.textContent = String(reviewedTodayCount(allCards));
     renderDueChart();
+    renderCreatedChart();
+    renderRatingsChart();
+    renderRatingsHistoryChart();
+    renderStreak();
+  }
+
+  /** Histogramme "Notes données" — sur la période partagée choisie plus
+   *  haut (item 6 : aujourd'hui/hier/semaine/mois/3 mois/6 mois/an), au lieu
+   *  des 3 anciens onglets Global/Aujourd'hui/7 jours. Basé sur `ratingLog`
+   *  (un événement par notation, indépendant de l'état actuel des fiches)
+   *  plutôt que sur les fiches elles-mêmes. */
+  const WEEKDAY_FULL = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
+  let statsPeriod = "week";
+
+  /** Convertit un choix de période (item 6) en plage de dates [start, end[
+   *  — end exclusive (début du lendemain de la borne haute). */
+  function periodToRange(period) {
+    const today = startOfDay(new Date());
+    const end = new Date(today);
+    end.setDate(end.getDate() + 1);
+    const start = new Date(today);
+    switch (period) {
+      case "today":
+        break;
+      case "yesterday":
+        start.setDate(start.getDate() - 1);
+        end.setDate(end.getDate() - 1);
+        break;
+      case "week":
+        start.setDate(start.getDate() - 7);
+        break;
+      case "month":
+        start.setDate(start.getDate() - 30);
+        break;
+      case "3months":
+        start.setDate(start.getDate() - 90);
+        break;
+      case "6months":
+        start.setDate(start.getDate() - 180);
+        break;
+      case "year":
+        start.setDate(start.getDate() - 365);
+        break;
+      default:
+        start.setDate(start.getDate() - 7);
+    }
+    return { start, end };
+  }
+
+  function filterEntriesByPeriod(entries, period) {
+    const { start, end } = periodToRange(period);
+    return entries.filter((e) => {
+      const t = new Date(e.at).getTime();
+      return t >= start.getTime() && t < end.getTime();
+    });
+  }
+
+  function ratingLogInScope() {
+    const scopeIds = statsScopeSubjectIds();
+    return scopeIds === null ? ratingLog : ratingLog.filter((e) => scopeIds.has(e.subjectId));
+  }
+
+  function ratingCountsFor(entries) {
+    const counts = { again: 0, hard: 0, good: 0, easy: 0 };
+    entries.forEach((e) => {
+      if (counts[e.rating] !== undefined) counts[e.rating] += 1;
+    });
+    return counts;
+  }
+
+  function renderRatingsSimpleChart(wrap, entries, ratings) {
+    const counts = ratingCountsFor(entries);
+    const total = ratings.reduce((sum, r) => sum + counts[r], 0);
+    if (total === 0) {
+      wrap.innerHTML = `<p class="field-hint algo-chart-empty">Aucune note enregistrée sur cette période.</p>`;
+      return;
+    }
+    const max = Math.max(1, ...ratings.map((r) => counts[r]));
+    const yMax = Math.max(4, Math.ceil(max * 1.15));
+    const W = 320, H = 190, padL = 26, padB = 26, padT = 14, padR = 12;
+    const plotW = W - padL - padR, plotH = H - padT - padB;
+    const gap = plotW / ratings.length;
+    const barW = gap * 0.55;
+    const yPos = (v) => padT + (1 - v / yMax) * plotH;
+
+    let svg = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;background:var(--svg-chart-bg-color, var(--desk));border-radius:8px;">`;
+    svg += `<line x1="${padL}" y1="${H - padB}" x2="${W - padR}" y2="${H - padB}" stroke="rgba(31,41,55,0.3)" stroke-width="1"/>`;
+    ratings.forEach((r, i) => {
+      const v = counts[r];
+      const h = (v / yMax) * plotH;
+      const x = padL + gap * i + (gap - barW) / 2;
+      const y = H - padB - h;
+      svg += `<rect x="${x}" y="${y}" width="${barW}" height="${Math.max(1, h)}" rx="4" fill="${ALGO_CHART_COLORS[r]}"/>`;
+      svg += `<text x="${x + barW / 2}" y="${y - 5}" font-size="10" fill="${ALGO_CHART_COLORS[r]}" text-anchor="middle" font-family="var(--font-mono)">${v}</text>`;
+      svg += `<text x="${x + barW / 2}" y="${H - padB + 14}" font-size="9" fill="var(--chart-label-color, #6b7280)" text-anchor="middle">${ALGO_CHART_RATING_LABELS[r]}</text>`;
+    });
+    svg += `</svg>`;
+    wrap.innerHTML = svg;
+  }
+
+  let ratingsPeriod = "byday";
+
+  /** Calcule numBuckets tranches de bucketDays jours chacune, la dernière
+   *  (index numBuckets-1) correspondant à AUJOURD'HUI — items 10/11 :
+   *  remplace les anciennes options "semaine dernière"/"mois dernier" par
+   *  des vues défilables (par jour/semaine/mois) sur une vingtaine de
+   *  tranches, plutôt qu'une fenêtre fixe. */
+  function computeScrollableBuckets(entries, numBuckets, bucketDays) {
+    const today = startOfDay(new Date());
+    const end = new Date(today);
+    end.setDate(end.getDate() + 1); // exclusive
+    const bucketMs = bucketDays * 86400000;
+    const rangeStart = new Date(end.getTime() - numBuckets * bucketMs);
+    const buckets = Array.from({ length: numBuckets }, () => ({ again: 0, hard: 0, good: 0, easy: 0 }));
+    entries.forEach((e) => {
+      const t = new Date(e.at).getTime();
+      if (t < rangeStart.getTime() || t >= end.getTime()) return;
+      let idx = Math.floor((t - rangeStart.getTime()) / bucketMs);
+      if (idx >= numBuckets) idx = numBuckets - 1;
+      if (idx < 0) idx = 0;
+      if (buckets[idx][e.rating] !== undefined) buckets[idx][e.rating] += 1;
+    });
+    return { buckets, rangeStart };
+  }
+
+  function scrollableBucketLabel(periodKind, date) {
+    if (periodKind === "byday") return WEEKDAY_SHORT[date.getDay()];
+    if (periodKind === "byweek") return formatShortDateLabel(date);
+    return MONTH_SHORT[date.getMonth()];
+  }
+
+  function renderRatingsChart() {
+    const wrap = el("ratings-chart-wrap");
+    if (!wrap) return;
+    const scoped = ratingLogInScope();
+    if (ratingsPeriod === "today" || ratingsPeriod === "yesterday") {
+      const filtered = filterEntriesByPeriod(scoped, ratingsPeriod);
+      renderRatingsSimpleChart(wrap, filtered, ["again", "hard", "good", "easy"]);
+      return;
+    }
+    const bucketDaysMap = { byday: 1, byweek: 7, bymonth: 30 };
+    const bucketDays = bucketDaysMap[ratingsPeriod] || 1;
+    const NUM_BUCKETS = 20;
+    const { buckets, rangeStart } = computeScrollableBuckets(scoped, NUM_BUCKETS, bucketDays);
+    renderRatingsScrollableChart(wrap, buckets, rangeStart, bucketDays, ratingsPeriod);
+  }
+
+  /** Vue défilable (items 10/11) : "aujourd'hui" toujours visible sans
+   *  défiler (dernière tranche, à droite), on remonte dans le temps en
+   *  faisant défiler vers la gauche — largeur FIXE par tranche (pas de
+   *  redimensionnement à la largeur de l'écran) pour que le défilement ait
+   *  un sens. */
+  function renderRatingsScrollableChart(wrap, buckets, rangeStart, bucketDays, periodKind) {
+    const ratings = ["again", "hard", "good", "easy"];
+    const numBuckets = buckets.length;
+    const legend = ratings
+      .map((r) => `<span class="algo-chart-legend-item"><span class="algo-chart-legend-dot" style="background:${ALGO_CHART_COLORS[r]}"></span>${ALGO_CHART_RATING_LABELS[r]}</span>`)
+      .join("");
+    const anyData = buckets.some((b) => ratings.some((r) => b[r] > 0));
+    if (!anyData) {
+      wrap.innerHTML = `<div class="algo-chart-legend">${legend}</div><p class="field-hint algo-chart-empty">Aucune note enregistrée sur cette période.</p>`;
+      return;
+    }
+    const max = Math.max(1, ...buckets.flatMap((b) => ratings.map((r) => b[r])));
+    const yMax = Math.max(4, Math.ceil(max * 1.15));
+    const BUCKET_W = 46;
+    const padL = 22, padR = 8, padT = 10, padB = 20;
+    const H = 190;
+    const plotH = H - padT - padB;
+    const W = padL + padR + numBuckets * BUCKET_W;
+    const barW = (BUCKET_W * 0.7) / ratings.length;
+    const bucketMs = bucketDays * 86400000;
+
+    let svg = `<svg viewBox="0 0 ${W} ${H}" style="width:${W}px;height:auto;background:var(--svg-chart-bg-color, var(--desk));border-radius:8px;display:block;">`;
+    svg += `<line x1="${padL}" y1="${H - padB}" x2="${W - padR}" y2="${H - padB}" stroke="rgba(31,41,55,0.3)" stroke-width="1"/>`;
+    for (let i = 0; i < numBuckets; i++) {
+      const bucketX = padL + i * BUCKET_W;
+      const bucketDate = new Date(rangeStart.getTime() + i * bucketMs);
+      ratings.forEach((r, ri) => {
+        const v = buckets[i][r];
+        const h = (v / yMax) * plotH;
+        const x = bucketX + (BUCKET_W - barW * ratings.length) / 2 + barW * ri;
+        const y = H - padB - h;
+        svg += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${Math.max(1, barW - 1).toFixed(1)}" height="${Math.max(v > 0 ? 1 : 0, h).toFixed(1)}" rx="1.5" fill="${ALGO_CHART_COLORS[r]}"/>`;
+      });
+      const isToday = i === numBuckets - 1;
+      const label = isToday ? "Auj" : scrollableBucketLabel(periodKind, bucketDate);
+      svg += `<text x="${(bucketX + BUCKET_W / 2).toFixed(1)}" y="${H - padB + 11}" font-size="7" fill="${isToday ? "var(--chart-today-label-color, var(--ink))" : "var(--chart-label-color, #6b7280)"}" text-anchor="middle" font-weight="${isToday ? "700" : "400"}">${label}</text>`;
+    }
+    svg += `</svg>`;
+
+    wrap.innerHTML = `<div class="algo-chart-legend">${legend}</div><div class="ratings-scroll-wrap">${svg}</div>`;
+    const scrollWrap = wrap.querySelector(".ratings-scroll-wrap");
+    if (scrollWrap) scrollWrap.scrollLeft = scrollWrap.scrollWidth;
+  }
+
+  /** Version à une seule couleur du graphique défilable ci-dessus (item
+   *  6e — "Fiches créées"), un seul total par tranche plutôt que 4 notes
+   *  empilées. */
+  function renderSingleSeriesScrollableChart(wrap, values, rangeStart, bucketDays, periodKind, color, emptyMsg) {
+    const numBuckets = values.length;
+    const anyData = values.some((v) => v > 0);
+    if (!anyData) {
+      wrap.innerHTML = `<p class="field-hint algo-chart-empty">${emptyMsg}</p>`;
+      return;
+    }
+    const max = Math.max(1, ...values);
+    const yMax = Math.max(4, Math.ceil(max * 1.15));
+    const BUCKET_W = 46;
+    const padL = 22, padR = 8, padT = 10, padB = 20;
+    const H = 160;
+    const plotH = H - padT - padB;
+    const W = padL + padR + numBuckets * BUCKET_W;
+    const barW = BUCKET_W * 0.55;
+    const bucketMs = bucketDays * 86400000;
+
+    let svg = `<svg viewBox="0 0 ${W} ${H}" style="width:${W}px;height:auto;background:var(--svg-chart-bg-color, var(--desk));border-radius:8px;display:block;">`;
+    svg += `<line x1="${padL}" y1="${H - padB}" x2="${W - padR}" y2="${H - padB}" stroke="rgba(31,41,55,0.3)" stroke-width="1"/>`;
+    for (let i = 0; i < numBuckets; i++) {
+      const bucketX = padL + i * BUCKET_W;
+      const bucketDate = new Date(rangeStart.getTime() + i * bucketMs);
+      const v = values[i];
+      const h = (v / yMax) * plotH;
+      const x = bucketX + (BUCKET_W - barW) / 2;
+      const y = H - padB - h;
+      svg += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${Math.max(v > 0 ? 1 : 0, h).toFixed(1)}" rx="1.5" fill="${color}"/>`;
+      if (v > 0) svg += `<text x="${(x + barW / 2).toFixed(1)}" y="${(y - 3).toFixed(1)}" font-size="7" fill="var(--chart-value-color, #6b7280)" text-anchor="middle">${v}</text>`;
+      const isToday = i === numBuckets - 1;
+      const label = isToday ? "Auj" : scrollableBucketLabel(periodKind, bucketDate);
+      svg += `<text x="${(bucketX + BUCKET_W / 2).toFixed(1)}" y="${H - padB + 11}" font-size="7" fill="${isToday ? "var(--chart-today-label-color, var(--ink))" : "var(--chart-label-color, #6b7280)"}" text-anchor="middle" font-weight="${isToday ? "700" : "400"}">${label}</text>`;
+    }
+    svg += `</svg>`;
+    wrap.innerHTML = `<div class="ratings-scroll-wrap">${svg}</div>`;
+    const scrollWrap2 = wrap.querySelector(".ratings-scroll-wrap");
+    if (scrollWrap2) scrollWrap2.scrollLeft = scrollWrap2.scrollWidth;
+  }
+
+  /** Histogramme "Fiches créées" (item 6e) : même principe défilable que
+   *  les graphiques de notes juste en dessous, piloté par la même échelle
+   *  partagée (byday/byweek/bymonth) et le même sélecteur de boîte. */
+  function renderCreatedChart() {
+    const wrap = el("created-chart-wrap");
+    if (!wrap) return;
+    const bucketDaysMap = { byday: 1, byweek: 7, bymonth: 30 };
+    const bucketDays = bucketDaysMap[ratingsPeriod] || 1;
+    const NUM_BUCKETS = 20;
+    const today = startOfDay(new Date());
+    const end = new Date(today);
+    end.setDate(end.getDate() + 1);
+    const bucketMs = bucketDays * 86400000;
+    const rangeStart = new Date(end.getTime() - NUM_BUCKETS * bucketMs);
+    const scopeIds = statsScopeSubjectIds();
+    const values = Array.from({ length: NUM_BUCKETS }, () => 0);
+    cards.forEach((c) => {
+      if (c.deleted) return;
+      if (scopeIds !== null && !scopeIds.has(c.subject)) return;
+      const t = new Date(c.createdAt).getTime();
+      if (t < rangeStart.getTime() || t >= end.getTime()) return;
+      let idx = Math.floor((t - rangeStart.getTime()) / bucketMs);
+      if (idx >= NUM_BUCKETS) idx = NUM_BUCKETS - 1;
+      if (idx < 0) idx = 0;
+      values[idx] += 1;
+    });
+    renderSingleSeriesScrollableChart(wrap, values, rangeStart, bucketDays, ratingsPeriod, "var(--due-bar-color, var(--teal))", "Aucune fiche créée sur cette période.");
   }
 
   /* ---------------------------------------------------------
-     Vue Tamagotchi : le foyer en vrac, un anneau de vie par compagnon,
-     la pile de cadeaux à ouvrir, et les trophées des animaux obtenus.
+     Évolution des notes dans le temps (item 6) : histogramme à barres
+     empilées en pourcentage, avec des cases à cocher pour choisir quelles
+     notes combiner dans une même barre (ex. cocher seulement 🙂 et 😎 pour
+     voir leur part combinée plutôt que les 4 séparément).
   --------------------------------------------------------- */
-  const tamaPetsListEl = el("tama-pets-list");
-  const tamaGiftsTrayEl = el("tama-gifts-tray");
-  const tamaEmptyHintEl = el("tama-empty-hint");
-  const tamaMemorialEl = el("tama-memorial");
-  const tamaMemorialListEl = el("tama-memorial-list");
-
-  function tamaPetSizePx(pet) {
-    const def = STAGE_DEFS[pet.stage === "broken" ? "oeuf" : pet.stage];
-    const frac = pet.stage === "broken" ? 0.5 : tamaPetLifeFraction(pet);
-    return Math.round(def.baseSize * (0.7 + 0.6 * frac));
-  }
-
-  function tamaPetRingColor(pet) {
-    if (pet.stage === "broken") return "hsl(0, 0%, 55%)";
-    const frac = tamaPetLifeFraction(pet);
-    return `hsl(${Math.round(120 * frac)}, 70%, 45%)`;
-  }
-
-  /** Nom et âge affichés sous la tuile d'un compagnon :
-   *  - décédé ("broken") : nom précédé de "RIP" + âge FIGÉ au moment du
-   *    décès (voir normalizePetLife) — jamais recalculé ensuite ;
-   *  - stade "animal" : nom réel + âge courant (voir item 4 : avant ce
-   *    stade, ni l'un ni l'autre ne sont révélés) ;
-   *  - stades intermédiaires (œuf, poussin, chenille, papillon) : juste le
-   *    nom du stade, pas d'âge — laisse planer le mystère jusqu'à l'éclosion
-   *    en animal adulte. */
-  function tamaPetLabelLines(pet) {
-    if (pet.stage === "broken") {
-      const days =
-        typeof pet.ageAtDeathDays === "number" ? pet.ageAtDeathDays : tamaPetAgeDays(pet, pet.deathAt);
-      return { name: `RIP ${pet.name || "?"}`, age: formatAgeDays(days) };
-    }
-    if (pet.stage === "animal") {
-      return { name: pet.name, age: tamaPetAgeLabel(pet) };
-    }
-    return { name: STAGE_DEFS[pet.stage].name, age: null };
-  }
-
-  function renderPetTile(pet) {
-    const size = tamaPetSizePx(pet);
-    const ringSize = size + 14;
-    const frac = pet.stage === "broken" ? 1 : tamaPetLifeFraction(pet);
-    const color = tamaPetRingColor(pet);
-
-    const tile = document.createElement("div");
-    tile.className = "tama-pet-tile";
-
-    const ring = document.createElement("div");
-    ring.className = "tama-pet-ring";
-    ring.style.width = `${ringSize}px`;
-    ring.style.height = `${ringSize}px`;
-    // Décédé : plus de barre de vie du tout (superflue — voir item 3), un
-    // simple cercle neutre et transparent pour garder la taille de la tuile
-    // cohérente avec les compagnons vivants.
-    ring.style.background = pet.stage === "broken"
-      ? "transparent"
-      : `conic-gradient(${color} ${Math.round(frac * 360)}deg, rgba(255,255,255,0.12) 0)`;
-
-    const inner = document.createElement("div");
-    inner.className = "tama-pet-inner";
-    inner.style.width = `${size}px`;
-    inner.style.height = `${size}px`;
-    inner.style.fontSize = `${Math.round(size * 0.62)}px`;
-    inner.textContent = tamaPetDisplayEmoji(pet);
-    ring.appendChild(inner);
-    tile.appendChild(ring);
-
-    const label = document.createElement("span");
-    label.className = "tama-pet-label";
-    const { name, age } = tamaPetLabelLines(pet);
-    const nameLine = document.createElement("span");
-    nameLine.className = "tama-pet-label-name";
-    nameLine.textContent = name;
-    label.appendChild(nameLine);
-    if (age) {
-      const ageLine = document.createElement("span");
-      ageLine.className = "tama-pet-label-age";
-      ageLine.textContent = age;
-      label.appendChild(ageLine);
-    }
-    tile.appendChild(label);
-
-    return tile;
-  }
-
-  /** Rafraîchit un tama-pet-tile déjà présent dans le DOM sans le recréer
-   *  (anneau de vie, émoji, étiquette) — utilisé par la boucle de
-   *  simulation à chaque battement, beaucoup moins coûteux qu'un rendu
-   *  complet de la vue à chaque frame. */
-  function updatePetTileVisual(pet, tile) {
-    const size = tamaPetSizePx(pet);
-    const ringSize = size + 14;
-    const frac = pet.stage === "broken" ? 1 : tamaPetLifeFraction(pet);
-    const color = tamaPetRingColor(pet);
-
-    const ring = tile.querySelector(".tama-pet-ring");
-    const inner = tile.querySelector(".tama-pet-inner");
-    const label = tile.querySelector(".tama-pet-label");
-    if (ring) {
-      ring.style.width = `${ringSize}px`;
-      ring.style.height = `${ringSize}px`;
-      ring.style.background = pet.stage === "broken"
-        ? "transparent"
-        : `conic-gradient(${color} ${Math.round(frac * 360)}deg, rgba(255,255,255,0.12) 0)`;
-    }
-    if (inner) {
-      inner.style.width = `${size}px`;
-      inner.style.height = `${size}px`;
-      inner.style.fontSize = `${Math.round(size * 0.62)}px`;
-      inner.textContent = tamaPetDisplayEmoji(pet);
-    }
-    if (label) {
-      const nameLine = label.querySelector(".tama-pet-label-name");
-      let ageLine = label.querySelector(".tama-pet-label-age");
-      const { name, age } = tamaPetLabelLines(pet);
-      if (nameLine) nameLine.textContent = name;
-      if (age) {
-        if (!ageLine) {
-          ageLine = document.createElement("span");
-          ageLine.className = "tama-pet-label-age";
-          label.appendChild(ageLine);
-        }
-        ageLine.textContent = age;
-      } else if (ageLine) {
-        ageLine.remove();
-      }
-    }
-  }
-
-  function renderFoodTile(food) {
-    const tile = document.createElement("div");
-    tile.className = "tama-food";
-    tile.dataset.foodId = food.id;
-
-    const emoji = document.createElement("span");
-    emoji.className = "tama-food-emoji";
-    emoji.textContent = food.emoji;
-    tile.appendChild(emoji);
-
-    const track = document.createElement("div");
-    track.className = "tama-food-bar-track";
-    const fill = document.createElement("div");
-    fill.className = "tama-food-bar-fill";
-    fill.style.width = `${Math.max(0, Math.min(100, (food.remaining / food.total) * 100))}%`;
-    track.appendChild(fill);
-    tile.appendChild(track);
-
-    return tile;
-  }
-
-  function renderGiftsTray() {
-    if (!tamaGiftsTrayEl) return;
-    const pending = tamaState.pendingGifts || [];
-    tamaGiftsTrayEl.innerHTML = "";
-    tamaGiftsTrayEl.hidden = pending.length === 0;
-    if (pending.length === 0) return;
-
-    const title = document.createElement("p");
-    title.className = "tama-gifts-title";
-    title.textContent = `${pending.length} cadeau(x) à ouvrir`;
-    tamaGiftsTrayEl.appendChild(title);
-
-    const row = document.createElement("div");
-    row.className = "tama-gifts-row";
-    pending.forEach((gift) => {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "tama-gift-box";
-      btn.textContent = "🎁";
-      btn.title = "Touche pour ouvrir";
-      btn.addEventListener("click", () => openGiftWithAnimation(gift.id, btn));
-      row.appendChild(btn);
+  /* ---------------------------------------------------------
+     Évolution des notes dans le temps : histogramme à barres empilées en
+     pourcentage. La fusion par cases à cocher a été retirée (repli plus
+     simple : toujours les 4 notes séparées) au profit d'un pourcentage
+     affiché directement dans chaque segment.
+  --------------------------------------------------------- */
+  function bucketEntriesByPeriod(entries, start, end, numBuckets) {
+    const totalMs = end.getTime() - start.getTime();
+    const bucketMs = totalMs / numBuckets;
+    const buckets = Array.from({ length: numBuckets }, () => ({ again: 0, hard: 0, good: 0, easy: 0 }));
+    entries.forEach((e) => {
+      const t = new Date(e.at).getTime();
+      if (t < start.getTime() || t >= end.getTime()) return;
+      let idx = Math.floor((t - start.getTime()) / bucketMs);
+      if (idx >= numBuckets) idx = numBuckets - 1;
+      if (idx < 0) idx = 0;
+      if (buckets[idx][e.rating] !== undefined) buckets[idx][e.rating] += 1;
     });
-    tamaGiftsTrayEl.appendChild(row);
+    return buckets;
   }
 
-  /** Affiche un message de confirmation bien visible, en bas d'écran.
-   *  `big` = variante plus grande / plus longue (ouverture de cadeau). */
-  function showTamaToast(message, big) {
+  function renderRatingsHistoryChart() {
+    const wrap = el("ratings-history-chart-wrap");
+    if (!wrap) return;
+    const scoped = ratingLogInScope();
+    const ratings = ["again", "hard", "good", "easy"];
+    const legend = ratings
+      .map(
+        (r) => `<span class="algo-chart-legend-item"><span class="algo-chart-legend-dot" style="background:${ALGO_CHART_COLORS[r]}"></span>${ALGO_CHART_RATING_LABELS[r]}</span>`
+      )
+      .join("");
+
+    // Items 10/11 : mêmes échelles que le graphique juste au-dessus —
+    // aujourd'hui/hier restent un simple découpage en 10 tranches sur la
+    // période ; par jour/semaine/mois deviennent des vues défilables sur
+    // 20 tranches, aujourd'hui toujours visible sans défiler.
+    let buckets, rangeStart, bucketMs, numBuckets, dateForBucket;
+    if (ratingsPeriod === "today" || ratingsPeriod === "yesterday") {
+      const { start, end } = periodToRange(ratingsPeriod);
+      const filtered = filterEntriesByPeriod(scoped, ratingsPeriod);
+      numBuckets = 10;
+      const built = bucketEntriesByPeriod(filtered, start, end, numBuckets);
+      buckets = built;
+      rangeStart = start;
+      bucketMs = (end.getTime() - start.getTime()) / numBuckets;
+      dateForBucket = (i) => new Date(rangeStart.getTime() + bucketMs * i);
+    } else {
+      const bucketDaysMap = { byday: 1, byweek: 7, bymonth: 30 };
+      const bucketDays = bucketDaysMap[ratingsPeriod] || 1;
+      numBuckets = 20;
+      const result = computeScrollableBuckets(scoped, numBuckets, bucketDays);
+      buckets = result.buckets;
+      rangeStart = result.rangeStart;
+      bucketMs = bucketDays * 86400000;
+      dateForBucket = (i) => new Date(rangeStart.getTime() + bucketMs * i);
+    }
+
+    const anyData = buckets.some((b) => ratings.some((r) => b[r] > 0));
+    if (!anyData) {
+      wrap.innerHTML = `<div class="algo-chart-legend">${legend}</div><p class="field-hint algo-chart-empty">Aucune note enregistrée sur cette période.</p>`;
+      return;
+    }
+
+    const scrollable = ratingsPeriod !== "today" && ratingsPeriod !== "yesterday";
+    const BUCKET_W = scrollable ? 46 : (320 - 28 - 8) / numBuckets;
+    const padL = scrollable ? 22 : 28, padR = 8, padT = 10, padB = scrollable ? 20 : 24;
+    const H = scrollable ? 190 : 210;
+    const plotH = H - padT - padB;
+    const W = scrollable ? padL + padR + numBuckets * BUCKET_W : 320;
+    const barW = BUCKET_W * (scrollable ? 0.7 : 0.7);
+
+    let svg = `<svg viewBox="0 0 ${W} ${H}" style="width:${scrollable ? W + "px" : "100%"};height:auto;background:var(--svg-chart-bg-color, var(--desk));border-radius:8px;${scrollable ? "display:block;" : ""}">`;
+    if (!scrollable) {
+      [0, 50, 100].forEach((pct) => {
+        const y = padT + (1 - pct / 100) * plotH;
+        svg += `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="rgba(31,41,55,0.1)" stroke-width="1"/>`;
+        svg += `<text x="${padL - 4}" y="${y + 3}" font-size="7" fill="var(--chart-value-color, #6b7280)" text-anchor="end">${pct}%</text>`;
+      });
+    }
+
+    buckets.forEach((b, i) => {
+      const x = padL + BUCKET_W * i + (BUCKET_W - barW) / 2;
+      const total = ratings.reduce((s, r) => s + b[r], 0);
+      const bucketDate = dateForBucket(i);
+      const isToday = scrollable && i === numBuckets - 1;
+      if (scrollable) {
+        const label = isToday ? "Auj" : scrollableBucketLabel(ratingsPeriod, bucketDate);
+        svg += `<text x="${(x + barW / 2).toFixed(1)}" y="${H - padB + 11}" font-size="7" fill="${isToday ? "var(--chart-today-label-color, var(--ink))" : "var(--chart-label-color, #6b7280)"}" text-anchor="middle" font-weight="${isToday ? "700" : "400"}">${label}</text>`;
+      } else if (i === 0 || i === numBuckets - 1 || i === Math.floor(numBuckets / 2)) {
+        svg += `<text x="${(x + barW / 2).toFixed(1)}" y="${H - padB + 13}" font-size="7" fill="var(--chart-label-color, #6b7280)" text-anchor="middle">${formatShortDateLabel(bucketDate)}</text>`;
+      }
+      if (total === 0) return;
+      let yCursor = padT + plotH;
+      ratings.forEach((r) => {
+        const count = b[r];
+        if (count === 0) return;
+        const share = count / total;
+        const segH = share * plotH;
+        const y = yCursor - segH;
+        svg += `<rect x="${x}" y="${y}" width="${barW}" height="${segH}" fill="${ALGO_CHART_COLORS[r]}"/>`;
+        // Pourcentage affiché dans le segment — seulement s'il y a assez de
+        // place pour rester lisible.
+        const pctLabel = Math.round(share * 100);
+        if (segH >= 10) {
+          svg += `<text x="${(x + barW / 2).toFixed(1)}" y="${(y + segH / 2 + 2.5).toFixed(1)}" font-size="6.5" fill="var(--desk)" text-anchor="middle" font-weight="700">${pctLabel}%</text>`;
+        }
+        yCursor = y;
+      });
+    });
+    svg += `</svg>`;
+
+    const axisLabel = `<p class="algo-chart-axis-x">Temps, du début à la fin de la période choisie ci-dessus</p>`;
+    if (scrollable) {
+      wrap.innerHTML = `<div class="algo-chart-legend">${legend}</div><div class="ratings-scroll-wrap">${svg}</div>${axisLabel}`;
+      const scrollWrap = wrap.querySelector(".ratings-scroll-wrap");
+      if (scrollWrap) scrollWrap.scrollLeft = scrollWrap.scrollWidth;
+    } else {
+      wrap.innerHTML = `<div class="algo-chart-legend">${legend}</div>${svg}${axisLabel}`;
+    }
+  }
+
+  /* ---------------------------------------------------------
+     🔥 Flammes / jours d'utilisation (item 6) : toujours calculées sur les
+     30 derniers jours, indépendamment de la période choisie plus haut (un
+     "streak" n'a pas vraiment de sens limité à "aujourd'hui" par exemple).
+  --------------------------------------------------------- */
+  function computeStreakData(scopeIds) {
+    const today = startOfDay(new Date());
+    const days = [];
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      days.push(d);
+    }
+    const hotSet = new Set();
+    ratingLog.forEach((e) => {
+      if (scopeIds !== null && !scopeIds.has(e.subjectId)) return;
+      hotSet.add(startOfDay(new Date(e.at)).getTime());
+    });
+    const hotDays = days.map((d) => hotSet.has(d.getTime()));
+    let streak = 0;
+    for (let i = hotDays.length - 1; i >= 0; i--) {
+      if (hotDays[i]) streak++;
+      else break;
+    }
+    return { days, hotDays, streak };
+  }
+
+  function renderStreak() {
+    const summaryEl = el("streak-summary");
+    const streakChartEl = el("streak-chart-wrap");
+    if (!summaryEl || !streakChartEl) return;
+    // Toujours toutes boîtes confondues (item : indépendant des choix de
+    // boîte/période plus bas sur la page).
+    const { days, hotDays, streak } = computeStreakData(null);
+    summaryEl.innerHTML = `🔥 Jours d'utilisation : <span class="streak-number-value">${streak}</span> jour${streak > 1 ? "s" : ""} d'affilée`;
+    const todayIdx = days.length - 1;
+    // "Auj" sur la colonne d'aujourd'hui (item 10), une colonne par jour
+    // qui se partagent toute la largeur disponible (voir CSS) plutôt
+    // qu'une largeur fixe qui débordait et forçait à défiler.
+    const cells = days
+      .map(
+        (d, i) =>
+          `<div class="streak-day-col">
+            <div class="streak-day${hotDays[i] ? " is-hot" : ""}${i === todayIdx ? " is-today" : ""}" title="${formatShortDateLabel(d)}"></div>
+            <span class="streak-day-label">${i === todayIdx ? "Auj" : ""}</span>
+          </div>`
+      )
+      .join("");
+    streakChartEl.innerHTML = `<div class="streak-row">${cells}</div>`;
+  }
+
+  /* ---------------------------------------------------------
+     Échelle partagée (byday/byweek/bymonth) pilotant le graphique
+     "à revoir/révisées", "fiches créées", "notes données" et
+     "évolution des notes" (item 6c) — même bouton/menu que le sélecteur
+     de boîte juste au-dessus (item 6), plutôt qu'un menu déroulant natif.
+  --------------------------------------------------------- */
+  const STATS_SCALE_TITLES = { byday: "Par jour", byweek: "Par semaine", bymonth: "Par mois" };
+  function renderStatsScaleSelect() {
+    const btn = el("stats-scale-select-btn");
+    if (btn) btn.textContent = STATS_SCALE_TITLES[ratingsPeriod] || "Par jour";
+  }
+  function openStatsScaleChoiceMenu() {
+    const menu = el("stats-scale-choice-menu");
+    if (menu) menu.hidden = false;
+  }
+  function closeStatsScaleChoiceMenu() {
+    const menu = el("stats-scale-choice-menu");
+    if (menu) menu.hidden = true;
+  }
+  const statsScaleSelectBtn = el("stats-scale-select-btn");
+  if (statsScaleSelectBtn) {
+    statsScaleSelectBtn.addEventListener("click", () => openStatsScaleChoiceMenu());
+  }
+  document.querySelectorAll('#stats-scale-choice-menu [data-scale]').forEach((btn) => {
+    btn.addEventListener("click", () => {
+      closeStatsScaleChoiceMenu();
+      ratingsPeriod = btn.dataset.scale;
+      renderStatsScaleSelect();
+      renderDueChart();
+      renderCreatedChart();
+      renderRatingsChart();
+      renderRatingsHistoryChart();
+    });
+  });
+  const statsScaleChoiceCancelBtn = el("stats-scale-choice-cancel");
+  if (statsScaleChoiceCancelBtn) statsScaleChoiceCancelBtn.addEventListener("click", closeStatsScaleChoiceMenu);
+  document.addEventListener("pointerdown", (e) => {
+    const menu = el("stats-scale-choice-menu");
+    if (!menu || menu.hidden) return;
+    if (menu.contains(e.target) || e.target === statsScaleSelectBtn) return;
+    closeStatsScaleChoiceMenu();
+  });
+
+  /** Affiche un message de confirmation bien visible, en bas d'écran. */
+  function showToast(message) {
     const toast = document.createElement("div");
-    toast.className = big ? "tama-toast tama-toast--gift" : "tama-toast";
+    toast.className = "app-toast";
     toast.textContent = message;
     document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), big ? 4500 : 3400);
+    setTimeout(() => toast.remove(), 3400);
   }
 
-  /** Ouvre un cadeau de la pile et affiche en direct ce qui vient de se
-   *  passer (nouvel œuf, ou nourriture posée quelque part dans le pré). */
-  function openGiftWithAnimation(giftId, anchorEl) {
-    const result = openPendingTamaGift(giftId);
-    if (!result) return;
-
-    showTamaToast(
-      result.type === "egg"
-        ? `🥚 Un nouvel œuf a rejoint le foyer !`
-        : `${result.emoji} ${result.qty} aliment${result.qty > 1 ? "s" : ""} (+${result.value} chacun) posé${result.qty > 1 ? "s" : ""} dans le pré — un compagnon va les trouver`,
-      true
-    );
-
-    renderTamagotchiView();
-
-    // Met brièvement en évidence ce qui vient d'apparaître.
-    requestAnimationFrame(() => {
-      if (result.type === "egg") {
-        const tile = tamaPetsListEl && tamaPetsListEl.querySelector(`[data-pet-id="${result.petId}"]`);
-        if (tile) {
-          tile.classList.add("tama-pet-tile--flash");
-          setTimeout(() => tile.classList.remove("tama-pet-tile--flash"), 900);
-        }
-      } else {
-        (result.foodIds || []).forEach((foodId) => {
-          const tile = tamaPetsListEl && tamaPetsListEl.querySelector(`[data-food-id="${foodId}"]`);
-          if (tile) {
-            tile.classList.add("tama-pet-tile--flash");
-            setTimeout(() => tile.classList.remove("tama-pet-tile--flash"), 900);
-          }
-        });
-      }
-    });
+  /** Variante centrée à l'écran (item 3) pour les annonces plus
+   *  importantes qu'une simple confirmation discrète (ex. passage en
+   *  révision libre) — la version en bas d'écran passait trop inaperçue. */
+  function showCenterToast(message) {
+    const toast = document.createElement("div");
+    toast.className = "app-toast app-toast--center";
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3400);
   }
 
   /* ---------------------------------------------------------
-     Simulation du pré : déplacement continu, lent et aléatoire des
-     compagnons, évitement mutuel, et repérage/consommation de la
-     nourriture posée par les cadeaux. Ne tourne que pendant que la page
-     Tamagotchi est affichée (voir la navigation par onglets).
-  --------------------------------------------------------- */
-  let tamaSimTimer = null;
-  let petRuntime = {}; // id -> { x, y, vx, vy, nextTurnAt } — coordonnées en % du pré
-  const TAMA_TICK_MS = 220;
-  const TAMA_PEN_MIN_X = 8, TAMA_PEN_MAX_X = 92;
-  const TAMA_PEN_MIN_Y = 12, TAMA_PEN_MAX_Y = 88;
-  const TAMA_EAT_RATE_PER_SEC = 4; // points de vie transférés par seconde de "contact"
-
-  function ensurePetRuntime(pet) {
-    let rt = petRuntime[pet.id];
-    if (!rt) {
-      rt = {
-        x: TAMA_PEN_MIN_X + Math.random() * (TAMA_PEN_MAX_X - TAMA_PEN_MIN_X),
-        y: TAMA_PEN_MIN_Y + Math.random() * (TAMA_PEN_MAX_Y - TAMA_PEN_MIN_Y),
-        vx: (Math.random() - 0.5) * 0.5,
-        vy: (Math.random() - 0.5) * 0.5,
-        nextTurnAt: Date.now() + 1500 + Math.random() * 3000,
-      };
-      petRuntime[pet.id] = rt;
-    }
-    return rt;
-  }
-
-  /** Un battement de la simulation : fait avancer chaque compagnon d'un
-   *  petit pas, gère l'évitement mutuel, l'attraction douce vers la
-   *  nourriture la plus proche, et la consommation ("vases communicants"
-   *  entre la barre de nourriture restante et la vie du compagnon). */
-  function stepTamaSimulation() {
-    if (!tamaState || tamaState.pets.length === 0) return;
-    const alive = tamaState.pets.filter((p) => p.stage !== "broken");
-    const foods = tamaState.foods || [];
-    let dataChanged = false;
-    const dtSec = TAMA_TICK_MS / 1000;
-
-    alive.forEach((pet) => {
-      const rt = ensurePetRuntime(pet);
-
-      // Change de direction de temps en temps ("aléatoirement").
-      if (Date.now() > rt.nextTurnAt) {
-        rt.vx = (Math.random() - 0.5) * 0.5;
-        rt.vy = (Math.random() - 0.5) * 0.5;
-        rt.nextTurnAt = Date.now() + 2000 + Math.random() * 3500;
-      }
-
-      // Évitement mutuel ("sans se rentrer dedans") : légère répulsion vis-
-      // à-vis de chaque autre compagnon trop proche.
-      alive.forEach((other) => {
-        if (other === pet) return;
-        const ort = ensurePetRuntime(other);
-        const dx = rt.x - ort.x, dy = rt.y - ort.y;
-        const dist = Math.sqrt(dx * dx + dy * dy) || 0.001;
-        const minDist = 14;
-        if (dist < minDist) {
-          rt.vx += (dx / dist) * 0.06;
-          rt.vy += (dy / dist) * 0.06;
-        }
-      });
-
-      // Légère attraction vers la nourriture disponible la plus proche —
-      // sans quoi, dans un pré assez grand, un compagnon pourrait ne
-      // jamais croiser la nourriture posée par hasard.
-      let nearestFood = null;
-      let nearestDist = Infinity;
-      foods.forEach((food) => {
-        if (food.eatenBy && food.eatenBy !== pet.id) return;
-        const dx = food.x - rt.x, dy = food.y - rt.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < nearestDist) {
-          nearestDist = dist;
-          nearestFood = food;
-        }
-      });
-      if (nearestFood && nearestDist > 3) {
-        const dx = nearestFood.x - rt.x, dy = nearestFood.y - rt.y;
-        const dist = Math.sqrt(dx * dx + dy * dy) || 0.001;
-        rt.vx += (dx / dist) * 0.045;
-        rt.vy += (dy / dist) * 0.045;
-      }
-
-      // Vitesse plafonnée ("lentement").
-      const speed = Math.sqrt(rt.vx * rt.vx + rt.vy * rt.vy);
-      const maxSpeed = 0.85;
-      if (speed > maxSpeed) {
-        rt.vx = (rt.vx / speed) * maxSpeed;
-        rt.vy = (rt.vy / speed) * maxSpeed;
-      }
-
-      rt.x += rt.vx;
-      rt.y += rt.vy;
-      if (rt.x < TAMA_PEN_MIN_X) { rt.x = TAMA_PEN_MIN_X; rt.vx = Math.abs(rt.vx); }
-      if (rt.x > TAMA_PEN_MAX_X) { rt.x = TAMA_PEN_MAX_X; rt.vx = -Math.abs(rt.vx); }
-      if (rt.y < TAMA_PEN_MIN_Y) { rt.y = TAMA_PEN_MIN_Y; rt.vy = Math.abs(rt.vy); }
-      if (rt.y > TAMA_PEN_MAX_Y) { rt.y = TAMA_PEN_MAX_Y; rt.vy = -Math.abs(rt.vy); }
-
-      // "Tombe dessus" -> mange : la barre de nourriture se vide pendant
-      // que la vie du compagnon se remplit d'autant (vases communicants).
-      if (nearestFood && nearestDist <= 5) {
-        if (!nearestFood.eatenBy) nearestFood.eatenBy = pet.id;
-        if (nearestFood.eatenBy === pet.id) {
-          const capacity = tamaPetCapacity(pet);
-          if (capacity > 0) {
-            const bite = Math.min(nearestFood.remaining, capacity, TAMA_EAT_RATE_PER_SEC * dtSec);
-            if (bite > 0) {
-              pet.life += bite;
-              nearestFood.remaining -= bite;
-              normalizePetLife(pet);
-              dataChanged = true;
-            }
-          }
-          // Nourriture épuisée, ou compagnon repu (déjà au maximum du
-          // dernier stade) : elle disparaît — s'il en restait, elle reste
-          // disponible dans le pré pour un autre compagnon.
-          if (nearestFood.remaining <= 0.05) {
-            tamaState.foods = tamaState.foods.filter((f) => f.id !== nearestFood.id);
-            dataChanged = true;
-          } else if (tamaPetCapacity(pet) <= 0) {
-            nearestFood.eatenBy = null;
-          }
-        }
-      }
-    });
-
-    // Nettoyage des positions de compagnons disparus (œuf au plat effacé).
-    Object.keys(petRuntime).forEach((id) => {
-      if (!tamaState.pets.some((p) => p.id === id)) delete petRuntime[id];
-    });
-
-    renderPetPositions();
-    if (dataChanged) {
-      saveTamaState();
-      refreshTamaTabIcon();
-      scheduleTamaPush();
-    }
-  }
-
-  /** Applique les positions courantes (calculées par stepTamaSimulation)
-   *  aux tuiles déjà présentes dans le DOM, et met à jour les barres de
-   *  nourriture — sans reconstruire la liste à chaque battement. */
-  function renderPetPositions() {
-    if (!tamaPetsListEl) return;
-    tamaState.pets.forEach((pet) => {
-      const tile = tamaPetsListEl.querySelector(`[data-pet-id="${pet.id}"]`);
-      if (!tile) return;
-      if (pet.stage === "broken") {
-        tile.style.left = "50%";
-        tile.style.top = "50%";
-      } else {
-        const rt = ensurePetRuntime(pet);
-        tile.style.left = `${rt.x}%`;
-        tile.style.top = `${rt.y}%`;
-      }
-      updatePetTileVisual(pet, tile);
-    });
-    (tamaState.foods || []).forEach((food) => {
-      const tile = tamaPetsListEl.querySelector(`[data-food-id="${food.id}"]`);
-      if (!tile) return;
-      tile.style.left = `${food.x}%`;
-      tile.style.top = `${food.y}%`;
-      const fill = tile.querySelector(".tama-food-bar-fill");
-      if (fill) fill.style.width = `${Math.max(0, Math.min(100, (food.remaining / food.total) * 100))}%`;
-    });
-    // Nourriture épuisée (retirée de tamaState.foods dans stepTamaSimulation) :
-    // sa tuile DOM devait auparavant attendre un changement de page pour
-    // disparaître, puisque renderPetPositions ne faisait que mettre à jour
-    // les tuiles encore présentes dans l'état — jamais retirer celles qui ne
-    // le sont plus. On nettoie donc ici toute tuile de nourriture orpheline.
-    const liveFoodIds = new Set((tamaState.foods || []).map((f) => f.id));
-    tamaPetsListEl.querySelectorAll("[data-food-id]").forEach((tile) => {
-      if (!liveFoodIds.has(tile.dataset.foodId)) tile.remove();
-    });
-  }
-
-  function startTamaSimulation() {
-    if (tamaSimTimer) return;
-    tamaSimTimer = setInterval(stepTamaSimulation, TAMA_TICK_MS);
-  }
-
-  function stopTamaSimulation() {
-    if (tamaSimTimer) {
-      clearInterval(tamaSimTimer);
-      tamaSimTimer = null;
-    }
-  }
-
-  /** Section "Ils nous ont quittés" : mémorial permanent des compagnons
-   *  décédés, du plus récent au plus ancien (voir archiveDeceasedPets). */
-  function renderTamaMemorial() {
-    if (!tamaMemorialEl || !tamaMemorialListEl) return;
-    const entries = Array.isArray(tamaState.memorial) ? tamaState.memorial : [];
-    tamaMemorialEl.hidden = entries.length === 0;
-    if (entries.length === 0) return;
-
-    tamaMemorialListEl.innerHTML = "";
-    const frag = document.createDocumentFragment();
-    entries.forEach((entry) => {
-      const row = document.createElement("div");
-      row.className = "tama-memorial-row";
-
-      const emoji = document.createElement("span");
-      emoji.className = "tama-memorial-emoji";
-      emoji.textContent = entry.emoji || BROKEN_EGG_EMOJI;
-      row.appendChild(emoji);
-
-      const body = document.createElement("div");
-      body.className = "tama-memorial-body";
-
-      const nameLine = document.createElement("div");
-      nameLine.className = "tama-memorial-name";
-      nameLine.textContent = `${entry.name || "?"} · ${formatAgeDays(entry.ageAtDeathDays || 0)}`;
-      body.appendChild(nameLine);
-
-      const epitaph = document.createElement("div");
-      epitaph.className = "tama-memorial-epitaph";
-      epitaph.textContent = entry.epitaph || "";
-      body.appendChild(epitaph);
-
-      row.appendChild(body);
-      frag.appendChild(row);
-    });
-    tamaMemorialListEl.appendChild(frag);
-  }
-
-  function renderTamagotchiView() {
-    applyTamaUpkeep();
-
-    if (tamaPetsListEl) {
-      tamaPetsListEl.innerHTML = "";
-      const frag = document.createDocumentFragment();
-      tamaState.pets.forEach((pet) => {
-        const tile = renderPetTile(pet);
-        tile.dataset.petId = pet.id;
-        const rt = pet.stage === "broken" ? null : ensurePetRuntime(pet);
-        tile.style.left = rt ? `${rt.x}%` : "50%";
-        tile.style.top = rt ? `${rt.y}%` : "50%";
-        frag.appendChild(tile);
-      });
-      (tamaState.foods || []).forEach((food) => {
-        const tile = renderFoodTile(food);
-        tile.style.left = `${food.x}%`;
-        tile.style.top = `${food.y}%`;
-        frag.appendChild(tile);
-      });
-      tamaPetsListEl.appendChild(frag);
-    }
-
-    if (tamaEmptyHintEl) tamaEmptyHintEl.hidden = tamaState.pets.length > 0;
-
-    renderGiftsTray();
-    renderTamaMemorial();
-    applyPenColor();
-    renderPenColorSwatches();
-
-    refreshTamaTabIcon();
-  }
-
-
-
-  statsSubjectSelectEl.addEventListener("change", () => {
-    statsSubjectFilter = statsSubjectSelectEl.value;
-    renderStats();
-  });
-
-  statsRangeSelectEl.addEventListener("change", () => {
-    statsRangeDays = Number(statsRangeSelectEl.value) || 15;
-    renderDueChart();
-  });
-
-  /* ---------------------------------------------------------
-     Mini histogramme de la page Réviser (matière en cours)
+     Mini histogramme de la page Réviser (boîte en cours)
   --------------------------------------------------------- */
   function formatRangeShort(days) {
     switch (days) {
       case 15: return "15 j";
       case 30: return "1 mois";
       case 90: return "3 mois";
-      case 182: return "6 mois";
       case 365: return "1 an";
       default: return `${days} j`;
     }
   }
 
-  function renderReviewChart() {
+  /** Empêche un rendu EXTÉRIEUR (ex. mise à jour reçue en temps réel d'un
+   *  autre appareil, ou tout autre appel à renderAll() qui passerait par
+   *  là) d'interrompre une vague en cours (bug corrigé — item 1 : c'était
+   *  la cause la plus probable des animations qui s'arrêtaient net ou ne
+   *  se voyaient pas du tout, y compris sur de courtes durées : n'importe
+   *  quel autre rendu survenant PENDANT l'animation remplaçait les
+   *  éléments DOM sur lesquels la vague était en train de jouer, la
+   *  coupant silencieusement). Les rendus déclenchés par la vague
+   *  ELLE-MÊME (extension temporaire, retour à la normale) passent outre
+   *  via reviewWaveInternalCall. */
+  let reviewWaveInProgress = false;
+  let reviewWaveInternalCall = false;
+
+  function renderReviewChart(minTotalDays) {
     if (!reviewChartEl) return;
+    if (reviewWaveInProgress && !reviewWaveInternalCall) return;
     if (reviewChartSubjectNameEl) reviewChartSubjectNameEl.textContent = subjectName(currentSubjectId);
     if (reviewChartScaleLabelEl) reviewChartScaleLabelEl.textContent = formatRangeShort(reviewChartRangeDays);
     const pool = subjectCards();
-    // La barre d'objectif-cadeau (et la possibilité de récolter un cadeau)
-    // n'a de sens qu'en révision libre (isBonusMode) : c'est seulement là
-    // qu'on continue de piocher des fiches déjà à jour pour faire "fondre"
-    // l'histogramme sous la ligne. En file du jour normale, on ne passe pas
-    // giftOpts pour que la ligne et le mécanisme de cadeau n'apparaissent pas.
     renderHistogramInto(
       reviewChartEl,
       reviewChartEmptyEl,
@@ -3233,17 +6414,158 @@
       pool,
       reviewChartRangeDays,
       REVIEW_CHART_MAX_BAR_PX,
-      isBonusMode ? { subjectId: currentSubjectId, onCollect: showTamaGiftToast } : null
+      undefined,
+      false,
+      true, // suppressChangeFlash (item 4) : la vague gère tout l'effet visuel
+      undefined,
+      minTotalDays
     );
-    maybeGrantZeroDueBonus(currentSubjectId, computeDueHistogram(pool, 1)[0].count);
   }
 
-  /** Petit toast qui confirme qu'un cadeau vient de partir dans la pile "à
-   *  ouvrir" de la page Tamagotchi, sans changer la mise en page ici. */
-  function showTamaGiftToast() {
-    refreshTamaTabIcon();
-    renderReviewChart(); // fait disparaître le repère tout juste récolté, en affiche un nouveau
-    showTamaToast("🎁 Cadeau envoyé vers la page Tamagotchi", false);
+  /** Anime en vague, de gauche à droite, toutes les colonnes entre
+   *  `fromIdx` (aujourd'hui) et `toIdx` (nouvelle date de la fiche notée) —
+   *  item 4/9 : chaque barre intermédiaire s'allume brièvement l'une après
+   *  l'autre (léger décalage croissant), et la barre CIBLE (nouvelle date)
+   *  ne s'allume qu'en DERNIER, une fois la vague arrivée jusqu'à elle —
+   *  puis reste allumée et haute environ 1,5 seconde avant de revenir à la
+   *  normale. Si la cible dépasse le nombre de jours actuellement RENDUS
+   *  (fréquent avec un mode à croissance rapide sur l'échelle "15 jours"
+   *  par défaut : quelques bonnes réponses suffisent à dépasser 60 jours),
+   *  le graphique est d'abord redessiné avec assez de colonnes pour
+   *  l'inclure vraiment — sans ça, la vague animait la dernière colonne
+   *  visible, une position qui n'avait rien à voir avec la vraie nouvelle
+   *  échéance de la fiche. Revient à l'échelle normale une fois terminé. */
+  /** Attend qu'un défilement fluide (smooth) ait eu le temps de se
+   *  terminer visuellement avant de continuer — plus simple et plus fiable
+   *  d'un navigateur à l'autre qu'un événement "scrollend" (pas encore
+   *  supporté partout). */
+  function waitForSmoothScroll(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  /** Anime en vague, de gauche à droite, toutes les colonnes entre
+   *  `fromIdx` (aujourd'hui) et `toIdx` (nouvelle date de la fiche notée) —
+   *  chaque barre intermédiaire s'allume brièvement l'une après l'autre
+   *  (léger décalage croissant), et la barre CIBLE (nouvelle date) ne
+   *  s'allume qu'en DERNIER, une fois la vague arrivée jusqu'à elle — puis
+   *  reste allumée et haute environ 1,5 seconde avant de revenir à la
+   *  normale.
+   *
+   *  Réécriture complète (bug corrigé — l'animation restait imprévisible :
+   *  vitesse qui variait, pause parfois absente, et surtout un vrai
+   *  problème quand un défilement était nécessaire, la vague démarrant
+   *  AVANT que le défilement (asynchrone, ~300-400ms) n'ait fini, ce qui
+   *  faisait tout jouer en même temps de façon chaotique. Désormais tout
+   *  se déroule dans un ordre strict et prévisible :
+   *  1. Si besoin, on redessine le graphique en élargi (fiche qui dépasse
+   *     la fenêtre actuellement affichée).
+   *  2. Si besoin, on défile jusqu'à la position finale et on ATTEND que ce
+   *     défilement soit terminé avant de passer à la suite (plus jamais en
+   *     même temps que la vague).
+   *  3. La vague se joue, avec un minutage entièrement fixé À L'AVANCE
+   *     (calculé une seule fois, jamais recalculé en cours de route).
+   *  4. Un SEUL minuteur global (pas un par barre) nettoie tout et revient
+   *     à la position de départ, calé sur la durée totale exacte —
+   *     indépendant des événements CSS "animationend", qui pouvaient être
+   *     manqués si quoi que ce soit d'autre redessinait le graphique pile
+   *     pendant l'animation. */
+  async function triggerReviewChartWave(fromIdx, toIdx) {
+    if (!reviewChartEl) return;
+    reviewWaveToken += 1;
+    const myToken = reviewWaveToken;
+    reviewWaveInProgress = true;
+
+    const bail = () => {
+      // Périmé (une vague plus récente a pris le relais) OU rien à animer :
+      // on relâche le verrou pour ne jamais bloquer les rendus suivants.
+      if (myToken === reviewWaveToken) reviewWaveInProgress = false;
+    };
+
+    let cols = reviewChartEl.querySelectorAll(".chart-col");
+    if (cols.length === 0 || toIdx > cols.length - 1) {
+      reviewWaveInternalCall = true;
+      renderReviewChart(toIdx + 3);
+      reviewWaveInternalCall = false;
+      cols = reviewChartEl.querySelectorAll(".chart-col");
+    }
+    if (cols.length === 0) {
+      bail();
+      return;
+    }
+
+    const lo = Math.max(0, Math.min(fromIdx, toIdx));
+    const hi = Math.min(cols.length - 1, Math.max(fromIdx, toIdx));
+    const wasExtended = cols.length > (RANGE_CONFIG[reviewChartRangeDays] || {}).total;
+
+    // Étape 1/2 : défilement d'ABORD, jusqu'au bout, avant de commencer
+    // quoi que ce soit d'autre.
+    const scroller = reviewChartWrapEl;
+    const originalScrollLeft = scroller ? scroller.scrollLeft : 0;
+    let scrolledAway = false;
+    if (scroller) {
+      const targetCol = cols[hi];
+      const targetLeft = targetCol.offsetLeft;
+      const targetRight = targetLeft + targetCol.offsetWidth;
+      const viewLeft = scroller.scrollLeft;
+      const viewRight = viewLeft + scroller.clientWidth;
+      if (targetRight > viewRight || targetLeft < viewLeft) {
+        scrolledAway = true;
+        const dest = Math.max(0, targetLeft - scroller.clientWidth * 0.7);
+        scroller.scrollTo({ left: dest, behavior: "smooth" });
+        await waitForSmoothScroll(420);
+      }
+    }
+    // Une vague plus récente a démarré pendant qu'on attendait le
+    // défilement (nouvelle notation très rapprochée) : on s'efface,
+    // silencieusement, sans toucher à rien.
+    if (myToken !== reviewWaveToken) return;
+
+    // Étape 3 : minutage entièrement fixé à l'avance, une seule fois.
+    const span = hi - lo;
+    const MAX_SWEEP_MS = 650;
+    const STEP_MS = span > 0 ? Math.min(55, MAX_SWEEP_MS / span) : 55;
+    const HOLD_MS = 1800;
+    let maxTotalMs = 0;
+    for (let i = lo; i <= hi; i++) {
+      const bar = cols[i].querySelector(".chart-bar");
+      if (!bar) continue;
+      const isTarget = i === hi;
+      const delay = Math.round((i - lo) * STEP_MS);
+      const animMs = isTarget ? HOLD_MS : 450;
+      maxTotalMs = Math.max(maxTotalMs, delay + animMs);
+      bar.classList.remove("chart-bar-wave", "chart-bar-wave-hold");
+      void bar.offsetWidth;
+      bar.style.animationDelay = `${delay}ms`;
+      bar.classList.add(isTarget ? "chart-bar-wave-hold" : "chart-bar-wave");
+    }
+
+    // Étape 4 : un seul minuteur global, calé sur la durée totale exacte —
+    // ni plus tôt (couperait la pause), ni plus tard (délai visible avant
+    // le retour à la normale). Relâche aussi le verrou anti-interruption :
+    // les rendus externes reçus PENDANT l'animation (et donc ignorés)
+    // pourront enfin s'appliquer.
+    setTimeout(() => {
+      if (myToken !== reviewWaveToken) return;
+      cols.forEach((col) => {
+        const bar = col.querySelector(".chart-bar");
+        if (bar) {
+          bar.classList.remove("chart-bar-wave", "chart-bar-wave-hold");
+          bar.style.animationDelay = "";
+        }
+      });
+      reviewWaveInternalCall = true;
+      if (wasExtended) {
+        renderReviewChart();
+      } else if (scrolledAway && scroller) {
+        scroller.scrollTo({ left: originalScrollLeft, behavior: "smooth" });
+      }
+      reviewWaveInternalCall = false;
+      reviewWaveInProgress = false;
+      // Un rendu externe a pu être ignoré pendant l'animation (ex. fiche
+      // ajoutée/synchronisée par un autre appareil) : on rattrape avec un
+      // rendu normal maintenant que la voie est libre.
+      renderReviewChart();
+    }, maxTotalMs + 60);
   }
 
   /** Tape sur le mini graphique : passe à l'échelle supérieure (boucle). */
@@ -3297,7 +6619,7 @@
   function saveBonusDaysSettings() {
     localStorage.setItem(BONUS_DAYS_KEY, JSON.stringify(bonusDaysSettings));
     touchAppSettingsTimestamp();
-    if (Sync.isConfigured()) pushTamaBlob();
+    scheduleDevSettingsPush();
   }
 
   function loadBonusAgainMode() {
@@ -3308,7 +6630,7 @@
   function saveBonusAgainMode() {
     localStorage.setItem(BONUS_AGAIN_MODE_KEY, bonusAgainMode);
     touchAppSettingsTimestamp();
-    if (Sync.isConfigured()) pushTamaBlob();
+    scheduleDevSettingsPush();
   }
 
   function clampHibernateDays(value, fallback) {
@@ -3329,8 +6651,100 @@
   function saveHibernateDays() {
     localStorage.setItem(HIBERNATE_DAYS_KEY, String(hibernateDays));
     touchAppSettingsTimestamp();
-    if (Sync.isConfigured()) pushTamaBlob();
+    scheduleDevSettingsPush();
   }
+
+  const SHOW_RATING_DAYS_KEY = "fiches_show_rating_days";
+  function loadShowRatingDays() {
+    const raw = localStorage.getItem(SHOW_RATING_DAYS_KEY);
+    return raw === null ? true : raw === "true";
+  }
+  function saveShowRatingDays(value) {
+    localStorage.setItem(SHOW_RATING_DAYS_KEY, String(value));
+    scheduleDevSettingsPush();
+  }
+  function applyShowRatingDays() {
+    const ratingRowEl = el("rating-row");
+    if (ratingRowEl) ratingRowEl.classList.toggle("hide-days", !loadShowRatingDays());
+  }
+  const settingShowRatingDaysEl = el("setting-show-rating-days");
+  if (settingShowRatingDaysEl) {
+    settingShowRatingDaysEl.addEventListener("change", () => {
+      saveShowRatingDays(settingShowRatingDaysEl.checked);
+      applyShowRatingDays();
+    });
+  }
+
+  // Histogramme de la page Réviser (item 1c) : masqué par défaut, un
+  // réglage l'affiche si on le souhaite.
+  const SHOW_REVIEW_CHART_KEY = "fiches_show_review_chart";
+  function loadShowReviewChart() {
+    return localStorage.getItem(SHOW_REVIEW_CHART_KEY) === "true";
+  }
+  function saveShowReviewChart(value) {
+    localStorage.setItem(SHOW_REVIEW_CHART_KEY, String(value));
+    scheduleDevSettingsPush();
+  }
+  function applyShowReviewChart() {
+    const section = el("review-chart-section");
+    if (section) section.hidden = !loadShowReviewChart();
+  }
+  const settingShowReviewChartEl = el("setting-show-review-chart");
+  if (settingShowReviewChartEl) {
+    settingShowReviewChartEl.addEventListener("change", () => {
+      saveShowReviewChart(settingShowReviewChartEl.checked);
+      applyShowReviewChart();
+    });
+  }
+
+  // Taille de police des fiches (item 2) : réglable depuis Réglages.
+  const CARD_FONT_SIZE_KEY = "fiches_card_font_size";
+  const DEFAULT_CARD_FONT_SIZE = 19;
+  function loadCardFontSize() {
+    const raw = Number(localStorage.getItem(CARD_FONT_SIZE_KEY));
+    return raw > 0 ? raw : DEFAULT_CARD_FONT_SIZE;
+  }
+  function saveCardFontSize(value) {
+    localStorage.setItem(CARD_FONT_SIZE_KEY, String(value));
+    scheduleDevSettingsPush();
+  }
+  function applyCardFontSize() {
+    document.documentElement.style.setProperty("--card-font-size", `${loadCardFontSize()}px`);
+  }
+  const settingCardFontSizeEl = el("setting-card-font-size");
+  if (settingCardFontSizeEl) {
+    settingCardFontSizeEl.addEventListener("change", () => {
+      const v = Number(settingCardFontSizeEl.value) || DEFAULT_CARD_FONT_SIZE;
+      saveCardFontSize(v);
+      applyCardFontSize();
+    });
+  }
+
+  /* ---------------------------------------------------------
+     Item 3 (dernier lot) : plus d'auto-défilement — 3 pictos en haut de la
+     page choisissent MANUELLEMENT ce qui s'affiche (nombre / mode /
+     jauge), synchronisé sur toutes les lignes à la fois via un attribut
+     sur <body>, lu par CSS partout en même temps.
+  --------------------------------------------------------- */
+  const ORG_DISPLAY_KEY = "fiches_org_display_mode";
+  const ORG_DISPLAY_MODES = ["count", "mode", "gauge"];
+  function loadOrgDisplayMode() {
+    const raw = localStorage.getItem(ORG_DISPLAY_KEY);
+    return ORG_DISPLAY_MODES.includes(raw) ? raw : "count";
+  }
+  function setOrgDisplayMode(mode) {
+    if (!ORG_DISPLAY_MODES.includes(mode)) return;
+    localStorage.setItem(ORG_DISPLAY_KEY, mode);
+    document.body.dataset.orgCarouselSlot = String(ORG_DISPLAY_MODES.indexOf(mode));
+    document.querySelectorAll(".org-display-toggle-btn").forEach((b) => {
+      b.classList.toggle("is-active", b.dataset.orgDisplay === mode);
+    });
+    scheduleDevSettingsPush();
+  }
+  document.querySelectorAll(".org-display-toggle-btn").forEach((btn) => {
+    btn.addEventListener("click", () => setOrgDisplayMode(btn.dataset.orgDisplay));
+  });
+  setOrgDisplayMode(loadOrgDisplayMode());
 
   function renderSettingsView() {
     if (settingBonusHardEl) settingBonusHardEl.value = bonusDaysSettings.hard;
@@ -3338,46 +6752,344 @@
     if (settingBonusEasyEl) settingBonusEasyEl.value = bonusDaysSettings.easy;
     if (settingBonusAgainModeEl) settingBonusAgainModeEl.value = bonusAgainMode;
     if (settingHibernateDaysEl) settingHibernateDaysEl.value = hibernateDays;
-    if (settingTamaFoodValueEl) settingTamaFoodValueEl.value = getFoodValue();
-    if (settingTamaGiftQtyMinEl) settingTamaGiftQtyMinEl.value = getGiftQtyMin();
-    if (settingTamaGiftQtyMaxEl) settingTamaGiftQtyMaxEl.value = getGiftQtyMax();
+    if (settingShowRatingDaysEl) settingShowRatingDaysEl.checked = loadShowRatingDays();
+    if (settingShowReviewChartEl) settingShowReviewChartEl.checked = loadShowReviewChart();
+    if (settingCardFontSizeEl) settingCardFontSizeEl.value = loadCardFontSize();
   }
 
-  if (settingTamaFoodValueEl) {
-    settingTamaFoodValueEl.addEventListener("change", () => {
-      const v = Math.max(1, Math.round(Number(settingTamaFoodValueEl.value)) || 15);
-      setFoodValue(v);
-      settingTamaFoodValueEl.value = v;
+  /* ---------------------------------------------------------
+     Page Développeur (item 19)
+  --------------------------------------------------------- */
+  function saveRatingLabelsFromInputs() {
+    const settings = loadDevSettings();
+    ["again", "hard", "good", "easy"].forEach((r) => {
+      const input = el(`dev-rating-${r}`);
+      if (input && input.value.trim()) settings.ratingLabels[r] = input.value.trim();
+    });
+    saveDevSettings(settings);
+    applyRatingLabels();
+  }
+  function saveNavLabelsFromInputs() {
+    const settings = loadDevSettings();
+    Object.keys(DEFAULT_NAV_LABELS).forEach((view) => {
+      const input = el(`dev-nav-${view}`);
+      if (input && input.value.trim()) settings.navLabels[view] = input.value.trim();
+    });
+    saveDevSettings(settings);
+    applyNavLabels();
+  }
+
+  ["again", "hard", "good", "easy"].forEach((r) => {
+    const input = el(`dev-rating-${r}`);
+    if (input) input.addEventListener("change", saveRatingLabelsFromInputs);
+  });
+  const devRatingResetBtn = el("dev-rating-reset");
+  if (devRatingResetBtn) {
+    devRatingResetBtn.addEventListener("click", () => {
+      const settings = loadDevSettings();
+      settings.ratingLabels = { ...DEFAULT_RATING_LABELS };
+      saveDevSettings(settings);
+      applyRatingLabels();
+      renderDevView();
     });
   }
-  if (settingTamaGiftQtyMinEl) {
-    settingTamaGiftQtyMinEl.addEventListener("change", () => {
-      let v = Math.max(1, Math.round(Number(settingTamaGiftQtyMinEl.value)) || 1);
-      // Le minimum ne doit jamais dépasser le maximum courant : on relève
-      // celui-ci plutôt que de laisser une plage invalide (min > max).
-      if (v > getGiftQtyMax()) {
-        setGiftQtyMax(v);
-        if (settingTamaGiftQtyMaxEl) settingTamaGiftQtyMaxEl.value = v;
-      }
-      setGiftQtyMin(v);
-      settingTamaGiftQtyMinEl.value = v;
+  Object.keys(DEFAULT_NAV_LABELS).forEach((view) => {
+    const input = el(`dev-nav-${view}`);
+    if (input) input.addEventListener("change", saveNavLabelsFromInputs);
+  });
+  const devNavResetBtn = el("dev-nav-reset");
+  if (devNavResetBtn) {
+    devNavResetBtn.addEventListener("click", () => {
+      const settings = loadDevSettings();
+      settings.navLabels = { ...DEFAULT_NAV_LABELS };
+      settings.navIcons = { ...DEFAULT_NAV_ICONS };
+      saveDevSettings(settings);
+      applyNavLabels();
+      renderDevView();
     });
   }
-  if (settingTamaGiftQtyMaxEl) {
-    settingTamaGiftQtyMaxEl.addEventListener("change", () => {
-      let v = Math.max(1, Math.round(Number(settingTamaGiftQtyMaxEl.value)) || 3);
-      if (v < getGiftQtyMin()) {
-        setGiftQtyMin(v);
-        if (settingTamaGiftQtyMinEl) settingTamaGiftQtyMinEl.value = v;
-      }
-      setGiftQtyMax(v);
-      settingTamaGiftQtyMaxEl.value = v;
+
+  /* ---------------------------------------------------------
+     Icônes, couleurs des notes/modes, palette de texte (item 2) — étoffe
+     le mode développeur avec un maximum de choix d'émoticônes/couleurs.
+  --------------------------------------------------------- */
+  function saveIconsFromInputs() {
+    const settings = loadDevSettings();
+    Object.keys(DEFAULT_ICONS).forEach((k) => {
+      const input = el(`dev-icon-${k}`);
+      if (input && input.value.trim()) settings.icons[k] = input.value.trim();
+    });
+    saveDevSettings(settings);
+    applyIconSettings();
+  }
+  Object.keys(DEFAULT_ICONS).forEach((k) => {
+    const input = el(`dev-icon-${k}`);
+    if (input) input.addEventListener("change", saveIconsFromInputs);
+  });
+  const devIconsResetBtn = el("dev-icons-reset");
+  if (devIconsResetBtn) {
+    devIconsResetBtn.addEventListener("click", () => {
+      const settings = loadDevSettings();
+      settings.icons = { ...DEFAULT_ICONS };
+      saveDevSettings(settings);
+      applyIconSettings();
+      renderDevView();
     });
   }
+
+  /** Couleurs des notes (item 4 — paires jour/nuit, via le même mécanisme
+   *  générique que fonds/textes/jauges). */
+  const RATING_COLORS_TITLES = { again: "Encore", hard: "Difficile", good: "Bien", easy: "Facile" };
+  function renderRatingColorsEditor() {
+    renderColorListPicker("dev-rating-colors-list", ["again", "hard", "good", "easy"], RATING_COLORS_TITLES, "ratingColors", applyColorSettings);
+  }
+  function saveRatingBtnBgFromInputs() {
+    const settings = loadDevSettings();
+    const dayInput = el("dev-color-rating-btn-bg");
+    const nightInput = el("dev-color-rating-btn-bg-night");
+    if (dayInput) settings.ratingBtnBgColor = dayInput.value;
+    if (nightInput) settings.nightColors.ratingBtnBgColor = nightInput.value;
+    saveDevSettings(settings);
+    applyColorSettings();
+  }
+  const ratingBtnBgInputEl = el("dev-color-rating-btn-bg");
+  if (ratingBtnBgInputEl) ratingBtnBgInputEl.addEventListener("input", saveRatingBtnBgFromInputs);
+  const ratingBtnBgNightInputEl = el("dev-color-rating-btn-bg-night");
+  if (ratingBtnBgNightInputEl) ratingBtnBgNightInputEl.addEventListener("input", saveRatingBtnBgFromInputs);
+  const devRatingColorsResetBtn = el("dev-rating-colors-reset");
+  if (devRatingColorsResetBtn) {
+    devRatingColorsResetBtn.addEventListener("click", () => {
+      const settings = loadDevSettings();
+      settings.ratingColors = { ...DEFAULT_RATING_COLORS };
+      settings.ratingBtnBgColor = DEFAULT_RATING_BTN_BG_COLOR;
+      settings.nightColors.ratingColors = { ...DEFAULT_RATING_COLORS };
+      settings.nightColors.ratingBtnBgColor = DEFAULT_NIGHT_RATING_BTN_BG_COLOR;
+      saveDevSettings(settings);
+      applyColorSettings();
+      renderDevView();
+    });
+  }
+
+  /** Couleurs des modes d'apprentissage (item 4 — paires jour/nuit). */
+  const MODE_COLORS_TITLES = { cool: "Cool", normal: "Normal", renforce: "Renforcé", custom: "Personnalisé" };
+  function renderModeColorsEditor() {
+    renderColorListPicker("dev-mode-colors-list", ["cool", "normal", "renforce", "custom"], MODE_COLORS_TITLES, "modeColors", applyColorSettings);
+  }
+  const devModeColorsResetBtn = el("dev-mode-colors-reset");
+  if (devModeColorsResetBtn) {
+    devModeColorsResetBtn.addEventListener("click", () => {
+      const settings = loadDevSettings();
+      settings.modeColors = { ...DEFAULT_MODE_COLORS };
+      settings.nightColors.modeColors = { ...DEFAULT_MODE_COLORS };
+      saveDevSettings(settings);
+      applyColorSettings();
+      renderDevView();
+    });
+  }
+
+  /** Couleurs des fonds / des textes (items 2h/2i) — remplace les anciens
+   *  blocs "Autres couleurs"/"Textes, histogrammes et fonds de zones". */
+  const devBgColorsResetBtn = el("dev-bg-colors-reset");
+  if (devBgColorsResetBtn) {
+    devBgColorsResetBtn.addEventListener("click", () => {
+      const settings = loadDevSettings();
+      settings.bgColors = { ...DEFAULT_BG_COLORS };
+      saveDevSettings(settings);
+      applyColorSettings();
+      renderDevView();
+    });
+  }
+  const devTextColorsSetResetBtn = el("dev-text-colors-set-reset");
+  if (devTextColorsSetResetBtn) {
+    devTextColorsSetResetBtn.addEventListener("click", () => {
+      const settings = loadDevSettings();
+      settings.textColorsSet = { ...DEFAULT_TEXT_COLORS_SET };
+      saveDevSettings(settings);
+      applyColorSettings();
+      renderDevView();
+    });
+  }
+
+  const devHomeLayoutResetBtn = el("dev-home-layout-reset");
+  if (devHomeLayoutResetBtn) {
+    devHomeLayoutResetBtn.addEventListener("click", () => {
+      const settings = loadDevSettings();
+      settings.homeLayout = JSON.parse(JSON.stringify(DEFAULT_HOME_LAYOUT));
+      saveDevSettings(settings);
+      applyHomeLayout();
+      renderDevView();
+    });
+  }
+
+  /** Liste éditable de couleurs de texte (item 2) : ajouter/renommer/
+   *  changer la couleur/retirer, appliqué en direct à la barre d'outils de
+   *  mise en forme des fiches. */
+  function renderTextColorsEditor() {
+    const wrap = el("dev-text-colors-list");
+    if (!wrap) return;
+    const colors = loadDevSettings().textColors;
+    wrap.innerHTML = colors
+      .map(
+        (c, i) => `<div class="dev-text-color-row" data-idx="${i}">
+          <input type="color" class="dev-text-color-swatch" value="${c.hex}" />
+          <input type="text" class="dev-text-color-label" value="${escapeHtml(c.label)}" maxlength="16" />
+          <button type="button" class="icon-btn icon-btn--danger dev-text-color-remove">🗑️</button>
+        </div>`
+      )
+      .join("");
+
+    function saveFromRows() {
+      const rows = [...wrap.querySelectorAll(".dev-text-color-row")];
+      const newColors = rows.map((row) => ({
+        hex: row.querySelector(".dev-text-color-swatch").value,
+        label: row.querySelector(".dev-text-color-label").value.trim() || "Couleur",
+      }));
+      const settings = loadDevSettings();
+      settings.textColors = newColors;
+      saveDevSettings(settings);
+      applyTextColorPalette();
+    }
+
+    wrap.querySelectorAll(".dev-text-color-swatch, .dev-text-color-label").forEach((input) => {
+      input.addEventListener("input", saveFromRows);
+    });
+    wrap.querySelectorAll(".dev-text-color-remove").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const settings = loadDevSettings();
+        const idx = Number(btn.closest(".dev-text-color-row").dataset.idx);
+        settings.textColors = settings.textColors.filter((_, i) => i !== idx);
+        if (settings.textColors.length === 0) settings.textColors = [{ ...DEFAULT_TEXT_COLORS[0] }];
+        saveDevSettings(settings);
+        applyTextColorPalette();
+        renderTextColorsEditor();
+        enhanceColorInputsWithHsl();
+      });
+    });
+  }
+  const devTextColorAddBtn = el("dev-text-color-add");
+  if (devTextColorAddBtn) {
+    devTextColorAddBtn.addEventListener("click", () => {
+      const settings = loadDevSettings();
+      settings.textColors = [...settings.textColors, { label: "Nouvelle", hex: "#888888" }];
+      saveDevSettings(settings);
+      applyTextColorPalette();
+      renderTextColorsEditor();
+      enhanceColorInputsWithHsl();
+    });
+  }
+  const devTextColorsResetBtn = el("dev-text-colors-reset");
+  if (devTextColorsResetBtn) {
+    devTextColorsResetBtn.addEventListener("click", () => {
+      const settings = loadDevSettings();
+      settings.textColors = DEFAULT_TEXT_COLORS.map((c) => ({ ...c }));
+      saveDevSettings(settings);
+      applyTextColorPalette();
+      renderTextColorsEditor();
+      enhanceColorInputsWithHsl();
+    });
+  }
+
+  /** Éditeur des valeurs "usine" des 3 modes fixes (item 19) : mêmes 12
+   *  valeurs discrètes que partout ailleurs (ALGO_K_VALUES/ALGO_M_VALUES),
+   *  ici via de simples menus déroulants (page technique, pas besoin de
+   *  curseurs tactiles soignés). */
+  /** Éditeur des couleurs des modes personnalisés (item 16) : une pastille
+   *  par mode réellement créé, à côté de son nom. */
+  function renderCustomModeColorsEditor() {
+    const wrap = el("dev-custom-mode-colors");
+    if (!wrap) return;
+    const modes = loadLearningModes();
+    const customModes = Object.values(modes).filter((m) => !m.builtin);
+    if (customModes.length === 0) {
+      wrap.innerHTML = `<p class="field-hint">Aucun mode personnalisé créé pour l'instant.</p>`;
+      return;
+    }
+    wrap.innerHTML = customModes
+      .map(
+        (m) => `<label class="field settings-bonus-field dev-custom-mode-color-row">
+          <span>${escapeHtml(m.name)}</span>
+          <input type="color" data-mode-id="${m.id}" class="dev-custom-mode-color-input" value="${getCustomModeColor(m.id)}" />
+        </label>`
+      )
+      .join("");
+    wrap.querySelectorAll(".dev-custom-mode-color-input").forEach((input) => {
+      input.addEventListener("input", () => {
+        setCustomModeColor(input.dataset.modeId, input.value);
+        renderSubjectManageList();
+        renderSubjectAlgoBadge(currentCard ? currentCard.subject : undefined);
+      });
+    });
+  }
+
+  function renderFactoryDefaultsEditor() {
+    const wrap = el("dev-factory-defaults");
+    if (!wrap) return;
+    const factory = getFactoryDefaults();
+    const kOpts = ALGO_K_VALUES.map((v) => `<option value="${v}">${v}</option>`).join("");
+    const mOpts = ALGO_M_VALUES.map((v) => `<option value="${v}">${v}</option>`).join("");
+    wrap.innerHTML = BUILTIN_MODE_IDS.map((modeId) => {
+      const f = factory[modeId];
+      const fields = ["Ka", "Kh", "Kg", "Ke", "Ma", "Mh", "Mg", "Me"]
+        .map((k) => {
+          const isK = k.startsWith("K");
+          const opts = isK ? kOpts : mOpts;
+          return `<label class="field settings-bonus-field">
+            <span>${k}</span>
+            <select id="dev-factory-${modeId}-${k}" data-mode="${modeId}" data-key="${k}">${opts}</select>
+          </label>`;
+        })
+        .join("");
+      return `<h4 class="settings-block-title">${ALGO_MODE_SHORT_LABELS[modeId]}</h4><div class="algo-grid algo-grid--4">${fields}</div>`;
+    }).join("");
+
+    BUILTIN_MODE_IDS.forEach((modeId) => {
+      ["Ka", "Kh", "Kg", "Ke", "Ma", "Mh", "Mg", "Me"].forEach((k) => {
+        const sel = el(`dev-factory-${modeId}-${k}`);
+        if (sel) sel.value = String(factory[modeId][k]);
+      });
+    });
+
+    wrap.querySelectorAll("select").forEach((sel) => {
+      sel.addEventListener("change", () => {
+        const settings = loadDevSettings();
+        settings.factoryDefaults[sel.dataset.mode][sel.dataset.key] = Number(sel.value);
+        saveDevSettings(settings);
+      });
+    });
+  }
+
+  function renderDevView() {
+    const devSettings = loadDevSettings();
+    const ratingBtnBgInput = el("dev-color-rating-btn-bg");
+    if (ratingBtnBgInput) ratingBtnBgInput.value = devSettings.ratingBtnBgColor;
+    const ratingBtnBgNightInput = el("dev-color-rating-btn-bg-night");
+    if (ratingBtnBgNightInput) ratingBtnBgNightInput.value = devSettings.nightColors.ratingBtnBgColor;
+    renderRatingColorsEditor();
+    renderModeColorsEditor();
+    renderRatingIconsEditor();
+    renderNavIconsEditor();
+    renderIconBankEditor();
+    renderOrgIconBankEditor();
+    renderBgColorsEditor();
+    renderTextColorsSetEditor();
+    renderShadowsEditor();
+    renderHomeLayoutEditor();
+    renderHomeLogoEditor();
+    renderReviewLayoutEditor();
+    renderCardScoreEditor();
+    renderGaugeColorsEditor();
+    renderFactoryDefaultsEditor();
+    // Après TOUS les autres rendus ci-dessus : ils régénèrent leurs propres
+    // <input class="dev-color-value"> dynamiquement, donc les pastilles
+    // (et curseurs T/S/L) doivent être posées en tout dernier pour ne
+    // rater aucun d'entre eux.
+    enhanceColorInputsWithHsl();
+  }
+
 
   /** Bouton de dépannage manuel : désinscrit le(s) service worker(s) et vide
    *  le Cache Storage de l'appli, sans toucher IndexedDB (les fiches) ni
-   *  localStorage (réglages, foyer Tamagotchi). Sert de filet de sécurité
+   *  localStorage (réglages). Sert de filet de sécurité
    *  accessible sans les outils de développement, pour les cas où la
    *  détection automatique de nouvelle version reste bloquée (observé sur
    *  GitHub Pages, qui ne permet pas de fixer nous-mêmes les en-têtes de
@@ -3434,13 +7146,13 @@
   }
 
   /* ---------------------------------------------------------
-     Navigation par onglets
+     Navigation par onglets (désormais déclenchée depuis les carrés de la
+     page d'accueil plutôt qu'un menu visible — item 1b/1c) — la logique
+     de bascule elle-même ne change pas, seul le déclencheur change.
   --------------------------------------------------------- */
+  const homeBtn = el("home-btn");
   document.querySelectorAll(".tab").forEach((tab) => {
     tab.addEventListener("click", () => {
-      const previousView = document.querySelector(".view.is-active");
-      const wasOnTamagotchi = previousView && previousView.id === "view-tamagotchi";
-
       document.querySelectorAll(".tab").forEach((t) => {
         t.classList.remove("is-active");
         t.setAttribute("aria-selected", "false");
@@ -3449,15 +7161,11 @@
       tab.setAttribute("aria-selected", "true");
 
       const view = tab.dataset.view;
-      // Quitter la page Tamagotchi archive les compagnons décédés dans le
-      // mémorial (voir archiveDeceasedPets) — ils ne réapparaîtront donc
-      // plus dans le pré au prochain passage sur cette page, seulement dans
-      // la section "Ils nous ont quittés", en dessous.
-      if (wasOnTamagotchi && view !== "tamagotchi") {
-        archiveDeceasedPets();
-      }
       document.querySelectorAll(".view").forEach((v) => v.classList.remove("is-active"));
       el(`view-${view}`).classList.add("is-active");
+      // Bouton "retour à l'accueil" (item 1e) : visible partout SAUF sur
+      // l'accueil lui-même.
+      if (homeBtn) homeBtn.hidden = false;
 
       if (view === "review") {
         if (!reviewSessionStarted) {
@@ -3466,20 +7174,78 @@
           syncCurrentCardFromStore();
         }
         renderReviewChart();
+        renderReviewSubjectScore();
+        renderReviewGauge();
       }
       if (view === "stats") renderStats();
-      if (view === "tamagotchi") renderTamagotchiView();
+      if (view === "dev") renderDevView();
       if (view === "sync") renderSyncView();
-      if (view === "settings") renderSettingsView();
-      renderDuePill();
-
-      if (view === "tamagotchi") {
-        startTamaSimulation();
-      } else {
-        stopTamaSimulation();
+      if (view === "calendar") renderCalendarEvents();
+      if (view === "revision-program") renderRevisionProgramList();
+      if (view === "settings") {
+        renderSettingsView();
+        // Item 8 : le contenu de l'ancienne page "Modes d'apprentissage"
+        // vit maintenant dans Réglages — on le peuple à chaque ouverture.
+        loadModeFormIntoInputs(algoEditingModeId || "normal");
       }
+      renderDuePill();
     });
   });
+
+  /** Retourne à l'accueil (item 1e) — bouton toujours présent en haut de
+   *  chaque page, sauf sur l'accueil lui-même. */
+  // Item 5 : quand on arrive sur Fiches en cliquant un dossier/une boîte
+  // depuis Organisation, le bouton Accueil de cette page ramène à
+  // Organisation plutôt qu'au véritable accueil — remis à false dès
+  // qu'on entre sur Fiches par un autre chemin (voir plus bas).
+  let cardsEntryFromManage = false;
+  function goHome() {
+    if (cardsEntryFromManage && el("view-cards") && el("view-cards").classList.contains("is-active")) {
+      cardsEntryFromManage = false;
+      const tab = document.querySelector('.tab[data-view="manage"]');
+      if (tab) tab.click();
+      return;
+    }
+    // Item 8 : Réviser se rejoint désormais toujours en passant par le
+    // Programme de révision — Accueil y ramène plutôt qu'au véritable
+    // accueil, cohérent avec ce chemin d'entrée unique.
+    if (el("view-review") && el("view-review").classList.contains("is-active")) {
+      const tab = document.querySelector('.tab[data-view="revision-program"]');
+      if (tab) tab.click();
+      return;
+    }
+    document.querySelectorAll(".tab").forEach((t) => {
+      t.classList.remove("is-active");
+      t.setAttribute("aria-selected", "false");
+    });
+    document.querySelectorAll(".view").forEach((v) => v.classList.remove("is-active"));
+    el("view-home").classList.add("is-active");
+    if (homeBtn) homeBtn.hidden = true;
+  }
+  if (homeBtn) homeBtn.addEventListener("click", goHome);
+
+  // Carrés de la page d'accueil (item 1a) : réutilisent directement la
+  // logique des onglets ci-dessus (chaque carré déclenche le même
+  // .tab[data-view=...].click()) plutôt que de dupliquer la bascule de vue.
+  document.querySelectorAll(".home-circle[data-go]").forEach((square) => {
+    square.addEventListener("click", () => {
+      // Item 5 : n'importe quel autre chemin vers Fiches (bouton d'accueil
+      // dédié, etc.) repart sur le comportement normal du bouton Accueil.
+      if (square.dataset.go === "cards") cardsEntryFromManage = false;
+      const tab = document.querySelector(`.tab[data-view="${square.dataset.go}"]`);
+      if (tab) tab.click();
+    });
+  });
+  const homeNewCardBtn = el("home-new-card-btn");
+  if (homeNewCardBtn) {
+    homeNewCardBtn.addEventListener("click", () => {
+      exitEditMode();
+      resetCardForm();
+      cancelEditBtn.hidden = false;
+      openNewCardView();
+      if (inputQuestion) inputQuestion.focus();
+    });
+  }
 
   /* ---------------------------------------------------------
      Vue Sync : formulaire de connexion + statut
@@ -3502,7 +7268,529 @@
   const syncStatusTextEl = el("sync-status-text");
 
   let unsubscribeRealtime = null;
+  let unsubscribeSubjectsRealtime = null;
+  let unsubscribeFoldersRealtime = null;
+  let unsubscribeLearningModesRealtime = null;
+  let unsubscribeDevSettingsRealtime = null;
   let syncAutoRetrying = false;
+
+  /* ---------------------------------------------------------
+     Vue Calendrier (item 9, revue item 2) — événements liés à une
+     boîte/dossier, pensés comme base pour une future génération de
+     programme de révision. Stockage simple en localStorage (pas encore
+     dans IndexedDB, le volume attendu est faible).
+  --------------------------------------------------------- */
+  const CALENDAR_EVENTS_KEY = "fiches_calendar_events";
+  function loadCalendarEvents() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(CALENDAR_EVENTS_KEY) || "[]");
+      return Array.isArray(raw) ? raw : [];
+    } catch {
+      return [];
+    }
+  }
+  function saveCalendarEvents(events) {
+    localStorage.setItem(CALENDAR_EVENTS_KEY, JSON.stringify(events));
+    scheduleDevSettingsPush();
+  }
+  let calendarEventLinkId = null; // "subject:ID" ou "folder:ID" ou null
+  let calendarEditingEventId = null; // null = ajout, sinon modification (item 2)
+  let calendarViewMode = "list"; // "list" | "months" | "year" (item 2)
+  let calendarMonthsAnchor = new Date();
+  let calendarYearAnchor = new Date().getFullYear();
+
+  function calendarLinkLabel(linkId) {
+    if (!linkId) return "Aucune boîte/dossier liés";
+    const [type, id] = linkId.split(":");
+    if (type === "subject") return subjectName(id);
+    const f = folders.find((x) => x.id === id);
+    return f ? `${f.name} (dossier)` : "Aucune boîte/dossier liés";
+  }
+
+  function renderCalendarLinkTree(container) {
+    container.innerHTML = "";
+    function walk(parentId, depth) {
+      const childFolders = folders
+        .filter((f) => f.parentId === parentId)
+        .sort((a, b) => a.name.localeCompare(b.name, "fr"));
+      const childSubjects = subjects
+        .filter((s) => s.folderId === parentId)
+        .sort((a, b) => a.name.localeCompare(b.name, "fr"));
+      childFolders.forEach((f) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "subject-choice-tree-folder";
+        btn.style.cssText = `padding-left:${10 + depth * 14}px; width:100%; text-align:left; background:none; border:none;`;
+        btn.textContent = `${folderIcon()} ${f.name}`;
+        btn.addEventListener("click", () => {
+          calendarEventLinkId = `folder:${f.id}`;
+          closeCalendarSubjectPicker();
+        });
+        container.appendChild(btn);
+        walk(f.id, depth + 1);
+      });
+      childSubjects.forEach((s) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "subject-choice-tree-item";
+        btn.style.paddingLeft = `${12 + depth * 14}px`;
+        btn.textContent = s.name;
+        btn.addEventListener("click", () => {
+          calendarEventLinkId = `subject:${s.id}`;
+          closeCalendarSubjectPicker();
+        });
+        container.appendChild(btn);
+      });
+    }
+    walk(ROOT_FOLDER_ID, 0);
+  }
+  // Item 2 : panneau plein écran (bug corrigé : celui-ci s'ouvrait hors
+  // écran, en petit menu déroulant, comme le fixe aussi le correctif du
+  // panneau de la page Fiches).
+  function closeCalendarSubjectPicker() {
+    const picker = el("calendar-event-subject-picker");
+    if (picker) picker.hidden = true;
+    const btn = el("calendar-event-subject-btn");
+    if (btn) btn.textContent = calendarLinkLabel(calendarEventLinkId);
+  }
+  const calendarEventSubjectBtn = el("calendar-event-subject-btn");
+  if (calendarEventSubjectBtn) {
+    calendarEventSubjectBtn.addEventListener("click", () => {
+      const picker = el("calendar-event-subject-picker");
+      const tree = el("calendar-event-subject-tree");
+      if (!picker || !tree) return;
+      renderCalendarLinkTree(tree);
+      picker.hidden = false;
+    });
+  }
+  const calendarEventSubjectNoneBtn = el("calendar-event-subject-none");
+  if (calendarEventSubjectNoneBtn) {
+    calendarEventSubjectNoneBtn.addEventListener("click", () => {
+      calendarEventLinkId = null;
+      closeCalendarSubjectPicker();
+    });
+  }
+  const calendarEventSubjectDoneBtn = el("calendar-event-subject-done");
+  if (calendarEventSubjectDoneBtn) calendarEventSubjectDoneBtn.addEventListener("click", closeCalendarSubjectPicker);
+
+  // Item 2 : le bouton de date ouvre le sélecteur natif (plus explicite
+  // qu'un simple champ texte) et affiche la date choisie en toutes lettres.
+  const calendarEventDateInput = el("calendar-event-date");
+  function formatCalendarDate(raw) {
+    const d = new Date(raw + "T00:00:00");
+    return d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+  }
+  if (calendarEventDateInput) {
+    // Item 3 : plus besoin d'appeler showPicker() nous-mêmes — l'input
+    // natif recouvre directement tout le bouton (voir CSS), c'est donc lui
+    // qui reçoit le clic et ouvre son sélecteur de date lui-même.
+    calendarEventDateInput.addEventListener("change", () => {
+      const label = el("calendar-event-date-label");
+      if (label && calendarEventDateInput.value) label.textContent = formatCalendarDate(calendarEventDateInput.value);
+    });
+  }
+
+  // Item 2 : le panneau d'ajout reste caché tant qu'on n'a pas cliqué sur
+  // "+ Ajouter un événement" — et sert aussi à MODIFIER un événement
+  // existant (même formulaire, prérempli).
+  function openCalendarEventForm(eventToEdit) {
+    const form = el("calendar-event-form");
+    if (!form) return;
+    form.hidden = false;
+    const title = el("calendar-event-form-title");
+    const submitBtn = el("calendar-event-submit");
+    if (eventToEdit) {
+      calendarEditingEventId = eventToEdit.id;
+      el("calendar-event-title").value = eventToEdit.title;
+      el("calendar-event-date").value = eventToEdit.date;
+      el("calendar-event-date-label").textContent = formatCalendarDate(eventToEdit.date);
+      calendarEventLinkId = eventToEdit.linkId || null;
+      el("calendar-event-subject-btn").textContent = calendarLinkLabel(calendarEventLinkId);
+      if (title) title.textContent = "Modifier l'événement";
+      if (submitBtn) submitBtn.textContent = "Enregistrer les modifications";
+    } else {
+      calendarEditingEventId = null;
+      form.reset();
+      el("calendar-event-date-label").textContent = "Choisir une date";
+      calendarEventLinkId = null;
+      el("calendar-event-subject-btn").textContent = calendarLinkLabel(null);
+      if (title) title.textContent = "Ajouter un événement";
+      if (submitBtn) submitBtn.textContent = "Ajouter à mon calendrier";
+    }
+  }
+  function closeCalendarEventForm() {
+    const form = el("calendar-event-form");
+    if (form) form.hidden = true;
+    calendarEditingEventId = null;
+  }
+  const calendarAddEventBtn = el("calendar-add-event-btn");
+  if (calendarAddEventBtn) calendarAddEventBtn.addEventListener("click", () => openCalendarEventForm(null));
+  const calendarEventCancelBtn = el("calendar-event-cancel");
+  if (calendarEventCancelBtn) calendarEventCancelBtn.addEventListener("click", closeCalendarEventForm);
+
+  const calendarEventForm = el("calendar-event-form");
+  if (calendarEventForm) {
+    calendarEventForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const titleInput = el("calendar-event-title");
+      const dateInput = el("calendar-event-date");
+      if (!titleInput.value.trim() || !dateInput.value) return;
+      const events = loadCalendarEvents();
+      if (calendarEditingEventId) {
+        const idx = events.findIndex((x) => x.id === calendarEditingEventId);
+        if (idx >= 0) events[idx] = { ...events[idx], title: titleInput.value.trim(), date: dateInput.value, linkId: calendarEventLinkId };
+      } else {
+        events.push({ id: uid(), title: titleInput.value.trim(), date: dateInput.value, linkId: calendarEventLinkId });
+      }
+      saveCalendarEvents(events);
+      const wasEditing = !!calendarEditingEventId;
+      closeCalendarEventForm();
+      renderCalendarEvents();
+      showToast(wasEditing ? "Événement modifié" : "Événement ajouté");
+    });
+  }
+
+  /** Ligne d'événement partagée (item 2) : liste ET popup de jour, avec
+   *  modifier + supprimer. */
+  function buildCalendarEventRow(ev, { onEdit, onDelete }) {
+    const li = document.createElement("li");
+    li.className = "card-row";
+    li.style.cssText = "flex-direction:row; align-items:center; justify-content:space-between; cursor:pointer;";
+    // Item 6 : cliquer sur l'événement l'ouvre directement en modification
+    // — plus besoin d'un bouton crayon séparé.
+    li.title = "Modifier cet événement";
+    li.addEventListener("click", onEdit);
+    const main = document.createElement("div");
+    main.className = "card-row-main";
+    main.innerHTML = `<strong>${escapeHtml(ev.title)}</strong><br><span class="card-row-meta">${escapeHtml(formatCalendarDate(ev.date))}${ev.linkId ? ` · ${escapeHtml(calendarLinkLabel(ev.linkId))}` : ""}</span>`;
+    const actions = document.createElement("div");
+    actions.style.cssText = "display:flex; gap:4px; flex-shrink:0;";
+    const delBtn = document.createElement("button");
+    delBtn.type = "button";
+    delBtn.className = "icon-btn icon-btn--danger";
+    delBtn.innerHTML = iconSvgMarkup("trash", "icon-inline-svg");
+    delBtn.title = "Supprimer cet événement";
+    // Item 4 : confirmation avant suppression, comme pour les fiches et
+    // les boîtes ailleurs dans l'appli.
+    delBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (confirm(`Supprimer l'événement « ${ev.title} » ?`)) onDelete();
+    });
+    actions.appendChild(delBtn);
+    li.appendChild(main);
+    li.appendChild(actions);
+    return li;
+  }
+
+  function renderCalendarListView() {
+    const list = el("calendar-event-list");
+    const empty = el("calendar-event-empty");
+    if (!list) return;
+    const events = loadCalendarEvents().slice().sort((a, b) => a.date.localeCompare(b.date));
+    list.innerHTML = "";
+    if (events.length === 0) {
+      if (empty) empty.hidden = false;
+      return;
+    }
+    if (empty) empty.hidden = true;
+    events.forEach((ev) => {
+      list.appendChild(
+        buildCalendarEventRow(ev, {
+          onEdit: () => openCalendarEventForm(ev),
+          onDelete: () => {
+            saveCalendarEvents(loadCalendarEvents().filter((x) => x.id !== ev.id));
+            renderCalendarEvents();
+          },
+        })
+      );
+    });
+  }
+
+  // Item 2 : affichages calendrier (2 mois) et année, avec des points sur
+  // les jours ayant un événement.
+  const CALENDAR_DOW_LABELS = ["L", "M", "M", "J", "V", "S", "D"];
+  function calendarEventsByDay(year, month) {
+    const map = {};
+    loadCalendarEvents().forEach((ev) => {
+      const d = new Date(ev.date + "T00:00:00");
+      if (d.getFullYear() === year && d.getMonth() === month) {
+        (map[d.getDate()] = map[d.getDate()] || []).push(ev);
+      }
+    });
+    return map;
+  }
+  function buildMiniMonthEl(year, month, compact) {
+    const wrap = document.createElement("div");
+    wrap.className = "calendar-mini-month";
+    const title = document.createElement("div");
+    title.className = "calendar-mini-month-title";
+    title.textContent = new Date(year, month, 1).toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+    wrap.appendChild(title);
+    const grid = document.createElement("div");
+    grid.className = "calendar-mini-month-grid";
+    if (!compact) {
+      CALENDAR_DOW_LABELS.forEach((l) => {
+        const dow = document.createElement("div");
+        dow.className = "calendar-mini-month-dow";
+        dow.textContent = l;
+        grid.appendChild(dow);
+      });
+    }
+    const firstDow = (new Date(year, month, 1).getDay() + 6) % 7; // lundi = 0
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const eventMap = calendarEventsByDay(year, month);
+    const today = new Date();
+    for (let i = 0; i < firstDow; i++) {
+      const cell = document.createElement("div");
+      cell.className = "calendar-day-cell is-empty";
+      grid.appendChild(cell);
+    }
+    for (let day = 1; day <= daysInMonth; day++) {
+      const cell = document.createElement("button");
+      cell.type = "button";
+      cell.className = "calendar-day-cell";
+      if (today.getFullYear() === year && today.getMonth() === month && today.getDate() === day) cell.classList.add("is-today");
+      const dayLabel = document.createElement("span");
+      dayLabel.className = "calendar-day-num";
+      dayLabel.textContent = String(day);
+      cell.appendChild(dayLabel);
+      if (eventMap[day]) {
+        // Item 3 : jour en gras + légèrement entouré, en plus du point,
+        // pour qu'un jour avec événement(s) ressorte nettement mieux.
+        // Item 4 : un point par événement (jusqu'à 3, plus au-delà juste
+        // un point légèrement plus large en dernière position pour ne
+        // pas surcharger une petite case).
+        cell.classList.add("has-event");
+        const dotsWrap = document.createElement("span");
+        dotsWrap.className = "calendar-day-dots";
+        const count = Math.min(eventMap[day].length, 3);
+        for (let i = 0; i < count; i++) {
+          const dot = document.createElement("span");
+          dot.className = "calendar-day-dot";
+          if (eventMap[day].length > 3 && i === count - 1) dot.classList.add("calendar-day-dot--more");
+          dotsWrap.appendChild(dot);
+        }
+        cell.appendChild(dotsWrap);
+        cell.addEventListener("click", () => openCalendarDayPopup(year, month, day, eventMap[day]));
+      }
+      grid.appendChild(cell);
+    }
+    wrap.appendChild(grid);
+    return wrap;
+  }
+  // Item 5 : les mois s'empilent verticalement (pleine largeur) et on peut
+  // défiler aussi loin que l'on veut vers le futur — plus de pagination
+  // "précédent/suivant" à deux mois fixes.
+  let calendarMonthsRenderedCount = 3;
+  function renderCalendarMonthsView() {
+    const grid = el("calendar-months-grid");
+    if (!grid) return;
+    grid.innerHTML = "";
+    const y = calendarMonthsAnchor.getFullYear();
+    const m = calendarMonthsAnchor.getMonth();
+    for (let i = 0; i < calendarMonthsRenderedCount; i++) {
+      const d = new Date(y, m + i, 1);
+      grid.appendChild(buildMiniMonthEl(d.getFullYear(), d.getMonth(), false));
+    }
+  }
+  const calendarMonthsView = el("calendar-months-grid");
+  if (calendarMonthsView) {
+    calendarMonthsView.addEventListener("scroll", () => {
+      const nearBottom = calendarMonthsView.scrollTop + calendarMonthsView.clientHeight >= calendarMonthsView.scrollHeight - 300;
+      if (nearBottom) {
+        calendarMonthsRenderedCount = Math.min(calendarMonthsRenderedCount + 2, 36);
+        renderCalendarMonthsView();
+      }
+    });
+  }
+  // Repli : sur certains agencements, c'est la PAGE entière qui défile,
+  // pas ce panneau en particulier — on écoute donc aussi le scroll général.
+  // Bug corrigé (item 2) : cet écouteur est GLOBAL et permanent, mais ne
+  // vérifiait que la variable d'état "calendarViewMode" — qui ne revient
+  // JAMAIS à sa valeur par défaut en quittant la page Calendrier. Résultat
+  // : après être passé une fois par "Calendrier" (vue mensuelle), N'IMPORTE
+  // QUEL scroll ailleurs dans l'appli (y compris le simple défilement
+  // provoqué par le clavier qui s'ouvre au clic dans un champ de
+  // recherche) relançait un rendu de calendrier de plus en plus lourd en
+  // arrière-plan, invisible, jusqu'à un vrai figement. On vérifie
+  // maintenant explicitement que la page Calendrier est bien la page
+  // ACTIVE, pas seulement que son dernier mode connu était "months".
+  window.addEventListener("scroll", () => {
+    if (calendarViewMode !== "months") return;
+    const calendarViewEl = el("view-calendar");
+    if (!calendarViewEl || !calendarViewEl.classList.contains("is-active")) return;
+    const nearBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 400;
+    if (nearBottom) {
+      // Garde-fou supplémentaire : inutile de charger des dizaines
+      // d'années d'avance même en cas d'usage légitime intensif.
+      calendarMonthsRenderedCount = Math.min(calendarMonthsRenderedCount + 2, 36);
+      renderCalendarMonthsView();
+    }
+  });
+  function renderCalendarYearView() {
+    const grid = el("calendar-year-grid");
+    const label = el("calendar-year-label");
+    if (!grid) return;
+    if (label) label.textContent = String(calendarYearAnchor);
+    grid.innerHTML = "";
+    for (let m = 0; m < 12; m++) grid.appendChild(buildMiniMonthEl(calendarYearAnchor, m, true));
+  }
+  const calendarYearPrevBtn = el("calendar-year-prev");
+  if (calendarYearPrevBtn) calendarYearPrevBtn.addEventListener("click", () => { calendarYearAnchor -= 1; renderCalendarYearView(); });
+  const calendarYearNextBtn = el("calendar-year-next");
+  if (calendarYearNextBtn) calendarYearNextBtn.addEventListener("click", () => { calendarYearAnchor += 1; renderCalendarYearView(); });
+
+  function openCalendarDayPopup(year, month, day, events) {
+    const popup = el("calendar-day-popup");
+    const title = el("calendar-day-popup-title");
+    const list = el("calendar-day-popup-list");
+    if (!popup || !list) return;
+    if (title) title.textContent = new Date(year, month, day).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+    list.innerHTML = "";
+    events.forEach((ev) => {
+      list.appendChild(
+        buildCalendarEventRow(ev, {
+          onEdit: () => {
+            popup.hidden = true;
+            openCalendarEventForm(ev);
+          },
+          onDelete: () => {
+            saveCalendarEvents(loadCalendarEvents().filter((x) => x.id !== ev.id));
+            popup.hidden = true;
+            renderCalendarEvents();
+          },
+        })
+      );
+    });
+    popup.hidden = false;
+  }
+  const calendarDayPopupCloseBtn = el("calendar-day-popup-close");
+  if (calendarDayPopupCloseBtn) {
+    calendarDayPopupCloseBtn.addEventListener("click", () => {
+      const popup = el("calendar-day-popup");
+      if (popup) popup.hidden = true;
+    });
+  }
+
+  // Item 2 : bascule liste / calendrier / année.
+  document.querySelectorAll(".calendar-view-toggle-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      calendarViewMode = btn.dataset.calview;
+      document.querySelectorAll(".calendar-view-toggle-btn").forEach((b) => b.classList.toggle("is-active", b === btn));
+      if (el("calendar-list-view")) el("calendar-list-view").hidden = calendarViewMode !== "list";
+      if (el("calendar-months-view")) el("calendar-months-view").hidden = calendarViewMode !== "months";
+      if (el("calendar-year-view")) el("calendar-year-view").hidden = calendarViewMode !== "year";
+      renderCalendarEvents();
+    });
+  });
+
+  function renderCalendarEvents() {
+    renderCalendarListView();
+    renderCalendarMonthsView();
+  }
+
+  /* ---------------------------------------------------------
+     Vue Programme de révision (item 7) — étape intermédiaire avant
+     Réviser : conseille les boîtes/dossiers à exercer en priorité en
+     fonction des échéances du calendrier (les plus proches d'abord), avec
+     un objectif de score à atteindre. Version volontairement simple pour
+     l'instant : l'objectif est fixe (80%) et la priorité suit juste la
+     date de l'échéance la plus proche pour ce dossier/boîte — assez pour
+     poser la structure, à affiner plus tard (item 7 du départ).
+  --------------------------------------------------------- */
+  const REVISION_PROGRAM_TARGET_SCORE = 80;
+  function computeRevisionProgramItems() {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const upcoming = loadCalendarEvents().filter((ev) => ev.linkId && ev.date >= todayStr);
+    // Un seul point de programme par boîte/dossier : celui dont
+    // l'échéance est la plus proche fait foi.
+    const byLink = {};
+    upcoming.forEach((ev) => {
+      if (!byLink[ev.linkId] || ev.date < byLink[ev.linkId].date) byLink[ev.linkId] = ev;
+    });
+    const items = Object.values(byLink).map((ev) => {
+      const [type, id] = ev.linkId.split(":");
+      const isFolder = type === "folder";
+      const score = isFolder ? computeFolderScore(id) : computeSubjectScore(id);
+      const daysLeft = Math.round((new Date(ev.date + "T00:00:00") - new Date(todayStr + "T00:00:00")) / 86400000);
+      return {
+        linkId: ev.linkId,
+        type,
+        id,
+        label: calendarLinkLabel(ev.linkId),
+        eventTitle: ev.title,
+        eventDate: ev.date,
+        daysLeft,
+        score: score === null ? 0 : score,
+        target: REVISION_PROGRAM_TARGET_SCORE,
+      };
+    });
+    // Priorité (item 7) : échéance la plus proche d'abord, à égalité de
+    // date c'est l'écart au score cible qui départage (le plus loin de
+    // l'objectif remonte en premier).
+    items.sort((a, b) => a.daysLeft - b.daysLeft || (b.target - b.score) - (a.target - a.score));
+    return items;
+  }
+
+  function goToReviewFor(linkId) {
+    if (linkId) {
+      const [type, id] = linkId.split(":");
+      if (type === "subject") {
+        switchSubject(id);
+      } else if (type === "folder") {
+        // Bug corrigé (item 7) : un dossier entier n'était jamais vraiment
+        // sélectionné (juste ignoré) — on bascule maintenant sur le mode
+        // "sélection de boîtes" avec TOUTES les boîtes de ce dossier (et
+        // sous-dossiers) déjà cochées, nommé d'après le dossier, exactement
+        // comme si on l'avait choisi à la main dans le sélecteur.
+        const ids = subjectIdsInFolder(id);
+        const f = folders.find((x) => x.id === id);
+        saveMultiSelection(ids);
+        saveMultiSelectionLabel(f ? f.name : "");
+        switchSubject(MULTI_SUBJECTS_ID, true);
+      }
+    } else {
+      // Item 6 : "Ne pas suivre le programme" repart sur "Toutes les
+      // boîtes", plutôt que de laisser la dernière boîte active
+      // (potentiellement peu pertinente/oubliée depuis longtemps).
+      switchSubject(ALL_SUBJECTS_ID);
+    }
+    const tab = document.querySelector('.tab[data-view="review"]');
+    if (tab) tab.click();
+  }
+
+  function renderRevisionProgramList() {
+    const list = el("revision-program-list");
+    const empty = el("revision-program-empty");
+    if (!list) return;
+    const items = computeRevisionProgramItems();
+    list.innerHTML = "";
+    if (items.length === 0) {
+      if (empty) empty.hidden = false;
+      return;
+    }
+    if (empty) empty.hidden = true;
+    items.forEach((it) => {
+      const li = document.createElement("li");
+      li.className = "card-row revision-program-row";
+      li.style.cssText = "flex-direction:row; align-items:center; justify-content:space-between;";
+      const dueLabel = it.daysLeft === 0 ? "aujourd'hui" : it.daysLeft === 1 ? "demain" : `dans ${it.daysLeft} j`;
+      li.innerHTML = `
+        <div class="card-row-main">
+          <strong>${escapeHtml(it.label)}</strong>
+          <span class="card-row-meta">« ${escapeHtml(it.eventTitle)} » — ${dueLabel}</span>
+        </div>
+        <div class="revision-program-gauge-col">${renderMiniGaugeRingWithTarget(it.score, it.target)}</div>
+      `;
+      li.addEventListener("click", () => goToReviewFor(it.linkId));
+      list.appendChild(li);
+    });
+  }
+
+  const revisionProgramSkipBtn = el("revision-program-skip");
+  if (revisionProgramSkipBtn) {
+    revisionProgramSkipBtn.addEventListener("click", () => goToReviewFor(null));
+  }
 
   function renderSyncView() {
     const configured = Sync.isConfigured();
@@ -3608,34 +7896,32 @@
       return;
     }
     if (unsubscribeRealtime) unsubscribeRealtime();
-    if (tamaSyncUnsub) tamaSyncUnsub();
+    if (unsubscribeSubjectsRealtime) unsubscribeSubjectsRealtime();
+    if (unsubscribeFoldersRealtime) unsubscribeFoldersRealtime();
+    if (unsubscribeLearningModesRealtime) unsubscribeLearningModesRealtime();
+    if (unsubscribeDevSettingsRealtime) unsubscribeDevSettingsRealtime();
     Sync.clearConfig();
-    // Si un code est reconnecté plus tard (même celui-ci ou un autre), on
-    // doit retraiter ça comme un tout premier branchement (voir
-    // pullAndMergeTama) plutôt que de comparer des horodatages locaux
-    // désormais hors-contexte.
-    localStorage.removeItem(TAMA_SYNCED_ONCE_KEY);
     syncForm.reset();
     renderSyncView();
     updateSyncStatus();
   });
 
-  /** Trouve (ou crée) localement la matière référencée par une fiche distante, à partir de son id + nom dénormalisé. */
+  /** Trouve (ou crée) localement la boîte référencée par une fiche distante, à partir de son id + nom dénormalisé. */
   async function ensureLocalSubjectFor(remote) {
     if (remote.subject && subjects.some((s) => s.id === remote.subject)) {
       return remote.subject;
     }
     if (remote.subject) {
-      // Matière inconnue sur cet appareil (créée ailleurs) : on la recrée avec le même id
-      // pour que les deux appareils convergent vers la même matière.
-      const remoteName = remote.subjectName || "Matière importée";
+      // Boîte inconnue sur cet appareil (créée ailleurs) : on la recrée avec le même id
+      // pour que les deux appareils convergent vers la même boîte.
+      const remoteName = remote.subjectName || "Boîte importée";
 
-      // Évite les doublons "fantômes" : si une matière locale du même nom
+      // Évite les doublons "fantômes" : si une boîte locale du même nom
       // existe déjà mais n'a encore aucune fiche (typiquement le "Général"
       // créé automatiquement au tout premier lancement de l'appli, avant la
       // toute première synchronisation), on la remplace par celle du serveur
       // au lieu d'en garder deux — sinon chaque nouvel appareil qui se
-      // connecte fait apparaître une matière "Général" vide supplémentaire.
+      // connecte fait apparaître une boîte "Général" vide supplémentaire.
       const emptyDuplicate = subjects.find(
         (s) => s.id !== remote.subject && s.name === remoteName &&
           !cards.some((c) => c.subject === s.id && !c.deleted)
@@ -3655,18 +7941,18 @@
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
-      await DB.putSubject(s);
+      await persistSubject(s);
       subjects.push(s);
       subjects.sort((a, b) => a.name.localeCompare(b.name, "fr"));
       renderSubjectSelect();
       renderStatsSubjectSelect();
       return s.id;
     }
-    // Fiche distante ancienne, sans matière renseignée : on la range dans "Général".
+    // Fiche distante ancienne, sans boîte renseignée : on la range dans "Général".
     let general = subjects.find((s) => s.name === "Général");
     if (!general) {
       general = newSubject("Général");
-      await DB.putSubject(general);
+      await persistSubject(general);
       subjects.push(general);
       renderSubjectSelect();
       renderStatsSubjectSelect();
@@ -3675,8 +7961,8 @@
   }
 
   /** Fusionne une fiche reçue de Supabase (import initial ou temps réel).
-   *  Règle importante : une ligne distante sans matière renseignée (donnée
-   *  ancienne, d'avant l'introduction des matières) ne doit jamais dégrader
+   *  Règle importante : une ligne distante sans boîte renseignée (donnée
+   *  ancienne, d'avant l'introduction des boîtes) ne doit jamais dégrader
    *  une fiche déjà correctement classée localement — sinon une simple
    *  synchronisation peut faire "retomber" une fiche dans Général. */
   async function mergeRemoteCard(remote) {
@@ -3685,11 +7971,11 @@
 
     if (remote.deleted) {
       // Fiche supprimée : elle ne sera jamais affichée (partout on filtre sur
-      // !c.deleted), donc pas besoin de résoudre une vraie matière pour elle.
-      // Important : si on appelait ensureLocalSubjectFor ici, une matière
+      // !c.deleted), donc pas besoin de résoudre une vraie boîte pour elle.
+      // Important : si on appelait ensureLocalSubjectFor ici, une boîte
       // qu'on vient de supprimer localement (avec toutes ses fiches) serait
       // recréée dès qu'on récupère ces mêmes fiches (supprimées) depuis
-      // Supabase — c'est ce qui faisait "réapparaître" la matière supprimée
+      // Supabase — c'est ce qui faisait "réapparaître" la boîte supprimée
       // à chaque réouverture de l'appli.
       remote.subject = remote.subject || (local ? local.subject : null);
     } else if (remote.subject) {
@@ -3728,7 +8014,7 @@
     }
   }
 
-  /** Ajoute discrètement à la file en cours les fiches dues de la matière active
+  /** Ajoute discrètement à la file en cours les fiches dues de la boîte active
    *  qui viennent d'arriver par la sync, sans jamais changer la fiche affichée. */
   function mergeNewDueCardsIntoQueue() {
     if (!reviewSessionStarted || isBonusMode) return;
@@ -3744,7 +8030,208 @@
     renderDuePill();
   }
 
+  /** Fusionne une boîte reçue de Supabase : adoptée si plus récente que
+   *  la version locale, retirée localement si marquée supprimée là-bas
+   *  (voir pushSubjectDeleted) — jamais l'inverse (une suppression locale
+   *  ne doit pas ressusciter une boîte plus récente créée ailleurs). */
+  async function mergeRemoteSubject(remote) {
+    const idx = subjects.findIndex((s) => s.id === remote.id);
+    if (remote.deleted) {
+      if (idx >= 0) {
+        subjects.splice(idx, 1);
+        await DB.removeSubject(remote.id);
+        if (currentSubjectId === remote.id) {
+          currentSubjectId = subjects[0] ? subjects[0].id : null;
+        }
+      }
+      return;
+    }
+    const local = idx >= 0 ? subjects[idx] : null;
+    if (!local || new Date(remote.updatedAt || 0) > new Date(local.updatedAt || 0)) {
+      await DB.putSubject(remote);
+      if (idx >= 0) subjects[idx] = remote;
+      else subjects.push(remote);
+      subjects.sort((a, b) => a.name.localeCompare(b.name, "fr"));
+    }
+  }
+
+  /** Fusionne un mode d'apprentissage reçu de Supabase (item 1, audit
+   *  synchro) : jamais synchronisé avant — un mode personnalisé créé sur un
+   *  appareil restait invisible sur les autres, qui retombaient
+   *  silencieusement sur "Normal" pour toute boîte qui l'utilisait. */
+  async function mergeRemoteLearningMode(remote) {
+    const modes = loadLearningModes();
+    if (remote.deleted) {
+      if (modes[remote.id] && !modes[remote.id].builtin) {
+        delete modes[remote.id];
+        saveLearningModes(modes);
+      }
+      return;
+    }
+    const local = modes[remote.id];
+    if (!local || new Date(remote.updatedAt || 0) > new Date(local.updatedAt || 0)) {
+      modes[remote.id] = { ...remote };
+      saveLearningModes(modes);
+    }
+  }
+
+  async function reconcileLearningModes() {
+    const remoteModes = await Sync.pullLearningModes();
+    const remoteById = new Map(remoteModes.map((r) => [r.id, r]));
+    const localModes = loadLearningModes();
+    for (const local of Object.values(localModes)) {
+      const remote = remoteById.get(local.id);
+      if (!remote || new Date(local.updatedAt || 0) > new Date(remote.updatedAt || 0)) {
+        Sync.pushLearningMode(local);
+      }
+    }
+    for (const remote of remoteModes) {
+      await mergeRemoteLearningMode(remote);
+    }
+  }
+
+  /** Vérifie qu'accepter ce parentId ne créerait pas de cycle (dossier qui
+   *  finit par être son propre ancêtre) — peut arriver après une fusion de
+   *  synchro malheureuse (deux appareils qui déplacent des dossiers l'un
+   *  dans l'autre en même temps). Si un cycle serait créé, on rattache le
+   *  dossier à la racine à la place plutôt que de risquer de figer l'appli
+   *  partout où l'arborescence est parcourue. */
+  function wouldCreateFolderCycle(folderId, candidateParentId, folderList) {
+    let cur = candidateParentId;
+    const visited = new Set();
+    while (cur) {
+      if (cur === folderId || visited.has(cur)) return true;
+      visited.add(cur);
+      const f = folderList.find((x) => x.id === cur);
+      if (!f) break;
+      cur = f.parentId;
+    }
+    return false;
+  }
+
+  async function mergeRemoteFolder(remote) {
+    const idx = folders.findIndex((f) => f.id === remote.id);
+    if (remote.deleted) {
+      if (idx >= 0) {
+        folders.splice(idx, 1);
+        await DB.removeFolder(remote.id);
+      }
+      return;
+    }
+    const local = idx >= 0 ? folders[idx] : null;
+    if (!local || new Date(remote.updatedAt || 0) > new Date(local.updatedAt || 0)) {
+      const candidateFolders = idx >= 0 ? folders.map((f, i) => (i === idx ? remote : f)) : [...folders, remote];
+      if (remote.parentId && wouldCreateFolderCycle(remote.id, remote.parentId, candidateFolders)) {
+        remote = { ...remote, parentId: ROOT_FOLDER_ID };
+      }
+      await DB.putFolder(remote);
+      if (idx >= 0) folders[idx] = remote;
+      else folders.push(remote);
+    }
+  }
+
+  /** Même logique que reconcileWithRemote (fiches), pour les boîtes et
+   *  les dossiers (item 1/8). Dossiers d'abord : une boîte peut référencer
+   *  un folderId qu'il vaut mieux avoir déjà en place. */
+  async function reconcileSubjectsAndFolders() {
+    const remoteFolders = await Sync.pullFolders();
+    const remoteFolderById = new Map(remoteFolders.map((r) => [r.id, r]));
+    for (const local of folders) {
+      const remote = remoteFolderById.get(local.id);
+      if (!remote || new Date(local.updatedAt || 0) > new Date(remote.updatedAt || 0)) {
+        Sync.pushFolder(local);
+      }
+    }
+    for (const remote of remoteFolders) {
+      await mergeRemoteFolder(remote);
+    }
+
+    const remoteSubjects = await Sync.pullSubjects();
+    const remoteSubjectById = new Map(remoteSubjects.map((r) => [r.id, r]));
+    for (const local of subjects) {
+      const remote = remoteSubjectById.get(local.id);
+      if (!remote || new Date(local.updatedAt || 0) > new Date(remote.updatedAt || 0)) {
+        Sync.pushSubject(local);
+      }
+    }
+    for (const remote of remoteSubjects) {
+      await mergeRemoteSubject(remote);
+    }
+
+    if (subjects.length === 0) {
+      const general = newSubject("Général");
+      await persistSubject(general);
+      subjects = [general];
+    }
+    if (!currentSubjectId || (!isSentinelSubject(currentSubjectId) && !subjects.some((s) => s.id === currentSubjectId))) {
+      currentSubjectId = subjects[0].id;
+    }
+  }
+
+  /** Applique TOUS les réglages du mode développeur d'un coup (item —
+   *  centralisé pour la synchro) : à chaque fois qu'on adopte des réglages
+   *  reçus d'un autre appareil, il faut rejouer exactement les mêmes
+   *  fonctions qu'au démarrage local, sinon certains réglages plus
+   *  récemment ajoutés (ombrage, disposition de l'accueil...) restent
+   *  ignorés après une synchro — c'était le bug : la fonction de synchro
+   *  n'avait pas été tenue à jour à chaque nouveau réglage ajouté. */
+  function applyAllDevSettings() {
+    applyRatingLabels();
+    applyNavLabels();
+    applyHomeIcons();
+    applyHomeLayout();
+    applyReviewLayout();
+    applyShowRatingDays();
+    applyShowReviewChart();
+    applyColorSettings();
+    applyShadowSettings();
+    applyIconSettings();
+    applyTextColorPalette();
+  }
+  // Bug corrigé (item 6) : cet écouteur vivait DANS applyAllDevSettings, qui
+  // peut s'exécuter plusieurs fois (démarrage, synchro) — il s'accumulait
+  // donc en plusieurs exemplaires. Pire : il recalculait la disposition de
+  // Réviser sur CHAQUE redimensionnement, y compris ceux causés par
+  // l'ouverture du clavier virtuel en tapant dans un tout autre champ (par
+  // ex. un réglage numérique du mode développeur) — le clavier réduit
+  // alors window.innerHeight, et les positions de la fiche (en pixels,
+  // calculées depuis cette hauteur réduite) restaient figées ainsi même
+  // une fois le clavier refermé : fiche minuscule, tout serré en haut de
+  // l'écran. Un seul écouteur, posé une fois pour toutes, qui ne
+  // recalcule que si Réviser est la page réellement affichée.
+  window.addEventListener("resize", () => {
+    if (el("view-review") && el("view-review").classList.contains("is-active")) applyReviewLayout();
+  });
+
+  /** Fusionne les réglages développeur reçus (item 1) : le plus récent
+   *  (comparé via updatedAt) l'emporte intégralement — contrairement aux
+   *  fiches, il n'y a pas de fusion champ par champ ici, un réglage de
+   *  couleurs est cohérent seulement pris comme un tout. */
+  async function reconcileDevSettings() {
+    const remote = await Sync.pullDevSettings();
+    const local = loadDevSettings();
+    if (!remote) {
+      // Rien côté serveur : on y pousse notre réglage local tel quel.
+      Sync.pushDevSettings({ ...local, appPrefs: gatherAppPrefs() });
+      return;
+    }
+    const remoteTime = new Date(remote.updatedAt || 0).getTime();
+    const localTime = new Date(local.updatedAt || 0).getTime();
+    if (remoteTime > localTime) {
+      localStorage.setItem(DEV_SETTINGS_KEY, JSON.stringify(remote.payload));
+      applyAllDevSettings();
+      applyAppPrefsFromRemote(remote.payload.appPrefs);
+    } else if (localTime > remoteTime) {
+      Sync.pushDevSettings({ ...local, appPrefs: gatherAppPrefs() });
+    }
+  }
+
   async function reconcileWithRemote() {
+    await reconcileDevSettings();
+    await reconcileLearningModes();
+    await reconcileSubjectsAndFolders();
+    renderSubjectSelect();
+
     const remoteCards = await Sync.pullAll();
     const remoteById = new Map(remoteCards.map((r) => [r.id, r]));
 
@@ -3762,18 +8249,46 @@
       await mergeRemoteCard(remote);
     }
 
+    // Item 6 (dernier lot) : bug corrigé — la boîte "Général" créée
+    // automatiquement au tout premier lancement (avant toute connexion)
+    // restait ensuite comme un dossier fantôme vide une fois la vraie
+    // synchro établie, même quand elle apportait ses propres données.
+    await cleanupPlaceholderGeneral();
+
     renderAll();
     updateSyncStatus();
+  }
+
+  /** Supprime la boîte "Général" issue du tout premier démarrage si elle
+   *  est toujours vide une fois que de vraies données (autre boîte ou
+   *  dossier) sont là — sans jamais toucher une boîte "Général" que
+   *  l'utilisateur aurait lui-même gardée ou remplie. */
+  async function cleanupPlaceholderGeneral() {
+    const candidates = subjects.filter((s) => s.name === "Général" && s.folderId === ROOT_FOLDER_ID);
+    if (candidates.length !== 1) return; // rien à nettoyer, ou pas notre affaire (dédup gère les doublons)
+    const general = candidates[0];
+    const hasCards = cards.some((c) => c.subject === general.id && !c.deleted);
+    if (hasCards) return;
+    const hasOtherData = subjects.length > 1 || folders.length > 0;
+    if (!hasOtherData) return;
+    await DB.removeSubject(general.id);
+    subjects = subjects.filter((x) => x.id !== general.id);
+    if (currentSubjectId === general.id && subjects.length > 0) {
+      currentSubjectId = subjects[0].id;
+      localStorage.setItem(CURRENT_SUBJECT_KEY, currentSubjectId);
+    }
   }
 
   async function connectSync() {
     if (!Sync.isConfigured()) return;
     if (unsubscribeRealtime) unsubscribeRealtime();
-    if (tamaSyncUnsub) tamaSyncUnsub();
+    if (unsubscribeSubjectsRealtime) unsubscribeSubjectsRealtime();
+    if (unsubscribeFoldersRealtime) unsubscribeFoldersRealtime();
+    if (unsubscribeLearningModesRealtime) unsubscribeLearningModesRealtime();
+    if (unsubscribeDevSettingsRealtime) unsubscribeDevSettingsRealtime();
 
     await reconcileWithRemote();
     await Sync.flushPending((id) => cards.find((c) => c.id === id));
-    await pullAndMergeTama();
 
     unsubscribeRealtime = Sync.subscribeRealtime(async (remote) => {
       await mergeRemoteCard(remote);
@@ -3789,21 +8304,40 @@
       }
     });
 
-    tamaSyncUnsub = Sync.subscribeTamaRealtime((remoteBlob) => {
-      const changedGoals = mergeTamaGoals(remoteBlob.goals);
-      if (remoteBlob.pet && new Date(remoteBlob.pet.updatedAt || 0) > new Date(tamaState.updatedAt || 0)) {
-        tamaState = remoteBlob.pet;
-        if (!tamaState.foods) tamaState.foods = [];
-        if (!tamaState.memorial) tamaState.memorial = [];
-        saveTamaState();
-      }
-      if (remoteBlob.settings && new Date(remoteBlob.settings.updatedAt || 0) > new Date(getAppSettingsTimestamp())) {
-        applyAppSettings(remoteBlob.settings);
-      }
-      if (changedGoals || remoteBlob.pet) {
-        refreshTamaTabIcon();
-        if (el("view-tamagotchi") && el("view-tamagotchi").classList.contains("is-active")) renderTamagotchiView();
-        renderReviewChart();
+    unsubscribeSubjectsRealtime = Sync.subscribeSubjectsRealtime(async (remote) => {
+      await mergeRemoteSubject(remote);
+      renderSubjectSelect();
+      renderAll();
+    });
+    unsubscribeFoldersRealtime = Sync.subscribeFoldersRealtime(async (remote) => {
+      await mergeRemoteFolder(remote);
+      renderSubjectManageList();
+    });
+    unsubscribeLearningModesRealtime = Sync.subscribeLearningModesRealtime(async (remote) => {
+      await mergeRemoteLearningMode(remote);
+      renderSubjectManageList();
+      renderSubjectAlgoBadge();
+    });
+    unsubscribeDevSettingsRealtime = Sync.subscribeDevSettingsRealtime((remote) => {
+      // Dernier écrit gagne (item 1) : un autre appareil vient de changer
+      // un réglage (couleur, icône...), on adopte tel quel si plus récent.
+      const local = loadDevSettings();
+      if (new Date(remote.updatedAt || 0) > new Date(local.updatedAt || 0)) {
+        localStorage.setItem(DEV_SETTINGS_KEY, JSON.stringify(remote.payload));
+        applyAllDevSettings();
+        applyAppPrefsFromRemote(remote.payload.appPrefs);
+        // Bug corrigé (items 1/2) : si l'utilisateur est EN TRAIN de taper
+        // dans un champ du mode développeur, reconstruire toute la liste
+        // (renderDevView) à cet instant précis lui fait perdre le focus en
+        // plein milieu de la frappe — ou, pour le mode nuit, fait
+        // clignoter l'état si l'écho de sa propre modification revient
+        // alors qu'il vient justement de la changer. On saute ce rendu
+        // tant qu'un champ de ce panneau a le focus ; il se remettra à
+        // jour de toute façon au prochain rendu normal (changement de
+        // page, nouvelle modification, etc.).
+        const devViewActive = el("view-dev") && el("view-dev").classList.contains("is-active");
+        const editingInDevView = document.activeElement && el("view-dev") && el("view-dev").contains(document.activeElement) && document.activeElement.tagName === "INPUT";
+        if (devViewActive && !editingInDevView) renderDevView();
       }
     });
 
@@ -3818,16 +8352,6 @@
   });
   window.addEventListener("offline", updateSyncStatus);
 
-  // Envoie immédiatement tout changement du foyer Tamagotchi en attente
-  // (voir scheduleTamaPush) quand l'app passe en arrière-plan ou se ferme,
-  // pour ne pas perdre les dernières secondes de simulation (repas,
-  // décroissance de vie) côté serveur en cas de fermeture avant le prochain
-  // envoi groupé.
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden") flushTamaPush();
-  });
-  window.addEventListener("pagehide", flushTamaPush);
-
   // Redessine les histogrammes au redimensionnement / changement d'orientation
   // (la largeur de colonne est calculée depuis la largeur réelle de l'écran,
   // voir chartAvailableWidth) — avec un léger debounce pour éviter de
@@ -3836,7 +8360,7 @@
   window.addEventListener("resize", () => {
     clearTimeout(chartResizeTimer);
     chartResizeTimer = setTimeout(() => {
-      if (el("view-stats") && el("view-stats").classList.contains("is-active")) renderDueChart();
+      if (el("view-stats") && el("view-stats").classList.contains("is-active")) { renderDueChart(); }
       if (el("view-review") && el("view-review").classList.contains("is-active")) renderReviewChart();
     }, 150);
   });
@@ -3903,12 +8427,14 @@
     loadBonusDaysSettings();
     loadBonusAgainMode();
     loadHibernateDays();
-    loadTamaState();
-    loadTamaGoals();
-    applyTamaUpkeep();
     renderSettingsView();
+    applyAllDevSettings();
+    applyCardFontSize();
+    // (Item 3 : l'affichage Organisation est initialisé plus haut, au
+    // moment où ses boutons pictos s'accrochent — plus besoin d'appel ici.)
     await loadSubjects();
     cards = await DB.getAll();
+    ratingLog = await DB.getAllRatingLog();
     await migrateOrphanCards();
     await dedupeEmptySubjects();
     // Rattrape le record par-fiche pour les fiches existantes qui n'ont
@@ -3923,6 +8449,9 @@
     }
     renderSubjectSelect();
     renderAll();
+    // Item 7 : appel complet maintenant que tout est chargé (voir plus haut
+    // pour le pourquoi du report).
+    setNightModeActive(new Date().getHours() < 7 || new Date().getHours() >= 20);
     startReviewSession();
     updateSyncStatus();
     // L'essentiel de l'UI est rendu et interactif : on désarme le filet de
@@ -3934,9 +8463,9 @@
       await connectSync();
       // Doublons "Général" : reconcileWithRemote() peut faire apparaître un
       // second sujet "Général" arrivé du serveur (fiches distantes sans
-      // matière) en plus de celui créé localement par défaut avant même que
+      // boîte) en plus de celui créé localement par défaut avant même que
       // la synchro n'ait eu le temps de tourner (voir loadSubjects) — d'où
-      // la matière "Générale" qui apparaissait parfois à la toute première
+      // la boîte "Générale" qui apparaissait parfois à la toute première
       // connexion. On redéduplique donc une fois la synchro effectuée.
       await dedupeEmptySubjects();
       renderSubjectSelect();

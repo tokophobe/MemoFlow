@@ -4,12 +4,23 @@
  */
 
 const DB_NAME = "fiches-db";
-const DB_VERSION = 2;
+const DB_VERSION = 4;
 const STORE = "cards";
 const SUBJECT_STORE = "subjects";
+const FOLDER_STORE = "folders";
+const RATING_LOG_STORE = "ratingLog";
+let dbConnectionPromise = null;
 
 function openDb() {
-  return new Promise((resolve, reject) => {
+  // Connexion mise en cache et réutilisée pour tous les appels, plutôt
+  // qu'une nouvelle connexion IndexedDB ouverte à chaque lecture/écriture
+  // (comme c'était le cas avant) sans jamais en fermer aucune : au fil
+  // d'une session, ça empilait un nombre croissant de connexions ouvertes
+  // en parallèle vers la même base — une cause plausible du "gel" ressenti
+  // à l'enregistrement d'une fiche (chaque `indexedDB.open()` a un coût,
+  // et ce coût grossissait avec le nombre de connexions déjà ouvertes).
+  if (dbConnectionPromise) return dbConnectionPromise;
+  dbConnectionPromise = new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
     req.onupgradeneeded = () => {
       const db = req.result;
@@ -20,10 +31,34 @@ function openDb() {
       if (!db.objectStoreNames.contains(SUBJECT_STORE)) {
         db.createObjectStore(SUBJECT_STORE, { keyPath: "id" });
       }
+      if (!db.objectStoreNames.contains(FOLDER_STORE)) {
+        db.createObjectStore(FOLDER_STORE, { keyPath: "id" });
+      }
+      if (!db.objectStoreNames.contains(RATING_LOG_STORE)) {
+        const store = db.createObjectStore(RATING_LOG_STORE, { keyPath: "id" });
+        store.createIndex("at", "at", { unique: false });
+      }
     };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
+    req.onsuccess = () => {
+      const db = req.result;
+      // Si une autre connexion (ex. un autre onglet après mise à jour)
+      // réclame une version supérieure, on referme proprement la nôtre
+      // plutôt que de bloquer indéfiniment cette autre connexion.
+      db.onversionchange = () => {
+        db.close();
+        dbConnectionPromise = null;
+      };
+      db.onclose = () => {
+        dbConnectionPromise = null;
+      };
+      resolve(db);
+    };
+    req.onerror = () => {
+      dbConnectionPromise = null;
+      reject(req.error);
+    };
   });
+  return dbConnectionPromise;
 }
 
 async function withStoreIn(storeName, mode, fn) {
@@ -92,6 +127,41 @@ const DB = {
 
   async removeSubject(id) {
     await withStoreIn(SUBJECT_STORE, "readwrite", (store) => store.delete(id));
+  },
+
+  /* ---- dossiers (folders) ---- */
+
+  async getAllFolders() {
+    const db = await openDb();
+    const tx = db.transaction(FOLDER_STORE, "readonly");
+    const store = tx.objectStore(FOLDER_STORE);
+    return reqToPromise(store.getAll());
+  },
+
+  async putFolder(folder) {
+    await withStoreIn(FOLDER_STORE, "readwrite", (store) => store.put(folder));
+    return folder;
+  },
+
+  async removeFolder(id) {
+    await withStoreIn(FOLDER_STORE, "readwrite", (store) => store.delete(id));
+  },
+
+  /* ---- historique des notes données (item 15) ---- */
+
+  async addRatingLog(entry) {
+    await withStoreIn(RATING_LOG_STORE, "readwrite", (store) => store.put(entry));
+  },
+
+  async getAllRatingLog() {
+    const db = await openDb();
+    const tx = db.transaction(RATING_LOG_STORE, "readonly");
+    const store = tx.objectStore(RATING_LOG_STORE);
+    return reqToPromise(store.getAll());
+  },
+
+  async removeFromRatingLog(id) {
+    await withStoreIn(RATING_LOG_STORE, "readwrite", (store) => store.delete(id));
   },
 };
 

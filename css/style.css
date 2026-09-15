@@ -2,19 +2,25 @@
    TOKENS
    ============================================================ */
 :root {
-  --desk: #1a2d26;
-  --desk-2: #142320;
-  --paper: #f7f1e1;
-  --paper-2: #eee5cf;
-  --rule: #c44c44;
-  --ink: #23302a;
-  --ink-soft: #5c6d63;
+  /* Thème clair "futuriste naïf" (item 1) : blanc / gris / bleu ciel,
+     sur toute l'application. --desk (fond général) et --paper (fond des
+     cartes) sont maintenant tous deux clairs — --ink (texte foncé) reste
+     donc lisible partout, sur les deux, sans avoir besoin d'une couleur de
+     texte séparée par surface comme c'était le cas avec l'ancien thème
+     sombre. */
+  --desk: #eef2f8;
+  --desk-2: #e3e9f3;
+  --paper: #ffffff;
+  --paper-2: #f4f7fb;
+  --rule: #4a9fe0;
+  --ink: #1f2937;
+  --ink-soft: #64748b;
   --amber: #cf9a4d;
   --sage: #6f8b5c;
   --teal: #3e7c6b;
   --terracotta: #b6604a;
-  --blue: #4b7996;
-  --paper-3: #ddcfa9;
+  --blue: #4a90d9;
+  --paper-3: #dce4f0;
 
 /*--font-type: "Special Elite", "Arial", monospace;*/
   --font-type: sans-serif;
@@ -22,8 +28,22 @@
   --font-body: sans-serif;
   --font-mono: sans-serif;
   /*--font-mono: "IBM Plex Mono", "SFMono-Regular", monospace;*/
-  --shadow-deep: 0 18px 40px rgba(0, 0, 0, 0.35);
+  --shadow-deep: 0 10px 30px rgba(30, 60, 100, 0.12);
   --radius-card: 14px;
+}
+
+/* Item 4 : mode nuit — recouvre les jetons de base (texte/fonds neutres)
+   qui ne font pas partie des réglages de couleurs individuels du mode
+   développeur (ceux-là restent posés en style inline, prioritaires). */
+:root.is-night-mode {
+  --desk: #11151c;
+  --desk-2: #171d27;
+  --paper: #1c2330;
+  --paper-2: #232b3a;
+  --paper-3: #2a3447;
+  --rule: #4a9fe0;
+  --ink: #eef2f8;
+  --ink-soft: #93a1b5;
 }
 
 * { box-sizing: border-box; }
@@ -45,25 +65,27 @@ body {
 button {
   font-family: inherit;
   cursor: pointer;
+  /* Bug corrigé (item 5) : sans ça, le halo tactile par défaut du
+     navigateur (rectangulaire) s'affiche brièvement au clic, même sur des
+     boutons ronds — il ne respecte pas border-radius, d'où le "carré" qui
+     apparaît derrière les boutons de notation. Notre propre retour visuel
+     au clic (.stamp:active, etc.) reste inchangé. */
+  -webkit-tap-highlight-color: transparent;
 }
 
 textarea, input {
   font-family: inherit;
 }
 
-/* Subtle desk-mat grid texture */
+/* Fond uni (item 4) : le quadrillage a été retiré — juste une couleur
+   pleine, réglable depuis la page Développeur (--app-bg-color). */
 .desk {
   min-height: 100vh;
   min-height: 100dvh;
   max-width: 560px;
   margin: 0 auto;
   padding: max(18px, env(safe-area-inset-top)) 18px max(28px, env(safe-area-inset-bottom));
-  background-image:
-    radial-gradient(circle at 20% 0%, rgba(255,255,255,0.05), transparent 45%),
-    linear-gradient(var(--desk-2) 1px, transparent 1px),
-    linear-gradient(90deg, var(--desk-2) 1px, transparent 1px);
-  background-size: auto, 28px 28px, 28px 28px;
-  background-color: var(--desk);
+  background-color: var(--app-bg-color, var(--desk));
 }
 
 /* ============================================================
@@ -73,6 +95,8 @@ textarea, input {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: nowrap;
+  gap: 6px;
   padding: 6px 2px 18px;
 }
 
@@ -82,25 +106,40 @@ textarea, input {
   gap: 8px;
 }
 
-/* Le fanion ✎ est présenté comme une icône d'appli (fond "squircle" façon
-   icône d'écran d'accueil). */
+button.topbar-new-card-btn {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  white-space: nowrap;
+  border-radius: 999px;
+  flex-shrink: 0;
+  background: #ffffff;
+  color: #1a1a1a;
+  border: none;
+  box-shadow: var(--shadow-deep);
+}
+
+/* Mascotte (item 10) : icône SVG originale (petit robot volant, cerveau
+   griffonné derrière un hublot) plutôt que le crayon ✎ — présentée en
+   grand format "icône d'appli" maintenant que le libellé texte à côté a
+   été retiré pour lui laisser toute la place. */
 .brand-mark-wrap {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 9px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
   background: linear-gradient(155deg, #2f4a3f, #142320);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.07);
 }
 
 .brand-mark {
-  color: var(--paper);
-  font-size: 16px;
-  transform: rotate(-8deg);
-  display: inline-block;
+  width: 34px;
+  height: 34px;
+  display: block;
 }
 
 .brand h1 {
@@ -109,7 +148,7 @@ textarea, input {
   font-weight: 400;
   font-size: 22px;
   letter-spacing: 0.06em;
-  color: var(--paper);
+  color: var(--ink);
 }
 
 .header-right {
@@ -118,17 +157,35 @@ textarea, input {
   gap: 8px;
 }
 
+/* Item 4 : bascule mode nuit/jour, en topbar. */
+.night-mode-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--ink-soft);
+}
+
+.night-mode-toggle-btn.is-active {
+  background: rgba(74, 144, 217, 0.18);
+  color: var(--blue);
+}
+
 .sync-status {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: none;
-  border: 1px solid rgba(247, 241, 225, 0.2);
+  background: var(--sync-status-bg-color, transparent);
+  border: none;
   border-radius: 999px;
   padding: 6px 10px;
   font-family: var(--font-mono);
   font-size: 11px;
-  color: rgba(247, 241, 225, 0.75);
+  color: var(--sync-text-color, rgba(31, 41, 55, 0.75));
 }
 
 .sync-dot {
@@ -146,21 +203,22 @@ textarea, input {
 .due-pill {
   font-family: var(--font-mono);
   font-size: 12px;
-  color: var(--desk);
+  color: var(--ink);
   background: var(--amber);
   border-radius: 999px;
   padding: 6px 12px;
   font-weight: 600;
-  box-shadow: var(--shadow-deep);
+  box-shadow: var(--shadow-due-pill, var(--shadow-deep));
   transition: background-color 0.35s ease, color 0.35s ease;
 }
 
 .due-pill #due-count { font-size: 13px; }
 
-/* Mode bonus (révision libre, plus rien de programmé) : fond blanc distinctif. */
+/* Mode bonus (révision libre, plus rien de programmé) : fond distinctif,
+   réglable depuis la page Développeur (item 8). */
 .due-pill.is-bonus {
-  background: #ffffff !important;
-  color: var(--desk) !important;
+  background: var(--due-pill-bonus-color, #ffffff) !important;
+  color: var(--ink) !important;
 }
 
 /* ============================================================
@@ -171,6 +229,55 @@ textarea, input {
   align-items: center;
   gap: 8px;
   margin-bottom: 14px;
+  position: relative;
+}
+
+/* Bug corrigé (encore) : le z-index seul ne suffisait pas dans tous les
+   cas — passer cette barre en position fixe, ancrée juste sous la barre
+   du haut, garantit qu'elle ne peut plus jamais se retrouver sous la
+   fiche, quelle que soit la position réglée pour cette dernière. */
+#subject-bar {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 54px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: var(--review-card-width, 355px);
+  max-width: 560px;
+  z-index: 10;
+  margin-bottom: 0;
+}
+
+/* Score de la boîte/sélection en cours (item 2), à côté du sélecteur. */
+.review-subject-score {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  background: var(--paper-2);
+  border-radius: 999px;
+  padding: 6px 10px;
+  flex-shrink: 0;
+}
+
+/* Bouton "+ Nouvelle fiche" (item 3), à côté du sélecteur de boîte —
+   ouvre le cadre de création, masqué par défaut. */
+.cards-new-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+  padding: 10px 14px;
+  font-size: 14px;
+}
+
+/* "Liste des fiches" (item 4) : gros titre, plus grand qu'un section-title
+   normal, pour bien marquer le début de la partie "parcourir" de la page,
+   après la partie "créer" au-dessus. */
+.cards-list-big-title {
+  font-size: 22px;
+  font-family: var(--font-type);
+  color: var(--main-text-color, var(--paper));
+  letter-spacing: normal;
+  text-transform: none;
+  margin: 20px 0 14px;
 }
 
 .subject-select {
@@ -179,14 +286,159 @@ textarea, input {
   font-family: var(--font-mono);
   font-size: 13px;
   letter-spacing: 0.02em;
-  color: var(--paper);
-  background: rgba(247, 241, 225, 0.08);
-  border: 1px solid rgba(247, 241, 225, 0.22);
+  color: var(--ink);
+  background: rgba(31, 41, 55, 0.08);
+  border: 1px solid rgba(31, 41, 55, 0.22);
   border-radius: 999px;
   padding: 8px 14px;
   appearance: none;
   -webkit-appearance: none;
 }
+
+/* Bouton qui remplace le <select> natif sur Réviser (item 18) : ouvrir un
+   menu personnalisé à 3 choix plutôt que la liste native de TOUTES les
+   boîtes. Même habillage visuel que l'ancien select. */
+.subject-select-btn {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: var(--selector-text-color, var(--ink));
+  background: var(--subject-select-bg-color, rgba(31, 41, 55, 0.08));
+  border: none;
+  border-radius: 999px;
+  padding: 8px 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Item 10 : affordance plus nette (ombre + chevron) pour bien signaler que
+   c'est une zone d'interaction, sans réintroduire de bordure (retirée
+   ailleurs sur demande). */
+.subject-select-btn--prominent {
+  position: relative;
+  padding-right: 34px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+.subject-select-btn--prominent::after {
+  content: "";
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-65%) rotate(45deg);
+  opacity: 0.6;
+}
+
+.cards-scope-summary {
+  font-family: var(--font-type);
+  font-size: 12px;
+  color: var(--general-text-color, var(--ink-soft));
+  margin: 6px 0 0;
+  /* Item 11 : force ce paragraphe sur sa propre ligne, sous le label et le
+     sélecteur (voir flex-wrap sur .cards-scope-row), avec un dossier/une
+     boîte par ligne plutôt qu'une liste séparée par des virgules. */
+  flex-basis: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cards-scope-summary-item {
+  display: block;
+}
+
+.subject-select-btn::after {
+  content: " ▾";
+  opacity: 0.7;
+}
+
+/* Menu à 3 choix (items 6/18) : Toutes les boîtes / Sélection / Annuler.
+   Repensé en petit menu déroulant compact (item 6) — ancré juste sous le
+   bouton, comme un vrai menu, plutôt qu'une grande carte à 3 gros boutons
+   empilés qui prenait toute la largeur de l'écran. */
+.subject-choice-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  background: var(--paper);
+  border-radius: 10px;
+  padding: 4px;
+  box-shadow: var(--shadow-deep);
+}
+
+/* Bug corrigé (urgent) : `[hidden]` et `.subject-choice-menu` ont la même
+   spécificité CSS — sans ce correctif, `display: flex` déclaré juste
+   au-dessus l'emportait TOUJOURS sur `[hidden] { display: none }` (l'ordre
+   dans la feuille de style tranche à spécificité égale), donc le menu ne
+   disparaissait jamais vraiment après un choix, quel que soit le bouton
+   cliqué. Même famille de bug déjà rencontrée avec .rating-row. */
+.subject-choice-menu[hidden] {
+  display: none;
+}
+
+.subject-choice-item {
+  text-align: left;
+  background: none;
+  border: none;
+  border-radius: 7px;
+  padding: 10px 12px;
+  font-family: var(--font-type);
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.subject-choice-item:hover, .subject-choice-item:active { background: rgba(35, 48, 42, 0.08); }
+
+.subject-choice-item--cancel {
+  color: var(--ink-soft);
+  border-top: 1px solid rgba(35, 48, 42, 0.12);
+  margin-top: 2px;
+  padding-top: 10px;
+}
+
+/* Variante "arborescence" du menu de choix (boîte de création d'une
+   fiche, dans Fiches) : liste de boîtes organisée par dossier, à choix
+   unique — clic direct, pas de coche ni de confirmation. */
+.subject-choice-menu--tree {
+  max-height: 60vh;
+  overflow-y: auto;
+  min-width: 220px;
+}
+
+.subject-choice-tree-folder {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  padding: 8px 10px 2px;
+}
+
+.subject-choice-tree-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  border-radius: 7px;
+  padding: 9px 12px;
+  font-family: var(--font-type);
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.subject-choice-tree-item:hover, .subject-choice-tree-item:active { background: rgba(35, 48, 42, 0.08); }
 
 .subject-select:focus-visible {
   outline: 2px solid var(--blue);
@@ -206,9 +458,9 @@ textarea, input {
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  border: 1px solid rgba(247, 241, 225, 0.22);
-  background: rgba(247, 241, 225, 0.08);
-  color: var(--paper);
+  border: 1px solid rgba(31, 41, 55, 0.22);
+  background: var(--add-btn-bg-color, rgba(31, 41, 55, 0.08));
+  color: var(--ink);
   font-size: 17px;
   line-height: 1;
   display: flex;
@@ -216,26 +468,187 @@ textarea, input {
   justify-content: center;
 }
 
-.subject-add-btn:hover { background: rgba(247, 241, 225, 0.16); }
+.subject-add-btn:hover { background: rgba(31, 41, 55, 0.16); }
 
-/* Badge "mode d'apprentissage" (cool/normal/renforcé/personnalisé) de la
-   matière active — dans la barre existante plutôt qu'une ligne en plus,
-   pour ne pas grandir la page (voir item 7). Vide -> pas affiché du tout. */
-.subject-algo-badge {
+/* Nombre de fiches + bouton mode d'apprentissage de la boîte active, dans
+   la barre de la page Réviser (item 1) — mêmes couleurs que le curseur du
+   mode d'apprentissage (voir ALGO_MODE_COLORS en JS et .algo-mode-slider). */
+.subject-bar-count {
   flex-shrink: 0;
   font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--ink-soft);
-  background: rgba(247, 241, 225, 0.75);
-  border-radius: 999px;
-  padding: 5px 9px;
+  font-size: 10.5px;
+  color: var(--ink);
+  opacity: 0.75;
   white-space: nowrap;
-  max-width: 92px;
+}
+
+.subject-bar-algo-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  border-radius: 8px;
+  padding: 6px 8px;
+  max-width: 88px;
+  border: 1px solid transparent;
+}
+
+.subject-bar-algo-btn span {
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.subject-algo-badge:empty { display: none; }
+/* Couleurs par mode, PLUS prononcées qu'avant (item 1 : jugées trop
+   "light") — texte en gras + fond et bordure nettement plus saturés.
+   Partagées par le bouton de la barre Réviser (.subject-bar-algo-btn) ET
+   celui de chaque ligne de boîte sur la page Gérer (.subject-row-algo-btn). */
+/* Item 1 (dernier lot) : fond transparent — plus aucun fond neutre non
+   plus, seul le pictogramme reste coloré selon le mode. */
+.subject-bar-algo-btn.is-cool, .subject-row-algo-btn.is-cool, .card-algo-btn.is-cool {
+  color: var(--mode-cool-color, var(--sage)); background: transparent; border-color: transparent;
+}
+.subject-bar-algo-btn.is-normal, .subject-row-algo-btn.is-normal, .card-algo-btn.is-normal {
+  color: var(--mode-normal-color, var(--amber)); background: transparent; border-color: transparent;
+}
+.subject-bar-algo-btn.is-renforce, .subject-row-algo-btn.is-renforce, .card-algo-btn.is-renforce {
+  color: var(--mode-renforce-color, var(--terracotta)); background: transparent; border-color: transparent;
+}
+.subject-bar-algo-btn.is-custom, .subject-row-algo-btn.is-custom, .card-algo-btn.is-custom {
+  color: var(--mode-custom-color, #e8c84a); background: transparent; border-color: transparent;
+}
+
+.subject-bar-algo-btn:hover, .subject-row-algo-btn:hover, .card-algo-btn:hover { filter: brightness(1.08); }
+
+/* Sélecteur de plusieurs boîtes confondues (item 1). */
+/* Item 1 : hauteur plein écran pour TOUS les panneaux de sélection
+   multi-boîtes (Réviser, Fiches, Stats), quelle que soit la taille de
+   l'écran — un vrai panneau plein écran plutôt qu'un encart de taille
+   variable selon le nombre de boîtes/dossiers à afficher. */
+.multi-subject-picker {
+  /* Items 5/6 : ce panneau plein écran ignorait le plafond de largeur
+     (560px, centré) qu'applique .desk à tout le reste de l'appli — sur un
+     écran large, il s'étalait donc bord à bord quand toutes les autres
+     pages restaient centrées dans leur colonne, une largeur visiblement
+     différente. Même plafond et même centrage ici. */
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 100dvh;
+  width: 100%;
+  max-width: 560px;
+  background: var(--paper);
+  border-radius: 0;
+  padding: 14px;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 14px);
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
+  box-shadow: var(--shadow-deep);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+}
+
+.multi-subject-picker[hidden] {
+  display: none;
+}
+
+.multi-subject-picker-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: none;
+  overflow-y: auto;
+  margin-bottom: 12px;
+}
+
+.multi-subject-picker-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-type);
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.multi-subject-picker-item .algo-custom-picker-color {
+  margin-left: auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid rgba(35, 48, 42, 0.2);
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.multi-subject-picker-item input[type="checkbox"],
+.multi-subject-picker-item input[type="radio"] {
+  width: 16px;
+  height: 16px;
+}
+
+.multi-subject-picker-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Fil d'ariane des dossiers (item 1) sur la page Gérer. */
+.folder-breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.folder-breadcrumb-item {
+  background: none;
+  border: none;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: rgba(31, 41, 55, 0.65);
+  padding: 2px 4px;
+}
+
+.folder-breadcrumb-item.is-current {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.folder-breadcrumb-sep {
+  color: rgba(31, 41, 55, 0.4);
+  font-size: 11.5px;
+}
+
+.list-header-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.folder-row .subject-row-name { color: var(--folder-subject-name-color, var(--ink)); font-weight: 600; }
+
+/* Sélecteur "déplacer vers" (dossiers/boîtes) — même look que le
+   sélecteur de plusieurs boîtes confondues (item 1). */
+.move-picker {
+  background: var(--paper);
+  border-radius: var(--radius-card);
+  padding: 14px;
+  margin-bottom: 14px;
+  box-shadow: var(--shadow-deep);
+}
+
+.move-picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 260px;
+  overflow-y: auto;
+  margin-bottom: 12px;
+}
 
 .subjects-panel { margin-bottom: 26px; }
 
@@ -249,23 +662,249 @@ textarea, input {
 }
 
 .subject-row {
-  background: var(--paper);
+  background: var(--subject-row-bg-color, var(--paper));
   border-radius: 10px;
-  padding: 10px 12px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+  box-shadow: var(--shadow-subject-row, 0 4px 12px rgba(0,0,0,0.18));
+  /* Item 4 : overflow:hidden retiré — le panneau d'actions (déplier via
+     org-deploy-btn) doit pouvoir déborder du bloc pour s'afficher. */
 }
 
-.subject-row.is-active { border-left: 3px solid var(--rule); }
+/* Item 3 : effet de pile (comme les fiches de Réviser) pour montrer qu'un
+   dossier replié contient bien quelque chose — deux "tranches" simulées
+   par de simples ombres décalées, sans DOM supplémentaire. */
+/* Item 3 (dernier lot) : un peu plus d'espace entre les dossiers
+   spécifiquement (pas les boîtes, qui gardent le simple espacement de la
+   liste). */
+.folder-row {
+  margin-bottom: 10px;
+}
+
+.folder-row--stacked {
+  /* Item 2 (dernier lot) : deux traits plus fins et plus rapprochés du
+     bloc (au lieu d'un seul, plus large) — même principe de coin arrondi
+     en bas à gauche, dans la couleur du dossier. */
+  position: relative;
+  margin-left: 5px !important;
+  margin-bottom: 12px !important;
+}
+
+.folder-row--stacked::before,
+.folder-row--stacked::after {
+  content: "";
+  position: absolute;
+  border-radius: 0 0 0 8px;
+  border-left: 1.5px solid var(--folder-bg-color, var(--paper));
+  border-bottom: 1.5px solid var(--folder-bg-color, var(--paper));
+  pointer-events: none;
+}
+
+.folder-row--stacked::before {
+  top: 3px;
+  left: -3px;
+  right: 3px;
+  bottom: -3px;
+}
+
+.folder-row--stacked::after {
+  top: 6px;
+  left: -6px;
+  right: 6px;
+  bottom: -6px;
+}
+
+/* Item 4 : bloc sur une seule ligne — flèche de dépli, icône+nom, nombre,
+   espace flexible, picto du mode, jauge courte, bouton d'actions. */
+.org-row-wrap {
+  position: relative;
+}
+
+.org-row-main {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  min-height: 40px;
+}
+
+.org-expand-btn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--ink-soft);
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.org-expand-btn svg { width: 18px; height: 18px; }
+
+.subject-row-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 30px;
+  overflow: hidden;
+}
+.subject-row-name span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.org-count {
+  flex-shrink: 0;
+  font-family: var(--font-type);
+  font-size: 11px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.org-row-spacer {
+  flex: 1;
+  min-width: 6px;
+}
+
+/* Item 4 (dernier lot) : le nombre, le mode et la jauge se relaient dans
+   un emplacement UNIQUE à largeur fixe (celle de la jauge, la plus
+   large), synchronisés sur toutes les lignes en même temps via un
+   attribut posé sur <body> — ça règle aussi l'alignement vertical qui
+   dépendait avant de la largeur restante à chaque niveau de dossier. */
+.org-info-slot {
+  position: relative;
+  flex-shrink: 0;
+  width: 68px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.org-info-slot-item {
+  display: none;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+body[data-org-carousel-slot="0"] .org-info-slot-item[data-slot="0"],
+body[data-org-carousel-slot="1"] .org-info-slot-item[data-slot="1"],
+body[data-org-carousel-slot="2"] .org-info-slot-item[data-slot="2"] {
+  display: flex;
+}
+
+.org-count {
+  font-family: var(--font-type);
+  font-size: 11px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.org-mode-icon {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+}
+
+.org-gauge-inline {
+  flex-shrink: 0;
+  width: 64px;
+  display: flex;
+  align-items: center;
+}
+
+.org-deploy-btn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--ink-soft);
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.org-deploy-btn svg { width: 16px; height: 16px; }
+
+/* Item 4 : le bouton de dépli révèle éditer/déplacer/supprimer, empilés
+   verticalement, dans un petit panneau ancré au bloc. */
+.org-actions-popover {
+  position: absolute;
+  top: 100%;
+  right: 8px;
+  z-index: 5;
+  background: var(--paper);
+  border-radius: 10px;
+  box-shadow: var(--shadow-deep);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 140px;
+}
+
+.org-actions-popover[hidden] { display: none; }
+
+.org-actions-popover-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-family: var(--font-type);
+  font-size: 13px;
+  color: var(--ink);
+  text-align: left;
+}
+.org-actions-popover-item:hover { background: rgba(35,48,42,0.06); }
+.org-actions-popover-item--danger { color: var(--terracotta); }
+.org-actions-popover-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+.linear-gauge-svg {
+  width: 100%;
+  height: auto;
+}
+
+/* Item 9 (dernier lot) : ce liseret signalait la boîte actuellement
+   sélectionnée pour Réviser, mais sans explication à l'écran ça ne fait
+   que semer la confusion — retiré. */
+
+/* Item 2 : les dossiers/boîtes enfants sont maintenant imbriqués
+   visuellement DANS le bloc de leur dossier parent (au lieu d'une simple
+   indentation à plat), avec un léger retrait + une bordure gauche pour
+   bien montrer la hiérarchie, en gardant le même système plier/déplier. */
+.org-children {
+  list-style: none;
+  /* Item 4 (dernier lot) : la marge/le padding à droite reviennent (effet
+     de blocs contenus dans le parent, demandé), et c'est maintenant un
+     calcul JS (voir alignOrgInfoSlots) qui recale précisément l'info-slot
+     de chaque ligne pour qu'il tombe pile à la même position, quel que
+     soit le niveau d'imbrication. */
+  margin: 0 8px 10px 14px;
+  padding: 0 0 0 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-left: 2px solid rgba(0,0,0,0.08);
+}
+
+/* Fond des dossiers par niveau de profondeur (item 2h) — 0 = dossier
+   racine, 1/2/3 = sous-dossiers ; au-delà de 3, on réutilise la couleur
+   du niveau 3. */
+.folder-row.folder-row-depth-0 { background: var(--folder-bg-color, var(--paper)); }
+.folder-row.folder-row-depth-1 { background: var(--folder-l1-bg-color, var(--paper)); }
+.folder-row.folder-row-depth-2 { background: var(--folder-l2-bg-color, var(--paper)); }
+.folder-row.folder-row-depth-3 { background: var(--folder-l3-bg-color, var(--paper)); }
 
 .subject-row-name {
   flex: 1;
   min-width: 0;
   font-family: var(--font-type);
   font-size: 14px;
-  color: var(--ink);
+  color: var(--folder-subject-name-color, var(--ink));
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -282,6 +921,51 @@ textarea, input {
   flex-shrink: 0;
 }
 
+/* Bouton "mode d'apprentissage" fusionné avec son propre affichage (item 9) :
+   un encadré net (fond + bordure) pour bien se lire comme un bouton distinct,
+   volontairement compact pour ne pas élargir la ligne (texte court, voir
+   ALGO_MODE_SHORT_LABELS). Couleur pilotée par une des 4 classes .is-*
+   ci-dessous (partagées avec le bouton de la page Réviser — item 1 :
+   avant, cette version-ci restait toujours en terracotta fixe, sans lien
+   avec le mode réel de la boîte). */
+.subject-row-algo-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 5px 7px;
+  max-width: 84px;
+  border: 1.5px solid transparent;
+}
+
+.subject-row-algo-btn span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Version compacte (item 16) : juste l'émoticône, sur un rond de la couleur
+   du mode — laisse davantage de place au nom de la boîte/du dossier à
+   côté. */
+.subject-row-algo-btn--compact {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border-radius: 50%;
+  justify-content: center;
+  font-size: 14px;
+  max-width: none;
+}
+
+/* Boutons resserrés entre eux sur une ligne de boîte/dossier (item 16). */
+.subject-row .row-actions {
+  gap: 3px;
+}
+
 .import-target-row {
   display: flex;
   align-items: center;
@@ -289,10 +973,24 @@ textarea, input {
   margin: -2px 0 4px;
 }
 
+.cards-scope-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 14px;
+  position: relative;
+}
+
+.cards-scope-row .subject-select-btn { flex: 1; }
+
 .import-target-label {
   font-family: var(--font-mono);
   font-size: 11px;
-  color: rgba(247, 241, 225, 0.6);
+  /* Bug corrigé : cette couleur claire (pensée pour un fond sombre) rendait
+     le texte quasi invisible sur le fond clair de .card-form — le
+     sélecteur de boîte semblait "flotter" sans étiquette visible. */
+  color: var(--ink-soft);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   flex-shrink: 0;
@@ -313,21 +1011,29 @@ textarea, input {
 .import-note {
   font-family: var(--font-mono);
   font-size: 10.5px;
-  color: rgba(247, 241, 225, 0.5);
+  color: rgba(31, 41, 55, 0.5);
   margin: 0 0 16px;
 }
 
 .tabs {
   display: flex;
   gap: 4px;
-  border-bottom: 1px solid rgba(247, 241, 225, 0.15);
+  border-bottom: 1px solid rgba(31, 41, 55, 0.15);
   margin-bottom: 20px;
+}
+
+/* Bug corrigé (même famille que .chart/.subject-choice-menu/.icon-popup
+   avant) : `display: flex` ci-dessus l'emportait sur `[hidden]` — le menu
+   principal est maintenant caché en dur (item 1b), ce correctif garantit
+   qu'il reste bien invisible. */
+.tabs[hidden] {
+  display: none;
 }
 
 .tab {
   background: none;
   border: none;
-  color: rgba(247, 241, 225, 0.55);
+  color: rgba(31, 41, 55, 0.55);
   font-family: var(--font-mono);
   font-size: 13px;
   letter-spacing: 0.04em;
@@ -342,9 +1048,21 @@ textarea, input {
 .tab.tab--icon {
   font-size: 19px;
   padding: 8px 4px 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.tab.is-active { color: var(--paper); }
+/* Icônes sobres en SVG (essai demandé) : un seul trait, suit la couleur du
+   texte du tab (currentColor), donc actif/inactif se gère tout seul sans
+   rien dupliquer en CSS. */
+.tab-icon-svg {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
+.tab.is-active { color: var(--ink); }
 
 .tab.is-active::after {
   content: "";
@@ -359,10 +1077,114 @@ textarea, input {
    ============================================================ */
 .view { display: none; }
 .view.is-active { display: block; animation: fade-in 0.2s ease; }
+/* Item 11 (dernier lot) : fond de la page d'accueil réglable
+   indépendamment du reste (déborde du padding de .desk pour un aplat sans
+   bord visible, via des marges négatives compensées par un padding
+   équivalent). */
+#view-home.is-active {
+  position: relative;
+  background: var(--home-bg-color, transparent);
+  margin: calc(-1 * max(18px, env(safe-area-inset-top))) -18px calc(-1 * max(28px, env(safe-area-inset-bottom)));
+  padding: max(18px, env(safe-area-inset-top)) 18px max(28px, env(safe-area-inset-bottom));
+}
 
 @keyframes fade-in {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   PAGE D'ACCUEIL (item 1a)
+   ============================================================ */
+.home-title {
+  font-family: var(--font-type);
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--home-title-color, var(--main-text-color, var(--paper)));
+  text-align: center;
+  margin: 10px 0 28px;
+}
+
+/* Items 1/2 (logo) : position et taille réglables depuis le mode
+   développeur (variables posées par applyHomeLayout, comme les cercles). */
+.home-logo {
+  position: absolute;
+  left: var(--home-logo-x, 50%);
+  top: var(--home-logo-y, 6%);
+  width: var(--home-logo-size, 72px);
+  height: auto;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.topbar-logo {
+  height: 24px;
+  width: 24px;
+  border-radius: 6px;
+  object-fit: cover;
+  margin-right: 4px;
+}
+
+/* Disposition dispersée (item 3) : conteneur relatif assez haut pour
+   contenir tous les cercles, chacun positionné en absolu via X/Y/diamètre
+   réglables (posés en style inline par JS, depuis le mode développeur). */
+.home-scatter {
+  position: relative;
+  width: 100%;
+  height: 640px;
+}
+
+.home-circle {
+  position: absolute;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: var(--home-square-bg-color, var(--paper));
+  border: none;
+  box-shadow: var(--shadow-home-square, var(--shadow-deep));
+  padding: 8px;
+  color: var(--ink);
+  text-align: center;
+  overflow: hidden;
+}
+
+.home-circle-icon {
+  width: 30%;
+  height: 30%;
+  max-width: 40px;
+  max-height: 40px;
+}
+
+.home-circle span {
+  font-family: var(--font-type);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.15;
+  max-width: 88%;
+  overflow-wrap: break-word;
+}
+
+.home-circle--accent {
+  background: var(--home-add-card-bg-color, var(--blue));
+  color: #ffffff;
+}
+
+button.home-btn {
+  padding: 8px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: var(--home-btn-bg-color, transparent);
+  border: none;
+}
+
+.home-btn[hidden] {
+  display: none;
 }
 
 .section-title {
@@ -370,7 +1192,7 @@ textarea, input {
   font-weight: 400;
   font-size: 15px;
   letter-spacing: 0.04em;
-  color: var(--paper);
+  color: var(--main-text-color, var(--paper));
   margin: 0 0 12px;
 }
 
@@ -401,7 +1223,7 @@ textarea, input {
 
 .empty-state {
   text-align: center;
-  color: rgba(247, 241, 225, 0.75);
+  color: rgba(31, 41, 55, 0.75);
   padding: 40px 20px;
 }
 
@@ -409,20 +1231,41 @@ textarea, input {
   font-family: var(--font-type);
   font-size: 17px;
   margin: 0 0 8px;
-  color: var(--paper);
+  color: var(--ink);
 }
 
 .empty-sub {
   font-size: 14px;
-  color: rgba(247, 241, 225, 0.55);
+  color: rgba(31, 41, 55, 0.55);
   margin: 0;
 }
 
 .card-stack {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  /* Bug corrigé (item 1) : la sécurité anti-chevauchement est maintenant
+     entièrement calculée en JS (voir applyReviewLayout) et posée en
+     pixels simples — plus de max()/calc() imbriqués ici, qui semblaient
+     mal interprétés sur certaines versions d'iOS Safari (la déclaration
+     entière est alors ignorée si le navigateur ne reconnaît pas la
+     syntaxe, laissant la fiche sans position "top" du tout). */
+  top: var(--review-card-top, 110px);
+  width: var(--review-card-width, 355px);
+  max-width: 560px;
+  height: var(--review-card-height, 380px);
+  z-index: 3;
+}
+
+/* La perspective 3D (nécessaire au retournement) est maintenant posée ICI,
+   sur un élément interne séparé, plutôt que directement sur .card-stack
+   (positionné en fixed) — pour écarter tout risque que la combinaison
+   "position fixed" + "perspective" sur le MÊME élément perturbe l'ordre
+   d'empilement sur certains moteurs de rendu. */
+.card-stack-3d {
   position: relative;
   width: 100%;
-  max-width: 380px;
-  height: 340px;
+  height: 100%;
   perspective: 1400px;
 }
 
@@ -430,21 +1273,25 @@ textarea, input {
   position: absolute;
   inset: 0;
   border-radius: var(--radius-card);
-  background: var(--paper);
+  /* Blanc pur (pas var(--paper), la teinte crème habituelle) pour que la
+     mise en forme riche (couleurs de texte notamment) ressorte au mieux
+     (item 20) — ne change QUE cette face de fiche, pas les autres cartes
+     de l'appli qui gardent leur crème habituel. */
+  background: #ffffff;
 }
 
 .stack-card--back-2 {
   transform: rotate(6deg) translateY(6px);
   background: var(--paper-2);
   opacity: 0.55;
-  box-shadow: var(--shadow-deep);
+  box-shadow: var(--shadow-card, var(--shadow-deep));
 }
 
 .stack-card--back-1 {
   transform: rotate(-3deg) translateY(3px);
   background: var(--paper-2);
   opacity: 0.8;
-  box-shadow: var(--shadow-deep);
+  box-shadow: var(--shadow-card, var(--shadow-deep));
 }
 
 .stack-card--front {
@@ -452,9 +1299,28 @@ textarea, input {
   padding: 0;
   transform-style: preserve-3d;
   -webkit-transform-style: preserve-3d;
-  transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.3, 1);
-  box-shadow: var(--shadow-deep);
+  /* Bug corrigé (item 2) : l'ancienne courbe cubic-bezier(0.2,0.7,0.3,1)
+     est très fortement "avance rapide puis ralentit" — la rotation
+     atteignait déjà 90° (son point de bascule visuel) bien avant 50% du
+     TEMPS écoulé, donc échanger le contenu à la moitié du temps (voir
+     showNextCard) se produisait alors que la fiche était déjà presque
+     revenue face avant, d'où l'impression d'un changement "trop tardif,
+     presque à la fin". ease-in-out est symétrique : 50% du temps
+     correspond bien à 50% de la rotation visuelle. */
+  transition: transform var(--review-flip-duration, 0.7s) ease-in-out;
+  box-shadow: var(--shadow-card, var(--shadow-deep));
   text-align: left;
+}
+
+/* Coupe l'animation de retournement UNIQUEMENT au moment de passer à la
+   fiche suivante (item 7 — bug corrigé) : sans ça, remettre la fiche à
+   l'endroit en cours de rotation laissait entrevoir furtivement la réponse
+   de la fiche SUIVANTE (déjà substituée dans le DOM) avant la fin de
+   l'animation. L'animation reste intacte pour le retournement volontaire
+   (tap sur la fiche pour voir la réponse), qui ne pose jamais ce problème
+   puisque le contenu ne change pas pendant CE retournement-là. */
+.stack-card--front.no-flip-transition {
+  transition: none !important;
 }
 
 .stack-card--front.is-flipped {
@@ -483,6 +1349,18 @@ textarea, input {
   transition: background 0.12s ease, color 0.12s ease;
 }
 
+.icon-inline-svg {
+  width: 18px;
+  height: 18px;
+  vertical-align: -4px;
+  /* Bug corrigé (item 5, dernier lot) : sans flex-shrink:0, ce picto se
+     faisait comprimer par l'algorithme flex dès que le nom manquait de
+     place à côté de lui (surtout dans .subject-row-name) — d'où des
+     tailles visiblement différentes d'une ligne à l'autre selon la
+     longueur du nom. */
+  flex-shrink: 0;
+}
+
 .card-icon-btn:hover {
   background: rgba(35, 48, 42, 0.16);
   color: var(--ink);
@@ -496,7 +1374,6 @@ textarea, input {
    grand cercle. Fond plus marqué et trait plus épais et plus sombre que les
    autres icônes, pour que le crayon ne passe plus inaperçu. */
 .card-edit-btn {
-  right: 12px;
   width: 54px;
   height: 34px;
   border-radius: 17px;
@@ -509,8 +1386,75 @@ textarea, input {
 .card-edit-btn:hover { background: rgba(35, 48, 42, 0.22); }
 
 .card-hibernate-btn {
-  right: 72px;
   font-size: 14px;
+}
+
+.card-algo-btn {
+  right: 54px;
+  font-size: 14px;
+}
+
+.card-construction-btn {
+  font-size: 14px;
+}
+
+/* Bouton "révéler" (item 7 — repositionné) : coin supérieur droit de la
+   fiche, ne recouvre plus le libellé "Question" qui était au même endroit
+   en haut à gauche. */
+.card-reveal-btn {
+  top: 10px;
+  right: 12px;
+  font-size: 13px;
+}
+
+/* Les 3 actions secondaires (item 7) : plus des icônes disposées sur la
+   fiche elle-même, mais un petit menu déroulant vertical qui apparaît sous
+   le triangle — chaque bouton repasse en position normale (static) dans ce
+   menu plutôt qu'en position absolue sur la fiche. */
+#secondary-icons-wrap {
+  position: absolute;
+  top: 50px;
+  right: 12px;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--paper);
+  border-radius: 14px;
+  padding: 8px;
+  box-shadow: var(--shadow-deep);
+}
+
+#secondary-icons-wrap[hidden] {
+  display: none;
+}
+
+#secondary-icons-wrap .card-icon-btn {
+  position: static;
+  width: 100%;
+  height: auto;
+  padding: 8px 14px;
+  border-radius: 10px;
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+#secondary-icons-wrap .card-edit-btn {
+  width: 100%;
+}
+
+/* Déplacé au coin inférieur droit de la fiche (item 7), plutôt que dans la
+   rangée d'icônes du haut. */
+.card-undo-btn {
+  top: auto;
+  bottom: 10px;
+  right: 12px;
+  font-size: 15px;
+}
+
+.card-icon-btn.is-active-construction {
+  background: var(--construction-active-color, rgba(207, 154, 77, 0.35));
+  color: var(--amber);
 }
 
 .rule-line {
@@ -535,10 +1479,14 @@ textarea, input {
   gap: 14px;
 }
 
-.card-face--question { background: var(--paper); }
+/* Blanc pur (pas var(--paper)/var(--paper-2), les teintes crème habituelles)
+   pour que la mise en forme riche (couleurs de texte notamment) ressorte
+   au mieux (item 20) — ne change QUE les faces de la fiche retournable,
+   pas les autres cartes de l'appli qui gardent leur crème habituel. */
+.card-face--question { background: var(--card-bg-color, #ffffff); }
 
 .card-face--answer {
-  background: var(--paper-2);
+  background: var(--card-bg-color, #ffffff);
   transform: rotateY(180deg);
   justify-content: flex-start;
 }
@@ -555,13 +1503,26 @@ textarea, input {
 
 .card-text {
   font-family: var(--font-type);
-  font-size: 19px;
+  font-size: var(--card-font-size, 19px);
   line-height: 1.5;
-  color: var(--ink);
+  color: var(--card-text-color, var(--ink));
   margin: 0;
   overflow-y: auto;
   flex: 1;
-  white-space: pre-line;
+  /* Le contenu vient désormais de contenteditable (item 13), qui porte déjà
+     ses propres <div>/<br> pour les retours à la ligne — laisser
+     "pre-line" aurait doublé les sauts de ligne des vieilles fiches en
+     texte brut (voir toDisplayHtml, qui convertit leurs "\n" en <br>). */
+  white-space: normal;
+}
+
+.card-text b, .card-text strong { font-weight: 700; }
+.card-text i, .card-text em { font-style: italic; }
+
+/* Rappel de la boîte sur la fiche en mode multi-boîtes (item 5) : gras
+   et plus grand que le reste du texte, plus de ":" final. */
+.card-subject-hint {
+  font-size: 1.15em;
 }
 
 .tap-hint {
@@ -575,55 +1536,150 @@ textarea, input {
    RATING STAMPS
    ============================================================ */
 .rating-row {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  top: var(--review-rating-row-top, 506px);
+  width: var(--review-card-width, 355px);
+  max-width: 560px;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
+  justify-items: center;
   gap: 6px;
-  margin-top: 16px;
+  z-index: 2;
 }
 
 .rating-row[hidden] { display: none; }
 
+/* Item 1d : délai/score, juste sous les boutons d'évaluation — même
+   positionnement fixe qu'eux (voir --review-rating-row-top), décalé de la
+   hauteur d'un bouton pour tomber juste en dessous. */
+.review-score-info {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  top: var(--review-score-info-top, 591px);
+  width: var(--review-card-width, 355px);
+  max-width: 560px;
+  z-index: 2;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--general-text-color, var(--ink-soft));
+  text-align: center;
+}
+
+.review-score-info[hidden] { display: none; }
+
+.review-score-info-current {
+  margin: 0 0 6px;
+}
+
+.review-score-info-current strong {
+  color: var(--ink);
+}
+
+.review-score-info-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.review-score-info-cell {
+  white-space: nowrap;
+}
+
+/* Jauge du score (item 2) : tout en bas de l'écran. */
+.review-gauge-wrap {
+  position: fixed;
+  left: 50%;
+  top: var(--review-gauge-top, 675px);
+  transform: translateX(-50%);
+  width: var(--review-card-width, 91vw);
+  max-width: 340px;
+  z-index: 2;
+  text-align: center;
+}
+
+.review-gauge-wrap svg {
+  width: 100%;
+  height: auto;
+}
+
+.review-gauge-label {
+  font-family: var(--font-type);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.review-gauge-value {
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+/* Réglage (item 5) : masque le nombre de jours à côté de chaque émoticône. */
+.rating-row.hide-days .stamp-sub { display: none; }
+
 .stamp {
-  border: 2px dashed currentColor;
-  border-radius: 8px;
-  background: transparent;
-  padding: 8px 2px;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  width: 64px;
+  height: 64px;
+  padding: 4px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 2px;
   min-width: 0;
-  transition: transform 0.12s ease, background 0.12s ease;
+  transition: transform 0.12s ease, filter 0.12s ease;
+  /* Élévation propre aux boutons : sans elle, l'ombre portée de la fiche
+     juste au-dessus (--shadow-deep, très étalée) retombait sur eux et les
+     rendait ternes, comme "sous" la fiche plutôt qu'à côté. */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
 .stamp:active { transform: scale(0.94) rotate(-2deg); }
 
 .stamp-label {
   font-family: var(--font-type);
-  font-size: 11px;
+  font-size: 22px;
+  font-weight: 700;
   letter-spacing: 0.01em;
   white-space: nowrap;
+  line-height: 1;
+}
+
+.stamp-label .icon-inline-svg {
+  width: 26px;
+  height: 26px;
+  vertical-align: middle;
 }
 
 .stamp-sub {
   font-family: var(--font-mono);
-  font-size: 9.5px;
-  opacity: 0.85;
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.9;
   white-space: nowrap;
 }
 
-.stamp--again { color: var(--terracotta); }
-.stamp--hard  { color: var(--amber); }
-.stamp--good  { color: var(--sage); }
-.stamp--easy  { color: var(--teal); }
+/* Item 4 — bug corrigé/comportement changé sur demande : le réglage de
+   couleur d'une note ne teinte plus le FOND du bouton (partagé par les 4,
+   réglable à part), mais l'ICÔNE elle-même (currentColor, repris par le
+   SVG). */
+.stamp--again { background: var(--rating-btn-bg-color, var(--paper)); color: var(--rating-again-color, var(--terracotta)); }
+.stamp--hard  { background: var(--rating-btn-bg-color, var(--paper)); color: var(--rating-hard-color, var(--amber)); }
+.stamp--good  { background: var(--rating-btn-bg-color, var(--paper)); color: var(--rating-good-color, var(--sage)); }
+.stamp--easy  { background: var(--rating-btn-bg-color, var(--paper)); color: var(--rating-easy-color, var(--teal)); }
 
-.stamp--again:hover { background: rgba(182, 96, 74, 0.12); }
-.stamp--hard:hover  { background: rgba(207, 154, 77, 0.12); }
-.stamp--good:hover  { background: rgba(111, 139, 92, 0.12); }
-.stamp--easy:hover  { background: rgba(62, 124, 107, 0.12); }
+.stamp--again:hover { filter: brightness(1.1); }
+.stamp--hard:hover  { filter: brightness(1.1); }
+.stamp--good:hover  { filter: brightness(1.1); }
+.stamp--easy:hover  { filter: brightness(1.1); }
 
 /* ============================================================
-   REVIEW: mini histogramme (matière en cours), en bas de la page
+   REVIEW: mini histogramme (boîte en cours), en bas de la page
    ============================================================ */
 .review-chart-section {
   margin-top: 8px;
@@ -641,7 +1697,7 @@ textarea, input {
   text-align: left;
   font-family: var(--font-mono);
   font-size: 11px;
-  color: rgba(247, 241, 225, 0.6);
+  color: rgba(31, 41, 55, 0.6);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -657,8 +1713,8 @@ textarea, input {
   margin-left: auto;
   font-family: var(--font-mono);
   font-size: 10px;
-  color: var(--paper);
-  background: rgba(247, 241, 225, 0.12);
+  color: var(--ink);
+  background: rgba(31, 41, 55, 0.12);
   border-radius: 999px;
   padding: 3px 9px;
   letter-spacing: 0.03em;
@@ -688,18 +1744,155 @@ textarea, input {
   100% { filter: brightness(1); box-shadow: none; }
 }
 
+/* Vague de barres qui s'allument successivement de gauche à droite, de la
+   colonne "aujourd'hui" jusqu'à la nouvelle date d'une fiche qu'on vient de
+   noter (item 9) — chaque barre grossit brièvement (scaleY, ancrée en bas)
+   avant de revenir à sa taille normale, avec un décalage croissant pour
+   donner l'effet de vague qui se propage. */
+.chart-bar {
+  transform-origin: bottom;
+}
+.chart-bar-wave {
+  animation: chart-bar-wave-anim 450ms ease-out;
+}
+@keyframes chart-bar-wave-anim {
+  0% { transform: scaleY(1); filter: brightness(1); box-shadow: none; }
+  35% { transform: scaleY(1.3); filter: brightness(1.7); box-shadow: 0 0 6px 1px var(--amber); }
+  100% { transform: scaleY(1); filter: brightness(1); box-shadow: none; }
+}
+
+/* Barre CIBLE (nouvelle date de la fiche) : s'allume en dernier (après le
+   délai appliqué en JS, une fois la vague arrivée jusqu'à elle) puis reste
+   allumée et haute environ 1,5s avant de revenir à la normale (item 4). */
+.chart-bar-wave-hold {
+  animation: chart-bar-wave-hold-anim 1800ms ease-out;
+}
+@keyframes chart-bar-wave-hold-anim {
+  0% { transform: scaleY(1); filter: brightness(1); box-shadow: none; }
+  12% { transform: scaleY(1.3); filter: brightness(1.8); box-shadow: 0 0 8px 2px var(--amber); }
+  88% { transform: scaleY(1.3); filter: brightness(1.8); box-shadow: 0 0 8px 2px var(--amber); }
+  100% { transform: scaleY(1); filter: brightness(1); box-shadow: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chart-col--changed .chart-bar, .chart-bar-wave, .chart-bar-wave-hold { animation: none; }
+}
+
 /* ============================================================
    MANAGE VIEW: form + list
    ============================================================ */
+.card-form-page-header {
+  margin-bottom: 10px;
+}
+
+.new-card-back-btn {
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
 .card-form {
-  background: var(--paper);
+  background: var(--card-form-bg-color, var(--paper));
   border-radius: var(--radius-card);
   padding: 18px;
-  box-shadow: var(--shadow-deep);
+  box-shadow: var(--shadow-card-form, var(--shadow-deep));
   margin-bottom: 26px;
 }
 
 .card-form .section-title { color: var(--ink); }
+
+/* Titre de la page Gérer (item 15) : plus long que l'ancien "Boîtes",
+   espace en dessous augmenté pour bien le séparer des boutons d'action. */
+.manage-title {
+  margin-bottom: 20px;
+}
+
+
+/* En-tête du formulaire "Nouvelle fiche" (item 7) : titre + sélecteur de
+   boîte compact sur la même ligne, sans indication de mode ici (juste le
+   choix de la boîte cible pour la fiche qu'on est en train de créer). */
+.card-form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.card-form-header .section-title { margin: 0; }
+
+.subject-select--compact {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 55%;
+  background: var(--paper-2);
+  color: var(--ink);
+  border: 1px solid rgba(35, 48, 42, 0.15);
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.card-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.card-list-title { margin-bottom: 0; }
+
+.construction-filter-btn {
+  position: relative;
+  flex-shrink: 0;
+  background: rgba(31, 41, 55, 0.08);
+  border: 1px solid rgba(31, 41, 55, 0.2);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 15px;
+}
+
+.construction-filter-btn.is-active {
+  background: var(--construction-active-color, rgba(207, 154, 77, 0.25));
+  border-color: var(--amber);
+}
+
+.construction-filter-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: var(--terracotta);
+  color: var(--paper);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+}
+
+.icon-btn.is-active-construction {
+  background: var(--construction-active-color, rgba(207, 154, 77, 0.25));
+}
+
+.cards-search-field {
+  margin-bottom: 18px;
+}
+
+.cards-search-field input {
+  font-family: var(--font-type);
+  font-size: 14px;
+  color: var(--ink);
+  background: rgba(31, 41, 55, 0.08);
+  border: 1px solid rgba(31, 41, 55, 0.2);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
 
 .field {
   display: flex;
@@ -724,6 +1917,87 @@ textarea, input {
   resize: vertical;
   text-transform: none;
   letter-spacing: normal;
+}
+
+/* Zone de texte éditable riche (item 13), remplace les <textarea> pour la
+   question/réponse — même habillage visuel qu'un textarea classique. */
+.rich-editor {
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: var(--ink);
+  background: var(--rich-editor-bg-color, var(--paper-2));
+  border: 1px solid rgba(35, 48, 42, 0.15);
+  border-radius: 8px;
+  padding: 10px 12px;
+  text-transform: none;
+  letter-spacing: normal;
+  min-height: 7.2em;
+  line-height: 1.5;
+  overflow-y: auto;
+}
+
+#input-answer.rich-editor { min-height: 13em; }
+
+.rich-editor:empty:before {
+  content: attr(data-placeholder);
+  color: rgba(35, 48, 42, 0.4);
+}
+
+.rich-editor:focus {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+/* Barre d'outils de mise en forme (item 13) : agit sur le champ (question
+   ou réponse) actuellement au focus. `onmousedown` + preventDefault côté JS
+   empêche de perdre la sélection de texte au clic sur un bouton. */
+.rich-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  background: var(--paper-2);
+  border-radius: 8px;
+  padding: 6px 8px;
+  margin-bottom: 10px;
+}
+
+.rt-btn {
+  min-width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: 1px solid rgba(35, 48, 42, 0.15);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 13px;
+  font-family: var(--font-body);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+}
+
+.rt-btn:hover, .rt-btn:active { background: rgba(35, 48, 42, 0.1); }
+
+.rt-btn--highlight { font-size: 14px; }
+
+.rt-color-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px;
+  border-left: 1px solid rgba(35, 48, 42, 0.15);
+  border-right: 1px solid rgba(35, 48, 42, 0.15);
+  margin: 0 2px;
+}
+
+.rt-color {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--paper);
+  box-shadow: 0 0 0 1px rgba(35, 48, 42, 0.25);
+  padding: 0;
 }
 
 .field select {
@@ -764,7 +2038,7 @@ textarea, input {
   border: 1px solid transparent;
   padding: 10px 16px;
   background: var(--desk);
-  color: var(--paper);
+  color: var(--ink);
 }
 
 .btn--primary { background: var(--rule); color: var(--paper); }
@@ -778,6 +2052,32 @@ textarea, input {
   justify-content: space-between;
   margin-bottom: 10px;
 }
+
+/* Item 3 (dernier lot) : pictos qui choisissent ce qui s'affiche à droite
+   des blocs de la page Organisation, à la place du titre de page. */
+.org-display-toggle {
+  display: flex;
+  gap: 4px;
+}
+
+.org-display-toggle-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: none;
+  background: var(--paper-2, rgba(35,48,42,0.06));
+  color: var(--ink-soft);
+}
+
+.org-display-toggle-btn.is-active {
+  background: var(--blue);
+  color: #ffffff;
+}
+
+.org-display-toggle-btn svg { width: 17px; height: 17px; }
 
 .io-buttons { display: flex; gap: 8px; }
 .io-buttons .btn { background: var(--paper-2); color: var(--ink); }
@@ -800,6 +2100,7 @@ textarea, input {
   gap: 8px;
   box-shadow: 0 6px 16px rgba(0,0,0,0.22);
   border-left: 3px solid var(--rule);
+  position: relative;
 }
 
 .card-row-main { flex: 1; min-width: 0; width: 100%; }
@@ -825,6 +2126,20 @@ textarea, input {
   padding-left: 8px;
 }
 
+/* Score d'apprentissage (item 1c) : coin supérieur droit de chaque ligne. */
+.card-row-score {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  background: var(--paper-2);
+  border-radius: 999px;
+  padding: 3px 8px;
+}
+
 .card-row-meta {
   font-family: var(--font-mono);
   font-size: 10.5px;
@@ -833,10 +2148,10 @@ textarea, input {
 
 /* `.row-actions` est partagée entre deux mises en page différentes : les
    rangées de fiches (colonne, actions en pleine largeur en haut) et les
-   rangées de matières (ligne horizontale, actions à droite). Le style
+   rangées de boîtes (ligne horizontale, actions à droite). Le style
    "pleine largeur + séparateur" ne doit s'appliquer qu'au premier cas —
    l'avoir mis sur la classe generique cassait l'affichage du nom des
-   matières (poussé hors de vue par une largeur forcée à 100%). */
+   boîtes (poussé hors de vue par une largeur forcée à 100%). */
 .card-row .row-actions {
   width: 100%;
   padding-bottom: 6px;
@@ -855,7 +2170,7 @@ textarea, input {
   color: var(--ink-soft);
   font-family: var(--font-mono);
   font-size: 12px;
-  padding: 4px 7px;
+  padding: 3px 6px;
   border-radius: 6px;
 }
 
@@ -872,7 +2187,7 @@ textarea, input {
 
 .list-empty {
   text-align: center;
-  color: rgba(247,241,225,0.5);
+  color: rgba(31,41,55,0.5);
   font-size: 13px;
   padding: 20px 0;
 }
@@ -880,11 +2195,158 @@ textarea, input {
 /* ============================================================
    STATS VIEW
    ============================================================ */
+/* Gros logo de la mascotte en tête de page (item 15). */
+.stats-mascot {
+  display: block;
+  width: 84px;
+  height: 84px;
+  margin: 4px auto 12px;
+}
+
 .stats-controls {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 14px;
+  position: relative;
 }
+
+/* Item 14 : collés en haut de page pendant le défilement, toujours
+   visibles. Fond opaque nécessaire (sinon le contenu défilerait "à
+   travers" les réglages, illisible). */
+.stats-controls--sticky {
+  position: sticky;
+  /* Repensé (bug corrigé) : au lieu d'un simple décalage "top" qui donnait
+     l'impression que le bloc "flottait" au milieu de l'écran, le bloc colle
+     désormais à la vraie limite haute (top: 0) mais avec un espace vide en
+     haut de LUI-MÊME (padding-top) qui couvre la zone de l'îlot dynamique /
+     encoche — cet espace vide se retrouve sous l'îlot une fois collé, les
+     réglages restent bien en dessous et le fond ne laisse rien voir "à
+     travers". */
+  top: 0;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 22px);
+  z-index: 15;
+  background: var(--app-bg-color, var(--desk));
+  padding-bottom: 10px;
+}
+
+.stats-controls--sticky .stats-select {
+  flex: 1 1 auto;
+  min-width: 100px;
+}
+
+/* Le bouton de choix de boîte passe en premier et sur toute sa propre
+   ligne (bug corrigé — bouton trop petit, peu lisible) : plus grand, plus
+   de contraste, bien distinct des deux menus déroulants d'échelle/période
+   qui restent sur la ligne suivante. */
+.stats-controls--sticky {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.stats-controls--sticky .subject-select-btn {
+  font-size: 15px;
+  padding: 12px 16px;
+  background: rgba(31, 41, 55, 0.12);
+  border-width: 1.5px;
+}
+
+.stats-controls--sticky-row2 {
+  display: flex;
+  gap: 8px;
+}
+
+.stats-controls--sticky-row2 .stats-select {
+  flex: 1 1 auto;
+  min-width: 100px;
+}
+
+#ratings-chart-wrap, #ratings-history-chart-wrap {
+  background: rgba(31, 41, 55, 0.05);
+  border-radius: 10px;
+  padding: 10px 8px 4px;
+  margin-bottom: 8px;
+}
+
+/* Vues défilables "par jour/semaine/mois" (items 10/11) : largeur fixe par
+   tranche, défilement horizontal — "aujourd'hui" toujours visible sans
+   défiler (dernière tranche, à droite). */
+.ratings-scroll-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
+  border-radius: 8px;
+}
+
+/* Flammes / jours d'utilisation (item 6). */
+.streak-summary {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: nowrap;
+  gap: 4px;
+  margin-bottom: 8px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.streak-summary .streak-number-value {
+  font-weight: 700;
+  color: var(--amber);
+}
+
+/* Trait fin entre la fin d'un graphique et le titre du suivant (item 4) —
+   aide à comprendre que ce titre s'applique à ce qui vient APRÈS lui. */
+.stats-chart-divider {
+  border: none;
+  border-top: 1px solid rgba(31, 41, 55, 0.15);
+  margin: 22px 0 10px;
+}
+
+/* Doivent tenir sur toute la largeur (item 10 — bug corrigé : on était
+   obligé de défiler pour voir les barres de droite) : largeur flexible au
+   lieu d'une largeur fixe par barre. */
+.streak-chart-wrap {
+  background: rgba(31, 41, 55, 0.05);
+  border-radius: 10px;
+  padding: 10px 8px 4px;
+  margin-bottom: 8px;
+}
+
+.streak-row {
+  display: flex;
+  gap: 2px;
+  align-items: flex-end;
+}
+
+.streak-day-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.streak-day {
+  width: 100%;
+  height: 22px;
+  border-radius: 2px;
+  background: var(--paper-3);
+}
+
+.streak-day-label {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  color: #9aa89e;
+  height: 9px;
+}
+
+.streak-day.is-hot { background: #e8873a; }
+.streak-day.is-today { outline: 1.5px solid var(--paper); outline-offset: 1px; }
 
 .stats-select {
   flex: 1;
@@ -912,7 +2374,7 @@ textarea, input {
   border-radius: var(--radius-card);
   padding: 18px 14px;
   text-align: center;
-  box-shadow: var(--shadow-deep);
+  box-shadow: var(--shadow-stat-box, var(--shadow-deep));
 }
 
 .stat-number {
@@ -932,28 +2394,36 @@ textarea, input {
 
 .stat-note {
   font-size: 13px;
-  color: rgba(247,241,225,0.55);
+  color: rgba(31,41,55,0.55);
   line-height: 1.5;
 }
 
 .chart-title {
   font-family: var(--font-mono);
   font-size: 11px;
-  color: rgba(247, 241, 225, 0.6);
+  color: rgba(31, 41, 55, 0.6);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   margin: 4px 0 10px;
 }
 
+/* Item 7 : espace réduit entre le graphique juste au-dessus et ce titre,
+   qui se retrouve donc "en bas" de l'espace au lieu d'"en haut" — visible
+   seulement en descendant un peu, pas collé aux flammes tout en haut. */
+.stats-section-title-lower {
+  margin-top: 2px;
+  margin-bottom: 10px;
+}
+
 .chart-wrap {
-  background: var(--paper);
+  background: var(--chart-wrap-bg-color, var(--paper));
   border-radius: var(--radius-card);
-  box-shadow: var(--shadow-deep);
+  box-shadow: var(--shadow-chart-wrap, var(--shadow-deep));
   padding: 16px 12px 10px;
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-x;
+  touch-action: pan-x pan-y;
 }
 
 .chart {
@@ -963,6 +2433,16 @@ textarea, input {
   height: 180px;
   gap: 2px;
   width: max-content;
+}
+
+/* Bug corrigé (même famille que .rating-row/.subject-choice-menu avant) :
+   sans ce correctif, `display: flex` ci-dessus l'emportait TOUJOURS sur
+   `[hidden] { display: none }` (spécificité égale, l'ordre dans la feuille
+   de style tranche) — le graphique gardait sa hauteur fixe de 180px même
+   masqué (aucune fiche à revoir sur la période), créant un grand vide
+   vide de sens avant le reste de la page. */
+.chart[hidden] {
+  display: none;
 }
 
 /* Périodes longues (3 mois / 6 mois / 1 an) : trop de colonnes pour qu'un
@@ -1003,36 +2483,299 @@ textarea, input {
   width: 100%;
   min-height: 2px;
   border-radius: 3px 3px 0 0;
-  background: var(--teal);
+  background: var(--due-bar-color, var(--teal));
 }
 
-.chart-col.is-today .chart-bar { background: var(--rule); }
+.chart-col.is-today .chart-bar { background: var(--today-bar-color, var(--rule)); }
+
+/* Historique des fiches révisées (item 21) : bleu, pour bien le distinguer
+   du graphique "à revoir" juste au-dessus. */
+/* Barres "fiches révisées" dans l'histogramme fusionné (item 9) : bleu,
+   pour bien les distinguer des barres "fiches à revoir". */
+.chart-bar--reviewed:not(.chart-bar--zero) { background: var(--reviewed-bar-color, var(--blue)); }
 
 /* Jours sans aucune fiche due : couleur neutre (beige plus foncé que le fond
    de la carte), pour rester visible sans attirer l'œil comme une vraie donnée. */
-.chart-bar--zero { background: var(--paper-3); }
-.chart-col.is-today .chart-bar--zero { background: var(--paper-3); }
+.chart-bar--zero { background: var(--empty-bar-color, var(--paper-3)); }
+.chart-col.is-today .chart-bar--zero { background: var(--empty-bar-color, var(--paper-3)); }
 
 .chart-value {
   font-family: var(--font-mono);
   font-size: 9px;
-  color: var(--ink-soft);
+  color: var(--chart-value-color, var(--ink-soft));
   white-space: nowrap;
 }
 
 .chart-label {
   font-family: var(--font-mono);
   font-size: 9px;
-  color: var(--ink-soft);
+  color: var(--chart-label-color, var(--ink-soft));
   white-space: nowrap;
   height: 12px;
 }
 
-.chart-col.is-today .chart-label { color: var(--rule); font-weight: 600; }
+.chart-col.is-today .chart-label { color: var(--chart-today-label-color, var(--rule)); font-weight: 600; }
+
+/* ============================================================
+   CALENDRIER (item 2/9)
+   ============================================================ */
+.calendar-date-field {
+  position: relative;
+}
+
+.calendar-date-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: var(--rich-editor-bg-color, var(--paper-2));
+  border: 1px solid rgba(35, 48, 42, 0.15);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--ink);
+  text-align: left;
+}
+
+/* Item 3 : l'input natif recouvre tout le bouton, en transparence — c'est
+   lui qui reçoit réellement le clic/tap et ouvre son sélecteur de date,
+   fiable sur tous les navigateurs (contrairement à showPicker() appelé sur
+   un champ minuscule et non interactif). */
+.calendar-date-native-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+}
+
+.calendar-view-toggle {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.calendar-view-toggle-btn {
+  flex: 1;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(35, 48, 42, 0.15);
+  background: var(--paper);
+  color: var(--ink-soft);
+  font-family: var(--font-type);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.calendar-view-toggle-btn.is-active {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #ffffff;
+}
+
+.calendar-nav-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Grille des mois (item 2) : deux mini-mois affichés côte à côte (ou
+   empilés sur un écran étroit). */
+/* Item 5 : les mois s'empilent verticalement, chacun sur toute la largeur
+   disponible plutôt que côte à côte. */
+.calendar-months-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.calendar-months-stack .calendar-mini-month { max-width: none; }
+.calendar-months-stack .calendar-mini-month-grid { gap: 4px; }
+.calendar-months-stack .calendar-day-cell { font-size: 14px; }
+.calendar-months-stack .calendar-mini-month-title { font-size: 15px; }
+
+.calendar-mini-month {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Bug corrigé (item 3) : cette règle datait de l'ancien agencement CÔTE À
+   CÔTE (flex-direction: row), où flex:1 1 0 servait à répartir la LARGEUR.
+   Dans le nouvel empilement VERTICAL (item 5), la même règle divisait la
+   HAUTEUR disponible entre tous les mois affichés — de plus en plus
+   écrasés à mesure que le défilement infini en ajoutait, jusqu'à devenir
+   invisibles (hauteur proche de zéro, contenu coupé par overflow:hidden).
+   Chaque mois reprend ici sa hauteur naturelle, sans grandir ni rétrécir. */
+.calendar-months-stack .calendar-mini-month {
+  flex: 0 0 auto;
+  overflow: visible;
+}
+
+.calendar-mini-month-title {
+  font-family: var(--font-type);
+  font-weight: 700;
+  font-size: 13px;
+  text-align: center;
+  margin-bottom: 6px;
+  text-transform: capitalize;
+}
+
+.calendar-mini-month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+  width: 100%;
+}
+
+.calendar-mini-month-dow {
+  font-size: 9px;
+  text-align: center;
+  color: var(--ink-soft);
+  font-weight: 700;
+}
+
+.calendar-day-cell {
+  aspect-ratio: 1;
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-size: 11px;
+  color: var(--ink);
+  position: relative;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+/* Item 2 : fond coloré en plus du cerclage — avec les jours à événement
+   maintenant AUSSI cerclés (item 3 du lot précédent), le simple anneau ne
+   suffisait plus à distinguer "aujourd'hui" du reste. */
+.calendar-day-cell.is-today {
+  font-weight: 700;
+  background: rgba(74, 144, 217, 0.16);
+  box-shadow: inset 0 0 0 1.5px var(--blue);
+  border-radius: 8px;
+}
+.calendar-day-cell.is-empty { visibility: hidden; }
+.calendar-day-cell.has-event { cursor: pointer; }
+
+/* Item 3 : un jour avec événement(s) ressort maintenant de 3 façons à la
+   fois (proposées puis retenues) — chiffre en gras, léger cerclage, ET
+   point(s) plus gros qu'avant (chacun de ces trois signaux, seul, restait
+   trop discret ou pouvait se confondre avec le cerclage du jour
+   "aujourd'hui"). */
+.calendar-day-cell.has-event .calendar-day-num {
+  font-weight: 700;
+}
+
+.calendar-day-cell.has-event {
+  box-shadow: inset 0 0 0 1.5px rgba(74, 144, 217, 0.35);
+  border-radius: 8px;
+}
+
+.calendar-day-cell.has-event.is-today {
+  box-shadow: inset 0 0 0 1.5px var(--blue);
+}
+
+/* Item 4 : plusieurs points côte à côte s'il y a plusieurs événements ce
+   jour-là (jusqu'à 3, au-delà le dernier point est juste un peu plus
+   large plutôt que d'en aligner un par événement sans fin). */
+.calendar-day-dots {
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+
+.calendar-day-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--blue);
+  flex-shrink: 0;
+}
+
+.calendar-day-dot--more {
+  width: 7px;
+  border-radius: 3px;
+}
+
+.calendar-months-stack .calendar-day-dots { bottom: 5px; gap: 3px; }
+.calendar-months-stack .calendar-day-dot { width: 6px; height: 6px; }
+.calendar-months-stack .calendar-day-dot--more { width: 9px; }
+
+/* Grille année (item 2) : les 12 mois en mini-grilles plus compactes. */
+.calendar-year-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px 10px;
+}
+
+.calendar-year-grid .calendar-mini-month { min-width: 0; }
+.calendar-year-grid .calendar-mini-month-title { font-size: 11px; }
+.calendar-year-grid .calendar-day-cell { font-size: 8px; }
+
+/* Item 7 : programme de révision. */
+.revision-program-row {
+  cursor: pointer;
+}
+
+.revision-program-row .card-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+
+/* Item 10 (dernier lot) : "Ne pas suivre le programme" présenté comme les
+   blocs de la page (même forme que .card-row), avec un fond de couleur
+   distinct réglable dans le mode développeur. */
+.revision-program-skip-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--skip-program-bg-color, #fde8d7);
+  border-radius: 10px;
+  padding: 14px;
+  margin-top: 14px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.22);
+  border: none;
+  font-family: var(--font-type);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* Item 7 : jauge en anneau (même principe que la page Organisation), avec
+   un repère indiquant l'objectif à atteindre. */
+.revision-program-gauge-col {
+  flex-shrink: 0;
+  width: 130px;
+  margin-left: 6px;
+}
 
 .chart-empty {
   font-size: 13px;
-  color: rgba(247,241,225,0.55);
+  color: rgba(31,41,55,0.55);
   text-align: center;
   padding: 20px 0;
 }
@@ -1055,23 +2798,89 @@ textarea, input {
 }
 
 /* ============================================================
-   MODE D'APPRENTISSAGE VIEW (par matière)
+   MODE D'APPRENTISSAGE VIEW (par boîte)
    ============================================================ */
 .view-title {
   font-family: var(--font-type);
   font-size: 19px;
-  color: var(--paper);
+  color: var(--ink);
   margin: 10px 0 14px;
+}
+
+/* Variante de .settings-block-title pour un titre posé directement sur le
+   fond sombre de la page (pas dans une carte .card-form claire) — sans
+   cette variante, le texte héritait de la couleur sombre pensée pour les
+   cartes claires et devenait invisible (même bug que .import-target-label,
+   corrigé précédemment). */
+.settings-block-title--on-dark {
+  color: var(--ink);
 }
 
 .algo-mode-label {
   font-family: var(--font-mono);
   font-size: 12px;
-  color: var(--paper);
-  background: rgba(247,241,225,0.1);
+  color: var(--ink);
+  background: rgba(31,41,55,0.1);
   border-radius: 8px;
   padding: 8px 12px;
   margin-bottom: 12px;
+}
+
+.algo-mode-slider-wrap {
+  margin: 8px 0 24px;
+  padding: 0 4px;
+}
+
+.algo-mode-slider {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(31, 41, 55, 0.25);
+  margin: 18px 0 10px;
+  /* Couleur du curseur pilotée par cette variable, mise à jour en JS selon
+     le mode actif (voir updateAlgoModeTicksHighlight) : vert = cool,
+     orange = normal, rouge = renforcé, jaune = personnalisé. */
+  --algo-slider-color: var(--amber);
+}
+
+.algo-mode-slider::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--algo-slider-color);
+  border: 2px solid var(--paper);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+  cursor: pointer;
+}
+
+.algo-mode-slider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--algo-slider-color);
+  border: 2px solid var(--paper);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+  cursor: pointer;
+}
+
+.algo-mode-ticks {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--ink-soft);
+}
+
+.algo-mode-ticks span:first-child { text-align: left; }
+.algo-mode-ticks span:last-child { text-align: right; }
+
+.algo-mode-ticks span.is-active {
+  color: var(--algo-tick-color, var(--amber));
+  font-weight: 600;
 }
 
 .algo-preset-row {
@@ -1086,6 +2895,639 @@ textarea, input {
   grid-template-columns: 1fr 1fr;
   gap: 10px 14px;
   margin-bottom: 20px;
+}
+
+/* 4 coefficients / 4 maximums sur une seule ligne (voir item 5) : labels et
+   police réduits pour que ça tienne sur un écran d'iPhone. */
+.algo-grid--4 {
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.algo-grid--4 .settings-bonus-field span {
+  font-size: 10px;
+}
+
+.algo-grid--4 .settings-bonus-field input {
+  padding: 8px 2px;
+  font-size: 14px;
+}
+
+/* Bloc "Revoir les vieilles fiches" nettement séparé du reste (interligne
+   plus généreuse), bouton mis en évidence en rouge — action irréversible. */
+.algo-review-old-block {
+  margin-top: 34px;
+}
+
+.algo-review-old-btn {
+  background: transparent;
+  border: 2px solid var(--terracotta);
+  color: var(--terracotta);
+}
+
+.algo-review-old-btn:hover {
+  background: rgba(182, 96, 74, 0.12);
+}
+
+/* Boutons "Paramétrages avancés" / "Revenir aux réglages d'origine" (item 9) :
+   avant de simples liens fantômes, peu perçus comme cliquables — passés en
+   boutons pleinement dessinés (fond + bordure nette). */
+.algo-advanced-toggle {
+  width: 100%;
+  margin: 4px 0 18px;
+  background: rgba(31, 41, 55, 0.1);
+  border: 1.5px solid rgba(31, 41, 55, 0.35);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.algo-advanced-toggle:hover { background: rgba(31, 41, 55, 0.18); }
+
+.algo-reset-btn-visible {
+  margin-top: 10px;
+  width: 100%;
+  background: rgba(31, 41, 55, 0.1);
+  border: 1.5px solid rgba(31, 41, 55, 0.35);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.algo-reset-btn-visible:hover { background: rgba(31, 41, 55, 0.18); }
+
+/* Curseurs à valeurs discrètes des coefficients/maximums (item 9) : mêmes
+   codes couleur que les boutons d'évaluation Encore/Difficile/Bien/Facile,
+   pour qu'on associe naturellement chaque réglage à sa note. */
+.algo-slider-field {
+  border-radius: 8px;
+  padding: 6px 10px;
+  margin-bottom: 6px;
+  border: 1.5px solid transparent;
+}
+
+.algo-slider-field-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.algo-slider-field-label {
+  font-family: var(--font-type);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.algo-slider-field-value {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.algo-slider-field input[type="range"] {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(31, 41, 55, 0.25);
+}
+
+.algo-slider-field input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--paper);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.35);
+  cursor: pointer;
+  background: var(--slider-color, var(--amber));
+}
+
+.algo-slider-field input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--paper);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.35);
+  cursor: pointer;
+  background: var(--slider-color, var(--amber));
+}
+
+/* Item 5 — retour aux couleurs des boutons d'évaluation (Encore/Difficile/
+   Bien/Facile), pas celles des modes d'apprentissage : demandé puis
+   reconsidéré, la couleur de la NOTE reste plus parlante ici puisque
+   chaque encadré correspond justement à une note précise. Le curseur
+   PRINCIPAL de choix du mode (Cool/Normal/Renforcé/Perso), lui, garde la
+   couleur du mode — ce n'est pas le même curseur. */
+.algo-slider-field--again { background: color-mix(in srgb, var(--terracotta) 14%, transparent); border-color: color-mix(in srgb, var(--terracotta) 40%, transparent); --slider-color: var(--terracotta); }
+.algo-slider-field--again .algo-slider-field-label,
+.algo-slider-field--again .algo-slider-field-value { color: var(--terracotta); }
+
+.algo-slider-field--hard { background: color-mix(in srgb, var(--amber) 14%, transparent); border-color: color-mix(in srgb, var(--amber) 40%, transparent); --slider-color: var(--amber); }
+.algo-slider-field--hard .algo-slider-field-label,
+.algo-slider-field--hard .algo-slider-field-value { color: var(--amber); }
+
+.algo-slider-field--good { background: color-mix(in srgb, var(--sage) 14%, transparent); border-color: color-mix(in srgb, var(--sage) 40%, transparent); --slider-color: var(--sage); }
+.algo-slider-field--good .algo-slider-field-label,
+.algo-slider-field--good .algo-slider-field-value { color: var(--sage); }
+
+.algo-slider-field--easy { background: color-mix(in srgb, var(--teal) 18%, transparent); border-color: color-mix(in srgb, var(--teal) 45%, transparent); --slider-color: var(--teal); }
+.algo-slider-field--easy .algo-slider-field-label,
+.algo-slider-field--easy .algo-slider-field-value { color: var(--teal); }
+
+/* Graphique d'aperçu des échéances (item 6). */
+/* Graphique d'aperçu de la page d'édition des modes : collé en haut au
+   défilement (item 4) — pour rester visible EN MÊME TEMPS qu'on manipule
+   les curseurs plus bas, sans avoir à faire l'aller-retour du regard. */
+#algo-chart-wrap {
+  position: sticky;
+  top: 6px;
+  z-index: 5;
+  background: var(--desk);
+  border-radius: 10px;
+  padding: 10px 8px 4px;
+  margin-bottom: 8px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+}
+
+#assign-chart-wrap {
+  background: rgba(31, 41, 55, 0.05);
+  border-radius: 10px;
+  padding: 10px 8px 4px;
+  margin-bottom: 8px;
+}
+
+/* Intitulés des axes (item 4) : l'ordonnée pivotée à la verticale, collée
+   contre le bord gauche du graphique (comme un vrai graphique), l'abscisse
+   toujours en dessous, centrée. */
+.algo-chart-body {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+}
+
+.algo-chart-axis-y {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  text-align: center;
+  white-space: nowrap;
+  align-self: center;
+  flex-shrink: 0;
+}
+
+.algo-chart-svg-col {
+  flex: 1;
+  min-width: 0;
+}
+
+.algo-chart-axis-y, .algo-chart-axis-x {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: #9aa89e;
+}
+
+.algo-chart-axis-x { text-align: center; margin-top: 4px; }
+
+/* Sous-liste des modes personnalisés (page Modes d'apprentissage) et liste
+   de choix d'affectation (page Gérer) — même look que les autres pickers. */
+.algo-custom-picker {
+  background: var(--paper);
+  border-radius: var(--radius-card);
+  padding: 12px 14px;
+  margin-bottom: 18px;
+}
+
+.algo-custom-picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+  margin-bottom: 10px;
+}
+
+.algo-custom-picker-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+#assign-mode-list {
+  background: var(--paper);
+  border-radius: var(--radius-card);
+  padding: 12px 14px;
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.algo-chart-legend {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--ink);
+  margin-bottom: 4px;
+  padding: 0 4px;
+}
+
+.algo-chart-hint {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: #9aa89e;
+  margin: 0 0 6px;
+  padding: 0 4px;
+}
+
+.algo-chart-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.algo-chart-legend-checkbox {
+  width: 13px;
+  height: 13px;
+  margin: 0;
+  cursor: pointer;
+}
+
+.algo-chart-legend-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.algo-chart-empty {
+  text-align: center;
+  padding: 40px 0;
+  margin: 0;
+}
+
+/* Éditeur de la palette de couleurs de texte (item 2, page Développeur). */
+.dev-text-colors-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+/* Popup de couleur personnalisé (item 2) : remplace le sélecteur natif
+   partout dans la page Développeur — pastille cliquable + popup avec
+   aperçu, curseurs (RVB ou TSL, choix mémorisé et modifiable dans le
+   popup lui-même), pas un réglage séparé ailleurs sur la page. */
+.color-swatch-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid rgba(35, 48, 42, 0.2);
+  padding: 0;
+  flex-shrink: 0;
+}
+
+/* Damier pour représenter un niveau de transparence (item 2 — la couleur
+   réelle (avec son alpha) est peinte par-dessus via ::after, sinon le
+   damier — peint intégralement opaque par ces dégradés — la masquerait
+   totalement quel que soit le niveau de transparence choisi). */
+.color-swatch-btn--transparent, .color-popup-preview--checker {
+  position: relative;
+  background-image:
+    linear-gradient(45deg, #ccc 25%, transparent 25%),
+    linear-gradient(-45deg, #ccc 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #ccc 75%),
+    linear-gradient(-45deg, transparent 75%, #ccc 75%);
+  background-size: 10px 10px;
+  background-position: 0 0, 0 5px, 5px -5px, -5px 0px;
+}
+
+.color-swatch-btn--transparent::after, .color-popup-preview--checker::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-color: var(--swatch-color, transparent);
+}
+
+.color-popup {
+  z-index: 60;
+  background: var(--paper);
+  border-radius: 10px;
+  padding: 12px;
+  box-shadow: var(--shadow-deep);
+  width: 260px;
+}
+
+.color-popup-preview {
+  width: 100%;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid rgba(35, 48, 42, 0.2);
+  margin-bottom: 8px;
+}
+
+.color-popup-sliders {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hsl-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hsl-slider-row span {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-soft);
+  width: 10px;
+  flex-shrink: 0;
+}
+
+.hsl-slider-row input[type="range"] {
+  flex: 1;
+  height: 18px;
+}
+
+.hsl-slider-value {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-soft);
+  width: 28px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.color-popup-sliders.is-disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.color-popup-hex-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.color-popup-alpha-row {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(31, 41, 55, 0.12);
+}
+
+.color-popup-hex-input {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--paper-2);
+  border: 1px solid rgba(35, 48, 42, 0.15);
+  border-radius: 6px;
+  padding: 6px 8px;
+  min-width: 0;
+}
+
+.color-popup-transparent-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.color-popup-mode-toggle {
+  display: flex;
+  gap: 4px;
+  margin-top: 10px;
+  border-top: 1px solid rgba(35, 48, 42, 0.12);
+  padding-top: 8px;
+}
+
+.color-popup-mode-btn {
+  flex: 1;
+  background: var(--paper-2);
+  border: 1px solid rgba(35, 48, 42, 0.15);
+  border-radius: 6px;
+  padding: 6px 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.color-popup-mode-btn.is-active {
+  background: var(--amber);
+  color: #2a1f0d;
+  border-color: var(--amber);
+}
+
+/* Banque d'icônes (page Développeur) : une ligne par onglet, avec un
+   aperçu cliquable qui ouvre une grille de choix. */
+.dev-nav-icons-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dev-nav-icon-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-type);
+  font-size: 14px;
+  color: var(--ink);
+}
+
+/* Listes "Couleurs des fonds" / "Couleurs des textes" (items 2h/2i) :
+   intitulé à gauche, pastille de couleur à droite, une ligne par réglage. */
+.dev-color-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.dev-shadows-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Grille de réglages X/Y/diamètre par cercle (item 3). */
+.dev-home-layout-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.dev-home-layout-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(31, 41, 55, 0.1);
+}
+
+.dev-home-layout-title {
+  flex-basis: 100%;
+  font-family: var(--font-type);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.dev-home-layout-row label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.dev-home-layout-input {
+  width: 56px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink);
+  background: var(--paper-2);
+  border: 1px solid rgba(31, 41, 55, 0.15);
+  border-radius: 6px;
+  padding: 4px 6px;
+}
+
+.dev-color-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-family: var(--font-type);
+  font-size: 14px;
+  color: var(--ink);
+}
+
+/* Item 4 : paire jour/nuit — deux pastilles côte à côte au lieu d'une
+   seule (jour puis nuit, dans l'ordre où les champs apparaissent) ; un
+   petit anneau distingue celle du mode nuit. */
+.dev-color-daynight-pair {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dev-color-daynight-pair input[data-variant="night"] ~ .color-swatch-btn {
+  box-shadow: 0 0 0 2px var(--ink-soft);
+}
+
+.dev-color-row span {
+  flex: 1;
+  min-width: 0;
+}
+
+.icon-picker-btn, .icon-bank-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  border: 1px solid rgba(35, 48, 42, 0.2);
+  background: var(--paper-2);
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.icon-bank-svg {
+  width: 22px;
+  height: 22px;
+}
+
+.icon-popup {
+  z-index: 60;
+  background: var(--paper);
+  border-radius: 10px;
+  padding: 10px;
+  box-shadow: var(--shadow-deep);
+  width: 240px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+/* Bug corrigé (même famille que .chart/.subject-choice-menu avant) :
+   `display: grid` ci-dessus l'emportait TOUJOURS sur `[hidden]`
+   (spécificité égale, l'ordre dans la feuille de style tranche) — le
+   popup restait donc visuellement affiché même une fois "fermé" côté DOM
+   (l'attribut hidden était bien posé, mais sans effet visuel réel). */
+.icon-popup[hidden] {
+  display: none;
+}
+
+.icon-bank-btn.is-active {
+  background: var(--amber);
+  border-color: var(--amber);
+  color: #2a1f0d;
+}
+
+.dev-text-color-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dev-text-color-swatch {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid rgba(35, 48, 42, 0.2);
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.dev-text-color-label {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--paper-2);
+  border: 1px solid rgba(35, 48, 42, 0.15);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.settings-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-type);
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.settings-toggle-row input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
 }
 
 .settings-bonus-row {
@@ -1117,7 +3559,7 @@ textarea, input {
    SYNC VIEW
    ============================================================ */
 .sync-intro {
-  color: rgba(247, 241, 225, 0.7);
+  color: rgba(31, 41, 55, 0.7);
   font-size: 14px;
   line-height: 1.6;
   margin: 0 0 18px;
@@ -1125,7 +3567,7 @@ textarea, input {
 
 .sync-intro code {
   font-family: var(--font-mono);
-  background: rgba(247, 241, 225, 0.12);
+  background: rgba(31, 41, 55, 0.12);
   padding: 1px 5px;
   border-radius: 4px;
   font-size: 12.5px;
@@ -1155,7 +3597,7 @@ textarea, input {
 .field-hint {
   font-family: var(--font-body);
   font-size: 12.5px;
-  color: var(--ink-soft);
+  color: var(--general-text-color, var(--ink-soft));
   text-transform: none;
   letter-spacing: normal;
   margin: -4px 0 14px;
@@ -1222,400 +3664,57 @@ textarea, input {
   to { opacity: 1; transform: translate(-50%, 0); }
 }
 
-/* ============================================================
-   TAMAGOTCHI
-   ============================================================ */
-
-/* Icône 🎁 -> stade de croissance de l'onglet : petit point ambre quand un
-   cadeau attend d'être récolté quelque part. */
-.tab--icon#tab-tamagotchi { position: relative; }
-.tab--icon#tab-tamagotchi.has-pending-gift::after {
-  content: "";
-  position: absolute;
-  top: 4px;
-  right: -2px;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--amber);
-  box-shadow: 0 0 0 2px var(--desk);
-}
-
-/* Foyer : un pré clos dans lequel les compagnons se déplacent tout seuls,
-   lentement et sans se chevaucher (voir la boucle JS stepTamaSimulation) ;
-   la nourriture gagnée y est posée au hasard et disparaît, mangée, quand un
-   compagnon passe dessus. Positionnement en absolu (%), donc le conteneur
-   a besoin d'une hauteur fixe. */
-.tama-pets-list {
-  position: relative;
-  height: 480px;
-  overflow: hidden;
-  border-radius: var(--radius-card);
-  /* Fond uni, couleur choisie par l'utilisateur (nuancier sous le pré) et
-     appliquée ici en inline style par JS (voir applyTamaPenColor) — la
-     valeur ci-dessous n'est qu'un repli avant que le JS ne s'exécute. */
-  background-color: #8bb56a;
-  border: 3px solid #5c7a45;
-  box-shadow: inset 0 3px 10px rgba(0,0,0,0.12);
-  margin-bottom: 14px;
-}
-
-.tama-pen-color-picker {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 14px;
-}
-
-.tama-pen-color-label {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--ink-soft);
-  flex-shrink: 0;
-}
-
-.tama-pen-color-swatches {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.tama-pen-color-swatch {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  border: 2px solid rgba(35,48,42,0.25);
-  cursor: pointer;
-  padding: 0;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-}
-
-.tama-pen-color-swatch.is-selected {
-  border-color: var(--ink);
-  box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--ink);
-}
-
-.tama-pen-color-swatch--custom {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red);
-  font-size: 12px;
-  overflow: hidden;
-  position: relative;
-}
-
-.tama-pen-color-swatch--custom input[type="color"] {
-  position: absolute;
-  inset: -4px;
-  width: calc(100% + 8px);
-  height: calc(100% + 8px);
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  opacity: 0;
-}
-
-.tama-pet-tile {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  transform: translate(-50%, -50%);
-  transition: left 0.5s linear, top 0.5s linear;
-  will-change: left, top;
-}
-
-.tama-pet-tile--flash .tama-pet-ring {
-  animation: tama-pet-flash 0.9s ease;
-}
-
-@keyframes tama-pet-flash {
-  0%, 100% { filter: none; }
-  40% { filter: brightness(1.6) drop-shadow(0 0 10px var(--amber)); }
-}
-
-/* Nourriture posée dans le pré : l'émoji, avec une mini-barre en dessous
-   qui se vide au fur et à mesure qu'un compagnon la mange (vases
-   communicants avec l'anneau de vie du compagnon, qui lui se remplit). */
-.tama-food {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  transform: translate(-50%, -50%);
-  font-size: 22px;
-  line-height: 1;
-  z-index: 2;
-  animation: tama-food-pop 0.3s ease;
-}
-
-@keyframes tama-food-pop {
-  from { transform: translate(-50%, -50%) scale(0.4); opacity: 0; }
-  to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-}
-
-.tama-food-bar-track {
-  width: 22px;
-  height: 4px;
-  border-radius: 2px;
-  background: rgba(247, 241, 225, 0.18);
-  overflow: hidden;
-  /* Fine bordure noire : lisibilité sur n'importe quelle couleur de fond de
-     pré (voir le nuancier — item 6). */
-  border: 0.5px solid rgba(0, 0, 0, 0.55);
-}
-
-.tama-food-bar-fill {
-  height: 100%;
-  background: var(--amber);
-  transition: width 0.25s linear;
-}
-
-.tama-pet-ring {
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: width 0.3s ease, height 0.3s ease, background 0.4s ease;
-  /* Idem : fine bordure noire autour de l'anneau de vie, pour qu'il reste
-     lisible quelle que soit la couleur de fond choisie pour le pré. */
-  box-shadow: 0 0 0 0.75px rgba(0, 0, 0, 0.55);
-}
-
-.tama-pet-inner {
-  border-radius: 50%;
-  background: var(--desk);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  transition: width 0.3s ease, height 0.3s ease, font-size 0.3s ease;
-}
-
-.tama-pet-label {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0;
-  font-family: var(--font-mono);
-  color: var(--paper);
-  max-width: 96px;
-  background: rgba(26, 45, 38, 0.55);
-  padding: 2px 6px;
-  border-radius: 8px;
-  text-shadow: 0 1px 1px rgba(0,0,0,0.3);
-}
-
-.tama-pet-label-name {
-  font-size: 11.5px;
-  font-weight: 600;
-  white-space: nowrap;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.tama-pet-label-age {
-  font-size: 9px;
-  font-weight: 400;
-  opacity: 0.8;
-  white-space: nowrap;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.tama-empty-hint { text-align: center; margin: 30px 12px; }
-
-/* Pile de cadeaux à ouvrir : posée en haut de la page, disparaît d'elle-même
-   quand elle est vide. */
-.tama-gifts-tray {
-  background: var(--paper);
-  border-radius: var(--radius-card);
-  box-shadow: var(--shadow-deep);
-  padding: 12px 14px;
-  margin-bottom: 12px;
-}
-
-.tama-gifts-title {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--ink-soft);
-  margin: 0 0 8px;
-}
-
-.tama-gifts-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.tama-gift-box {
-  font-size: 22px;
-  background: var(--paper-2);
-  border: 2px solid var(--amber);
-  border-radius: 12px;
-  padding: 6px 10px;
-  animation: chart-goal-pulse 1.6s ease-in-out infinite;
-}
-
-.tama-hint { margin-bottom: 8px; }
-
-/* Mémorial "Ils nous ont quittés" : liste permanente, du décès le plus
-   récent au plus ancien (voir archiveDeceasedPets). */
-.tama-memorial { margin-top: 18px; }
-
-.tama-memorial-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.tama-memorial-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  background: var(--paper);
-  border-radius: 10px;
-  padding: 10px 12px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-}
-
-.tama-memorial-emoji {
-  font-size: 22px;
-  flex-shrink: 0;
-  filter: grayscale(0.4) saturate(0.7);
-  opacity: 0.85;
-}
-
-.tama-memorial-body { min-width: 0; flex: 1; }
-
-.tama-memorial-name {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--ink);
-  margin-bottom: 2px;
-}
-
-.tama-memorial-epitaph {
-  font-family: var(--font-type);
-  font-size: 12.5px;
-  color: var(--ink-soft);
-  line-height: 1.4;
-  font-style: italic;
-}
-
-
-/* Objectif-cadeau de l'histogramme mini (page Réviser) : une seule ligne
-   horizontale, sur toute la largeur du graphique (y compris la partie qui
-   déborde hors écran), à 80% de la barre la plus haute au moment où
-   l'objectif a été fixé. Grisée/pointillée tant que des barres dépassent
-   encore, pleine et cliquable dès que toutes les barres sont retombées
-   à son niveau ou en dessous. */
-.chart-goal-bar {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 0;
-  border-top: 2px dashed var(--ink-soft);
-  z-index: 3;
-  background: none;
-  padding: 0;
-  cursor: default;
-}
-
-.chart-goal-bar-gift {
-  position: absolute;
-  left: 6px;
-  top: -13px;
-  font-size: 15px;
-  line-height: 1;
-}
-
-/* Prêt à ouvrir : la ligne devient pleine et ambrée, le cadeau pulse. */
-.chart-goal-bar.is-ready {
-  cursor: pointer;
-  border-top-style: solid;
-  border-top-color: var(--amber);
-}
-
-.chart-goal-bar.is-ready .chart-goal-bar-gift {
-  animation: chart-goal-pulse 1.6s ease-in-out infinite;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
-}
-
-.chart-goal-bar.is-locked .chart-goal-bar-gift {
-  filter: grayscale(1);
-  opacity: 0.55;
-}
-
-@keyframes chart-goal-pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.25); }
-}
-
-/* Toast de confirmation (cadeau récolté / cadeau ouvert / passage en
-   révision libre) : bien visible, assez gros pour se lire d'un coup d'œil,
-   reste affiché assez longtemps avant de s'effacer. */
-.tama-toast {
+/* Toast générique (confirmations diverses : passage en révision libre,
+   déconnexion, etc.) — même apparence que .update-toast, disparaît tout
+   seul après quelques secondes. */
+.app-toast {
   position: fixed;
   left: 50%;
-  bottom: 40px;
+  bottom: max(20px, env(safe-area-inset-bottom));
   transform: translateX(-50%);
-  max-width: min(86vw, 360px);
-  text-align: center;
-  background: var(--ink);
-  color: var(--paper);
-  font-family: var(--font-mono);
-  font-size: 15px;
-  font-weight: 600;
-  line-height: 1.4;
-  padding: 16px 22px;
-  border-radius: 16px;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-type);
+  font-size: 13px;
+  padding: 10px 18px;
+  border-radius: 999px;
   box-shadow: var(--shadow-deep);
-  z-index: 50;
-  animation: tama-toast-in-out 3.4s ease forwards;
-  pointer-events: none;
+  z-index: 999;
+  max-width: 86vw;
+  text-align: center;
+  animation: app-toast-in-out 3.4s ease forwards;
 }
 
-/* Toast d'ouverture de cadeau : encore plus grand, reste encore plus
-   longtemps — c'est le moment le plus satisfaisant du jeu. */
-.tama-toast--gift {
-  font-size: 18px;
-  padding: 20px 26px;
-  border-radius: 18px;
-  border: 2px solid var(--amber);
-  animation: tama-toast-in-out 4.5s ease forwards;
-}
-
-.tama-toast--gift .tama-toast-emoji {
-  display: block;
-  font-size: 34px;
-  margin-bottom: 6px;
-}
-
-@keyframes tama-toast-in-out {
-  0% { opacity: 0; transform: translate(-50%, 10px) scale(0.92); }
-  8% { opacity: 1; transform: translate(-50%, 0) scale(1); }
-  88% { opacity: 1; transform: translate(-50%, 0) scale(1); }
-  100% { opacity: 0; transform: translate(-50%, -6px) scale(0.98); }
-}
-
-/* ============================================================
-   RESPONSIVE + MOTION
-   ============================================================ */
-@media (max-width: 380px) {
-  .card-text { font-size: 17px; }
+@keyframes app-toast-in-out {
+  0% { opacity: 0; transform: translate(-50%, 10px); }
+  10% { opacity: 1; transform: translate(-50%, 0); }
+  85% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, 10px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .stack-card--front { transition: none; }
-  .view.is-active { animation: none; }
-  .chart-col--changed .chart-bar { animation: none; }
-  .chart-gift { animation: none; }
-  .tama-toast { animation: none; opacity: 1; }
+  .app-toast { animation: none; opacity: 1; }
 }
+
+/* Variante centrée à l'écran (item 3), pour une annonce qu'on ne doit pas
+   pouvoir manquer — plus grande, au milieu, fond plus opaque. */
+.app-toast--center {
+  left: 50%;
+  top: 50%;
+  bottom: auto;
+  transform: translate(-50%, -50%);
+  font-size: 16px;
+  padding: 18px 26px;
+  max-width: 80vw;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.55);
+  animation: app-toast-center-in-out 3.4s ease forwards;
+}
+
+@keyframes app-toast-center-in-out {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+  10% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  85% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+}
+
+

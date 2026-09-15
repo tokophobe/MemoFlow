@@ -116,12 +116,16 @@
 <div class="desk">
   <header class="topbar">
     <div class="brand">
-      <span class="brand-mark-wrap">
-        <span class="brand-mark" aria-hidden="true">✎</span>
-      </span>
-      <h1>Fiches</h1>
+      <h1 class="sr-only">Fiches</h1>
+      <img src="./icons/logo.png" alt="" class="topbar-logo" id="topbar-logo" />
+      <button type="button" class="btn btn--ghost home-btn" id="home-btn" title="Retour à l'accueil" aria-label="Retour à l'accueil" hidden>
+        <svg class="tab-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+      </button>
     </div>
     <div class="header-right">
+      <button type="button" class="night-mode-toggle-btn" id="night-mode-toggle-btn" title="Mode nuit" aria-label="Basculer le mode nuit">
+        <svg class="icon-inline-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      </button>
       <button class="sync-status" id="sync-status" type="button" title="État de la synchronisation">
         <span class="sync-dot" id="sync-dot"></span>
         <span id="sync-status-text">Local</span>
@@ -132,141 +136,297 @@
     </div>
   </header>
 
-  <div class="subject-bar">
-    <select class="subject-select" id="subject-select" aria-label="Matière active"></select>
-    <span class="subject-algo-badge" id="subject-algo-badge" title="Mode d'apprentissage de cette matière"></span>
-    <button class="subject-add-btn" id="add-subject-btn" type="button" title="Nouvelle matière">+</button>
-  </div>
-
-  <nav class="tabs" role="tablist" aria-label="Navigation">
-    <button class="tab is-active" role="tab" aria-selected="true" data-view="review">Réviser</button>
-    <button class="tab" role="tab" aria-selected="false" data-view="manage">Gérer</button>
-    <button class="tab" role="tab" aria-selected="false" data-view="stats">Stats</button>
+  <nav class="tabs" role="tablist" aria-label="Navigation" hidden>
+    <button class="tab tab--icon is-active" role="tab" aria-selected="true" data-view="review" title="Réviser" aria-label="Réviser">
+      <svg class="tab-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="4" y1="12" x2="20" y2="12"/></svg>
+    </button>
+    <button class="tab tab--icon" role="tab" aria-selected="false" data-view="manage" title="Gérer" aria-label="Gérer">
+      <svg class="tab-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg>
+    </button>
+    <button class="tab tab--icon" role="tab" aria-selected="false" data-view="cards" title="Fiches" aria-label="Fiches">
+      <svg class="tab-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M15 2v5h5"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+    </button>
+    <button class="tab tab--icon" role="tab" aria-selected="false" data-view="stats" title="Stats" aria-label="Stats">
+      <svg class="tab-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="20" x2="6" y2="14"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="10"/><line x1="3" y1="20" x2="21" y2="20"/></svg>
+    </button>
     <button class="tab" role="tab" aria-selected="false" data-view="sync" hidden>Sync</button>
-    <button class="tab tab--icon" role="tab" aria-selected="false" data-view="tamagotchi" id="tab-tamagotchi" title="Tamagotchi" aria-label="Tamagotchi"><span id="tab-tamagotchi-icon">🥚</span></button>
-    <button class="tab tab--icon" role="tab" aria-selected="false" data-view="settings" title="Réglages" aria-label="Réglages">⚙</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="calendar" hidden>Calendrier</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="revision-program" hidden>Programme</button>
+    <button class="tab tab--icon" role="tab" aria-selected="false" data-view="settings" title="Réglages" aria-label="Réglages">
+      <svg class="tab-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+    <button class="tab tab--icon" role="tab" aria-selected="false" data-view="dev" title="Développeur" aria-label="Développeur">🧑‍💻</button>
   </nav>
 
   <main>
+    <!-- VUE ACCUEIL (item 1a) : nouvelle page centrale — on y repasse à
+         chaque fois pour aller d'une page à l'autre (item, confirmé). -->
+    <section id="view-home" class="view is-active">
+      <img src="./icons/logo.png" alt="" id="home-logo" class="home-logo" />
+      <h1 class="home-title">Fiches</h1>
+      <div class="home-scatter" id="home-scatter">
+        <button type="button" class="home-circle" data-key="review" data-go="revision-program">
+          <svg class="home-circle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="4" y1="12" x2="20" y2="12"/></svg>
+          <span>Réviser</span>
+        </button>
+        <button type="button" class="home-circle" data-key="manage" data-go="manage">
+          <svg class="home-circle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg>
+          <span>Dossiers &amp; boîtes</span>
+        </button>
+        <button type="button" class="home-circle" data-key="cards" data-go="cards">
+          <svg class="home-circle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M15 2v5h5"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+          <span>Fiches</span>
+        </button>
+        <button type="button" class="home-circle home-circle--accent" data-key="addCard" id="home-new-card-btn">
+          <svg class="home-circle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span>Ajouter une fiche</span>
+        </button>
+        <button type="button" class="home-circle" data-key="stats" data-go="stats">
+          <svg class="home-circle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="20" x2="6" y2="14"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="10"/><line x1="3" y1="20" x2="21" y2="20"/></svg>
+          <span>Statistiques</span>
+        </button>
+        <button type="button" class="home-circle" data-key="settings" data-go="settings">
+          <svg class="home-circle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>Réglages</span>
+        </button>
+        <button type="button" class="home-circle" data-key="sync" data-go="sync">
+          <svg class="home-circle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2.1l4 4-4 4"/><path d="M3 12v-2a4 4 0 0 1 4-4h14"/><path d="M7 21.9l-4-4 4-4"/><path d="M21 12v2a4 4 0 0 1-4 4H3"/></svg>
+          <span>Synchronisation</span>
+        </button>
+        <button type="button" class="home-circle" data-key="calendar" data-go="calendar">
+          <svg class="home-circle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span>Calendrier</span>
+        </button>
+        <button type="button" class="home-circle" data-key="dev" data-go="dev">
+          <svg class="home-circle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16,18 22,12 16,6"/><polyline points="8,6 2,12 8,18"/></svg>
+          <span>Développeur</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- VUE PROGRAMME DE RÉVISION (item 7) : étape intermédiaire avant
+         Réviser, qui conseille par ordre de priorité les boîtes/dossiers
+         à exercer en fonction des échéances du calendrier. -->
+    <section id="view-revision-program" class="view" aria-labelledby="tab-revision-program">
+      <h2 class="section-title">Programme de révision</h2>
+      <p class="field-hint settings-block-hint">Conseillé en fonction de tes échéances du calendrier — objectif de score à atteindre avant chaque échéance.</p>
+      <ul class="card-list" id="revision-program-list"></ul>
+      <p class="chart-empty" id="revision-program-empty" hidden>Pas d'échéance à venir — programme aucune priorité particulière.</p>
+      <button type="button" class="revision-program-skip-btn" id="revision-program-skip">Ne pas suivre le programme → aller directement à Réviser</button>
+    </section>
+
     <!-- VUE RÉVISION -->
-    <section id="view-review" class="view is-active" aria-labelledby="tab-review">
+    <section id="view-review" class="view" aria-labelledby="tab-review">
+      <div class="subject-bar" id="subject-bar">
+        <button type="button" class="subject-select-btn" id="subject-select-btn" aria-label="Choisir les boîtes à réviser"></button>
+        <span class="review-subject-score" id="review-subject-score"></span>
+
+        <div class="subject-choice-menu" id="subject-choice-menu" hidden>
+          <button type="button" class="subject-choice-item" id="subject-choice-all">Toutes les boîtes</button>
+          <button type="button" class="subject-choice-item" id="subject-choice-selection">Sélection des boîtes</button>
+          <button type="button" class="subject-choice-item subject-choice-item--cancel" id="subject-choice-cancel">Annuler</button>
+        </div>
+      </div>
+
+      <div class="multi-subject-picker" id="multi-subject-picker" hidden>
+        <p class="field-hint settings-block-hint">Choisis les boîtes à réviser confondues :</p>
+        <div class="multi-subject-picker-list" id="multi-subject-picker-list"></div>
+        <div class="multi-subject-picker-actions">
+          <button type="button" class="btn btn--small" id="multi-subject-picker-confirm">Valider</button>
+          <button type="button" class="btn btn--ghost btn--small" id="multi-subject-picker-cancel">Annuler</button>
+        </div>
+      </div>
+
       <p class="review-progress sr-only" id="review-progress" aria-live="polite"></p>
 
       <div class="stage" id="stage">
         <!-- empty state -->
         <div class="empty-state" id="empty-state" hidden>
           <p class="empty-title">Rien à réviser pour l'instant.</p>
-          <p class="empty-sub">Reviens plus tard, ou ajoute des fiches dans l'onglet « Gérer ».</p>
+          <p class="empty-sub">Reviens plus tard, ou ajoute des fiches dans l'onglet « Fiches ».</p>
         </div>
 
         <!-- card stack -->
         <div class="card-stack" id="card-stack" hidden>
-          <div class="stack-card stack-card--back-2" aria-hidden="true"></div>
-          <div class="stack-card stack-card--back-1" aria-hidden="true"></div>
-          <button class="stack-card stack-card--front" id="flip-card" type="button" aria-label="Retourner la fiche">
-            <div class="rule-line"></div>
-            <div class="card-face card-face--question">
-              <span class="card-label">Question</span>
-              <p class="card-text" id="question-text"></p>
-              <span class="tap-hint">Touche la fiche pour voir la réponse</span>
-            </div>
-            <div class="card-face card-face--answer">
-              <span class="card-label card-label--answer">Réponse</span>
-              <p class="card-text" id="answer-text"></p>
-            </div>
-          </button>
-          <button class="card-icon-btn card-hibernate-btn" id="hibernate-current-btn" type="button" hidden title="Mettre cette fiche en hibernation" aria-label="Mettre cette fiche en hibernation">💤</button>
-          <button class="card-icon-btn card-edit-btn" id="edit-current-btn" type="button" hidden title="Modifier cette fiche" aria-label="Modifier cette fiche">✎</button>
+          <div class="card-stack-3d">
+            <div class="stack-card stack-card--back-2" aria-hidden="true"></div>
+            <div class="stack-card stack-card--back-1" aria-hidden="true"></div>
+            <button class="stack-card stack-card--front" id="flip-card" type="button" aria-label="Retourner la fiche">
+              <div class="rule-line"></div>
+              <div class="card-face card-face--question">
+                <span class="card-label">Question</span>
+                <p class="card-text" id="question-text"></p>
+                <span class="tap-hint">Touche la fiche pour voir la réponse</span>
+              </div>
+              <div class="card-face card-face--answer">
+                <span class="card-label card-label--answer">Réponse</span>
+                <p class="card-text" id="answer-text"></p>
+              </div>
+            </button>
+          </div>
+          <button class="card-icon-btn card-undo-btn" id="undo-rating-btn" type="button" hidden title="Revenir à la fiche précédente (annule la dernière évaluation)" aria-label="Annuler la dernière évaluation">◀️</button>
+          <button type="button" class="card-icon-btn card-algo-btn" id="card-algo-btn" hidden title="Mode d'apprentissage de cette boîte">🎓</button>
+          <!-- Boutons secondaires repliés par défaut (item 1c) : un simple
+               bouton "révéler" à la place, qui les fait apparaître. -->
+          <button class="card-icon-btn card-reveal-btn" id="reveal-secondary-icons-btn" type="button" title="Afficher les actions supplémentaires" aria-label="Afficher les actions supplémentaires (chantier, hibernation, éditer)"></button>
+          <div id="secondary-icons-wrap" hidden>
+            <button class="card-icon-btn card-hibernate-btn" id="hibernate-current-btn" type="button" hidden title="Mettre cette fiche en hibernation" aria-label="Mettre cette fiche en hibernation">💤</button>
+            <button class="card-icon-btn card-construction-btn" id="construction-current-btn" type="button" hidden title="Signaler comme fiche à corriger" aria-label="Signaler ou retirer cette fiche comme à corriger">🚧</button>
+            <button class="card-icon-btn card-edit-btn" id="edit-current-btn" type="button" hidden title="Modifier cette fiche" aria-label="Modifier cette fiche">✎</button>
+          </div>
         </div>
       </div>
 
       <div class="rating-row" id="rating-row" hidden>
         <button class="stamp stamp--again" data-rating="again" type="button">
-          <span class="stamp-label">Encore</span>
+          <span class="stamp-label">😵‍💫</span>
           <span class="stamp-sub" id="sub-again">&lt; 1 j</span>
         </button>
         <button class="stamp stamp--hard" data-rating="hard" type="button">
-          <span class="stamp-label">Difficile</span>
+          <span class="stamp-label">🤔</span>
           <span class="stamp-sub" id="sub-hard">—</span>
         </button>
         <button class="stamp stamp--good" data-rating="good" type="button">
-          <span class="stamp-label">Bien</span>
+          <span class="stamp-label">🙂</span>
           <span class="stamp-sub" id="sub-good">—</span>
         </button>
         <button class="stamp stamp--easy" data-rating="easy" type="button">
-          <span class="stamp-label">Facile</span>
+          <span class="stamp-label">😎</span>
           <span class="stamp-sub" id="sub-easy">—</span>
         </button>
       </div>
 
-      <div class="review-chart-section" id="review-chart-section">
-        <div class="chart-wrap chart-wrap--mini" id="review-chart-wrap">
-          <div class="chart chart--mini" id="review-due-chart"></div>
+      <!-- Item 1d : délai précédent, score actuel, et pour chaque bouton
+           d'évaluation le futur délai + futur score associé. -->
+      <div class="review-score-info" id="review-score-info" hidden>
+        <p class="review-score-info-current">
+          Délai précédent : <strong id="score-info-prev-delay">—</strong>
+          &nbsp;·&nbsp;Score actuel : <strong id="score-info-current">—</strong>
+        </p>
+        <div class="review-score-info-grid">
+          <span class="review-score-info-cell" id="score-info-again">—</span>
+          <span class="review-score-info-cell" id="score-info-hard">—</span>
+          <span class="review-score-info-cell" id="score-info-good">—</span>
+          <span class="review-score-info-cell" id="score-info-easy">—</span>
         </div>
-        <p class="chart-empty" id="review-chart-empty" hidden>Rien à revoir sur cette période.</p>
       </div>
+
+      <!-- Item 2 : jauge du score de la boîte/sélection en cours, tout en
+           bas de la page. -->
+      <div class="review-gauge-wrap" id="review-gauge-wrap"></div>
     </section>
 
     <!-- VUE GESTION -->
     <section id="view-manage" class="view" aria-labelledby="tab-manage">
       <div class="subjects-panel">
         <div class="list-header">
-          <h2 class="section-title">Matières</h2>
-          <button class="btn btn--small" id="manage-add-subject-btn" type="button">+ Nouvelle matière</button>
+          <!-- Item 3 (dernier lot) : titre retiré, remplacé par 3 pictos
+               qui choisissent CE QUI s'affiche à droite des blocs (au lieu
+               de tout faire tenir à la fois) — laisse plus de place au nom. -->
+          <div class="org-display-toggle" id="org-display-toggle">
+            <button type="button" class="org-display-toggle-btn is-active" data-org-display="count" title="Nombre de fiches/boîtes">
+              <svg class="icon-inline-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><line x1="7" y1="20" x2="17" y2="20"/><line x1="7" y1="9" x2="17" y2="9"/><line x1="7" y1="13" x2="14" y2="13"/></svg>
+            </button>
+            <button type="button" class="org-display-toggle-btn" data-org-display="mode" title="Mode d'apprentissage">
+              <svg class="icon-inline-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9l10-5 10 5-10 5-10-5z"/><path d="M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/><line x1="22" y1="9" x2="22" y2="15.5"/></svg>
+            </button>
+            <button type="button" class="org-display-toggle-btn" data-org-display="gauge" title="Jauge de score">
+              <svg class="icon-inline-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="10" width="18" height="4" rx="2"/><rect x="3" y="10" width="11" height="4" rx="2" fill="currentColor" stroke="none"/></svg>
+            </button>
+          </div>
+          <div class="list-header-actions">
+            <button class="btn btn--small" id="manage-add-folder-btn" type="button">+ Nouveau dossier</button>
+          </div>
         </div>
         <ul class="subject-list" id="subject-list"></ul>
       </div>
 
+      <div class="move-picker" id="move-picker" hidden>
+        <p class="field-hint settings-block-hint" id="move-picker-title">Déplacer vers :</p>
+        <div class="move-picker-list" id="move-picker-list"></div>
+        <div class="multi-subject-picker-actions">
+          <button type="button" class="btn btn--small" id="move-picker-confirm">Déplacer ici</button>
+          <button type="button" class="btn btn--ghost btn--small" id="move-picker-cancel">Annuler</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- VUE FICHES -->
+    <!-- VUE NOUVELLE FICHE : page indépendante, accessible uniquement via
+         le bouton "+ Fiche" en haut de l'écran (pas un onglet du menu). -->
+    <section id="view-new-card" class="view">
       <form class="card-form" id="card-form">
-        <h2 class="section-title">Nouvelle fiche</h2>
+        <div class="card-form-header">
+          <h2 class="section-title">Nouvelle fiche</h2>
+        </div>
+
+        <!-- Choix de la boîte (item 7) : intégré au cadre de création
+             lui-même. -->
+        <div class="subject-bar" id="cards-subject-bar">
+          <button type="button" class="subject-select-btn subject-select-btn--prominent" id="cards-subject-select-btn" aria-label="Choisir la boîte de cette nouvelle fiche"></button>
+
+          <div class="subject-choice-menu subject-choice-menu--tree" id="cards-subject-choice-menu" hidden>
+            <div id="cards-subject-choice-tree"></div>
+          </div>
+        </div>
+
         <label class="field">
           <span>Question</span>
-          <textarea id="input-question" rows="3" required placeholder="Ex. Capitale de l'Islande ?"></textarea>
+          <div class="rich-editor" id="input-question" contenteditable="true" data-placeholder="Ex. Capitale de l'Islande ?" role="textbox" aria-multiline="true"></div>
         </label>
         <label class="field">
           <span>Réponse</span>
-          <textarea id="input-answer" rows="6" required placeholder="Ex. Reykjavik"></textarea>
+          <div class="rich-editor" id="input-answer" contenteditable="true" data-placeholder="Ex. Reykjavik" role="textbox" aria-multiline="true"></div>
         </label>
         <div class="form-actions">
           <button type="submit" class="btn btn--primary" id="submit-btn">Ajouter à la pile</button>
           <button type="button" class="btn btn--ghost" id="cancel-edit" hidden>Annuler</button>
+          <button type="button" class="btn algo-review-old-btn" id="delete-editing-card" hidden>Supprimer cette fiche</button>
         </div>
       </form>
+    </section>
 
-      <div class="list-header">
-        <h2 class="section-title">Fiches de cette matière (<span id="total-count">0</span>)</h2>
-        <div class="io-buttons">
-          <button class="btn btn--small" id="export-btn" type="button">Exporter</button>
-          <label class="btn btn--small btn--file">
-            Importer
-            <input type="file" id="import-input" accept="application/json" hidden />
-          </label>
+    <section id="view-cards" class="view" aria-labelledby="tab-cards">
+      <h2 class="section-title cards-list-big-title">Liste des fiches</h2>
+
+      <div class="cards-scope-row">
+        <label class="import-target-label" for="cards-scope-select-btn">Afficher / chercher dans :</label>
+        <button type="button" class="subject-select-btn subject-select-btn--prominent" id="cards-scope-select-btn" aria-label="Choisir le périmètre d'affichage et de recherche"></button>
+        <p class="cards-scope-summary" id="cards-scope-summary" hidden></p>
+
+        <div class="subject-choice-menu" id="cards-scope-choice-menu" hidden>
+          <button type="button" class="subject-choice-item" id="cards-scope-choice-all">Toutes les boîtes</button>
+          <button type="button" class="subject-choice-item" id="cards-scope-choice-selection">Sélection de boîtes et dossiers</button>
+          <button type="button" class="subject-choice-item subject-choice-item--cancel" id="cards-scope-choice-cancel">Annuler</button>
         </div>
       </div>
-      <div class="import-target-row">
-        <label class="import-target-label" for="import-target-select">Importer dans :</label>
-        <select class="import-target-select" id="import-target-select" aria-label="Matière cible pour l'import"></select>
-      </div>
-      <p class="import-note">Un import ajoute toujours de nouvelles fiches — il ne modifie ni ne supprime jamais celles déjà présentes.</p>
 
+      <div class="multi-subject-picker" id="cards-multi-picker" hidden>
+        <p class="field-hint settings-block-hint">Coche des boîtes et/ou dossiers — les résultats se mettent à jour tout de suite :</p>
+        <div class="multi-subject-picker-list" id="cards-multi-picker-list"></div>
+        <div class="multi-subject-picker-actions">
+          <button type="button" class="btn btn--small" id="cards-multi-picker-done">Valider</button>
+        </div>
+      </div>
+
+      <label class="field cards-search-field">
+        <span>Rechercher</span>
+        <input type="search" id="cards-search-input" placeholder="Mot-clé dans la question ou la réponse…" />
+      </label>
+
+      <div class="card-list-header">
+        <h2 class="section-title card-list-title">Fiches (<span id="total-count">0</span>)</h2>
+        <button type="button" class="construction-filter-btn" id="construction-filter-btn" title="N'afficher que les fiches « chantier »">
+          <span id="construction-filter-icon">🚧</span>
+          <span class="construction-filter-badge" id="construction-filter-badge" hidden>0</span>
+        </button>
+      </div>
       <ul class="card-list" id="card-list"></ul>
     </section>
 
     <!-- VUE STATS -->
     <section id="view-stats" class="view" aria-labelledby="tab-stats">
-      <h2 class="section-title">Où en es-tu</h2>
-
-      <div class="stats-controls">
-        <select class="stats-select" id="stats-subject-select" aria-label="Matière pour les statistiques"></select>
-        <select class="stats-select" id="stats-range-select" aria-label="Période affichée">
-          <option value="15">15 jours</option>
-          <option value="30">1 mois</option>
-          <option value="90">3 mois</option>
-          <option value="182">6 mois</option>
-          <option value="365">1 an</option>
-        </select>
-      </div>
-
+      <!-- 6a : toujours toutes boîtes confondues, en tout premier. -->
       <div class="stat-grid">
         <div class="stat-box">
           <span class="stat-number" id="stat-total">0</span>
@@ -274,45 +434,158 @@
         </div>
         <div class="stat-box">
           <span class="stat-number" id="stat-reviewed-today">0</span>
-          <span class="stat-label">revues aujourd'hui</span>
+          <span class="stat-label">fiches revues aujourd'hui</span>
         </div>
       </div>
 
-      <h3 class="chart-title">Fiches à revoir par jour</h3>
+      <!-- 6b : paragraphe retiré, texte simplifié directement dans la ligne. -->
+      <div id="streak-summary" class="streak-summary"></div>
+      <div id="streak-chart-wrap" class="streak-chart-wrap"></div>
+
+      <!-- 6c : les deux réglages ci-dessous (boîte/dossier + échelle)
+           s'appliquent à TOUT ce qui suit, collés en haut au défilement. -->
+      <div class="stats-controls stats-controls--sticky">
+        <button type="button" class="subject-select-btn" id="stats-subject-select-btn" aria-label="Choisir les boîtes pour les statistiques"></button>
+        <div class="stats-controls--sticky-row2">
+          <button type="button" class="subject-select-btn" id="stats-scale-select-btn" aria-label="Choisir l'échelle des statistiques"></button>
+        </div>
+
+        <div class="subject-choice-menu" id="stats-scope-choice-menu" hidden>
+          <button type="button" class="subject-choice-item" id="stats-scope-choice-all">Toutes les boîtes</button>
+          <button type="button" class="subject-choice-item" id="stats-scope-choice-selection">Sélection de boîtes et dossiers</button>
+          <button type="button" class="subject-choice-item subject-choice-item--cancel" id="stats-scope-choice-cancel">Annuler</button>
+        </div>
+
+        <div class="subject-choice-menu" id="stats-scale-choice-menu" hidden>
+          <button type="button" class="subject-choice-item" data-scale="byday">Par jour</button>
+          <button type="button" class="subject-choice-item" data-scale="byweek">Par semaine</button>
+          <button type="button" class="subject-choice-item" data-scale="bymonth">Par mois</button>
+          <button type="button" class="subject-choice-item subject-choice-item--cancel" id="stats-scale-choice-cancel">Annuler</button>
+        </div>
+      </div>
+
+      <div class="multi-subject-picker" id="stats-multi-picker" hidden>
+        <p class="field-hint settings-block-hint">Choisis les boîtes et/ou dossiers à combiner :</p>
+        <div class="multi-subject-picker-list" id="stats-multi-picker-list"></div>
+        <div class="multi-subject-picker-actions">
+          <button type="button" class="btn btn--small" id="stats-multi-picker-confirm">Valider</button>
+          <button type="button" class="btn btn--ghost btn--small" id="stats-multi-picker-cancel">Annuler</button>
+        </div>
+      </div>
+
+      <!-- 6d -->
+      <h3 class="chart-title">Fiches à revoir / révisées par jour</h3>
+      <p class="field-hint settings-block-hint">
+        À gauche d'Aujourd'hui : le nombre de fiches révisées. À droite
+        d'Aujourd'hui : le nombre de fiches à revoir.
+      </p>
       <div class="chart-wrap" id="chart-wrap">
         <div class="chart" id="due-chart"></div>
       </div>
       <p class="chart-empty" id="chart-empty" hidden>Rien à revoir sur cette période.</p>
+
+      <!-- Trait fin (item 4) : sépare la fin d'un graphique du TITRE du
+           suivant, pour qu'on associe bien ce titre à ce qui vient après
+           lui plutôt qu'à ce qui précède. -->
+      <hr class="stats-chart-divider" />
+
+      <!-- 6e -->
+      <h3 class="chart-title">Fiches créées</h3>
+      <div id="created-chart-wrap"></div>
+
+      <hr class="stats-chart-divider" />
+
+      <!-- 6f -->
+      <h3 class="chart-title">Notes données (Encore / Difficile / Bien / Facile)</h3>
+      <div id="ratings-chart-wrap"></div>
+
+      <hr class="stats-chart-divider" />
+
+      <!-- 6g -->
+      <h3 class="chart-title">Évolution des notes dans le temps</h3>
+      <p class="field-hint settings-block-hint">
+        Répartition en pourcentage des 4 notes, tranche par tranche.
+      </p>
+      <div id="ratings-history-chart-wrap"></div>
     </section>
 
-    <!-- VUE TAMAGOTCHI -->
-    <section id="view-tamagotchi" class="view" aria-labelledby="tab-tamagotchi">
-      <div class="tama-gifts-tray" id="tama-gifts-tray" hidden></div>
+    <!-- VUE CALENDRIER (item 9, revue item 2) -->
+    <section id="view-calendar" class="view" aria-labelledby="tab-calendar">
+      <h2 class="section-title">Calendrier</h2>
+      <p class="field-hint settings-block-hint">Note ici tes échéances (contrôle, interrogation, partiels, bac...) liées à une boîte ou un dossier. De quoi, plus tard, générer automatiquement un programme de révision.</p>
 
-      <div class="tama-pets-list" id="tama-pets-list"></div>
-      <p class="field-hint tama-empty-hint" id="tama-empty-hint" hidden>
-        Le foyer est vide pour l'instant — ouvre un cadeau depuis
-        l'histogramme de la page Réviser pour faire arriver un premier œuf.
-      </p>
+      <button type="button" class="btn btn--primary" id="calendar-add-event-btn" style="margin-bottom:14px;">+ Ajouter un événement</button>
 
-      <div class="tama-pen-color-picker" id="tama-pen-color-picker">
-        <span class="tama-pen-color-label">Couleur du pré</span>
-        <div class="tama-pen-color-swatches" id="tama-pen-color-swatches"></div>
+      <!-- Panneau d'ajout/modification (item 2) : caché tant qu'on n'a pas
+           cliqué sur le bouton ci-dessus. -->
+      <form class="card-form" id="calendar-event-form" hidden>
+        <h3 class="settings-block-title" id="calendar-event-form-title">Ajouter un événement</h3>
+        <label class="field">
+          <span>Titre</span>
+          <input type="text" id="calendar-event-title" placeholder="Ex. Contrôle de chimie" required />
+        </label>
+        <label class="field">
+          <span>Date</span>
+          <div class="calendar-date-field">
+            <button type="button" class="calendar-date-btn" id="calendar-event-date-btn" tabindex="-1">
+              <svg class="icon-inline-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span id="calendar-event-date-label">Choisir une date</span>
+            </button>
+            <!-- Item 3 : bug corrigé — l'ancien input caché (1px,
+                 pointer-events désactivés) empêchait showPicker() de
+                 fonctionner sur certains navigateurs. Il est maintenant
+                 posé EN TRANSPARENCE PAR-DESSUS le bouton, sur toute sa
+                 surface : le clic va donc directement au vrai input natif,
+                 qui ouvre son sélecteur de date lui-même, de façon fiable
+                 partout. -->
+            <input type="date" id="calendar-event-date" required class="calendar-date-native-input" />
+          </div>
+        </label>
+        <button type="button" class="subject-select-btn" id="calendar-event-subject-btn" aria-label="Choisir la boîte ou le dossier lié">Aucune boîte/dossier liés</button>
+
+        <!-- Item 2 : panneau plein écran, comme les autres sélecteurs de
+             boîtes de l'appli (bug corrigé : celui-ci s'ouvrait hors
+             écran, en petit menu déroulant). -->
+        <div class="multi-subject-picker" id="calendar-event-subject-picker" hidden>
+          <p class="field-hint settings-block-hint">Choisis la boîte ou le dossier lié :</p>
+          <div class="multi-subject-picker-list" id="calendar-event-subject-tree"></div>
+          <div class="multi-subject-picker-actions">
+            <button type="button" class="btn btn--small" id="calendar-event-subject-none">Aucun lien</button>
+            <button type="button" class="btn btn--ghost btn--small" id="calendar-event-subject-done">Fermer</button>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:8px; margin-top:12px;">
+          <button type="submit" class="btn btn--primary" id="calendar-event-submit">Ajouter à mon calendrier</button>
+          <button type="button" class="btn btn--ghost" id="calendar-event-cancel">Annuler</button>
+        </div>
+      </form>
+
+      <!-- Item 3 : bascule d'affichage — liste / calendrier (mois en
+           défilement infini). Le format "année" a été retiré. -->
+      <div class="calendar-view-toggle">
+        <button type="button" class="calendar-view-toggle-btn is-active" data-calview="list">Liste</button>
+        <button type="button" class="calendar-view-toggle-btn" data-calview="months">Calendrier</button>
       </div>
 
-      <p class="field-hint tama-hint">
-        Chaque compagnon n'a qu'une seule jauge de vie, qui baisse tout
-        seule avec le temps : l'anneau autour de lui va du rouge (basse) au
-        vert (pleine), et il grossit avec elle. À zéro, il redescend d'un
-        stade (œuf → œuf au plat). Au maximum, il grandit encore, jusqu'à
-        devenir un bel animal, dont le nom et l'âge sont alors révélés. Les
-        cadeaux de l'histogramme de la page Réviser atterrissent ici, à
-        ouvrir toi-même.
-      </p>
+      <div class="card-form" id="calendar-list-view">
+        <h3 class="settings-block-title">Événements à venir</h3>
+        <ul class="card-list" id="calendar-event-list"></ul>
+        <p class="chart-empty" id="calendar-event-empty" hidden>Aucun événement pour l'instant.</p>
+      </div>
 
-      <div class="tama-memorial" id="tama-memorial" hidden>
-        <h3 class="settings-block-title">Ils nous ont quittés</h3>
-        <div class="tama-memorial-list" id="tama-memorial-list"></div>
+      <div class="card-form" id="calendar-months-view" hidden>
+        <div id="calendar-months-grid" class="calendar-months-stack"></div>
+        <p class="field-hint settings-block-hint" id="calendar-months-loading" style="text-align:center;">Fais défiler pour voir la suite…</p>
+      </div>
+
+      <!-- Popup listant les événements d'un jour cliqué. -->
+      <div class="multi-subject-picker" id="calendar-day-popup" hidden>
+        <p class="field-hint settings-block-hint" id="calendar-day-popup-title"></p>
+        <ul class="card-list" id="calendar-day-popup-list"></ul>
+        <div class="multi-subject-picker-actions">
+          <button type="button" class="btn btn--ghost btn--small" id="calendar-day-popup-close">Fermer</button>
+        </div>
       </div>
     </section>
 
@@ -394,11 +667,27 @@
       <h2 class="section-title">Réglages</h2>
 
       <div class="card-form">
+        <h3 class="settings-block-title">Page Réviser</h3>
+        <label class="field">
+          <span>Taille de la police des fiches (px)</span>
+          <input type="number" id="setting-card-font-size" min="10" max="40" />
+        </label>
+      </div>
+
+      <div class="card-form">
+        <h3 class="settings-block-title">Boutons d'évaluation</h3>
+        <label class="settings-toggle-row">
+          <input type="checkbox" id="setting-show-rating-days" />
+          <span>Afficher le nombre de jours à côté de chaque bouton</span>
+        </label>
+      </div>
+
+      <div class="card-form">
         <h3 class="settings-block-title">Mode bonus — recul des fiches (en jours)</h3>
         <p class="field-hint settings-block-hint">
           Une fois les fiches du jour terminées, tu peux continuer en révision
           libre. Chaque réponse recule alors la fiche du nombre de jours
-          choisi ci-dessous, sans passer par l'algorithme SM-2.
+          choisi ci-dessous, sans passer par l'algorithme des modes d'apprentissage.
         </p>
         <div class="settings-bonus-row">
           <label class="field settings-bonus-field">
@@ -444,96 +733,334 @@
         </label>
       </div>
 
+      <!-- Repoussée en bas de page (item 4) : moins consultée que le reste
+           des réglages, et son bug d'affichage (étiquette invisible) est
+           corrigé ci-dessous. -->
       <div class="card-form">
-        <h3 class="settings-block-title">Cadeaux du Tamagotchi 🎁</h3>
+        <h3 class="settings-block-title">Exporter des fiches</h3>
+        <p class="field-hint settings-block-hint">Choisis la boîte à exporter :</p>
+        <select class="import-target-select" id="export-subject-select" aria-label="Boîte à exporter"></select>
+        <button class="btn btn--small" id="export-btn" type="button">Exporter (<span id="settings-io-count">0</span> fiche(s))</button>
+      </div>
+
+      <div class="card-form">
+        <h3 class="settings-block-title">Importer des fiches</h3>
+        <label class="btn btn--small btn--file">
+          Choisir un fichier…
+          <input type="file" id="import-input" accept="application/json" hidden />
+        </label>
+        <div class="import-target-row">
+          <label class="import-target-label" for="import-target-select">Importer dans :</label>
+          <select class="import-target-select" id="import-target-select" aria-label="Boîte cible pour l'import"></select>
+        </div>
+        <p class="import-note">Un import ajoute toujours de nouvelles fiches — il ne modifie ni ne supprime jamais celles déjà présentes.</p>
+      </div>
+    
+      <!-- Contenu déplacé depuis l'ancienne page "Modes d'apprentissage" (item 8). -->
+      <div class="card-form">
+        <h3 class="settings-block-title">Modes d'apprentissage</h3>
+      <h2 class="view-title">Paramétrage des modes d'apprentissage</h2>
+      <p class="field-hint settings-block-hint">
+        Un mode d'apprentissage définit à quelle vitesse l'intervalle entre
+        deux révisions d'une fiche augmente selon ta réponse (Encore,
+        Difficile, Bien, Facile). Chaque boîte (ou dossier entier de
+        boîtes) se voit affecter un mode depuis la page Gérer. Modifier un
+        mode ici change donc le rythme de révision de TOUTES les boîtes
+        qui l'utilisent actuellement.
+      </p>
+
+      <div class="algo-mode-slider-wrap">
+        <input type="range" id="algo-mode-slider" min="0" max="3" step="1" value="1" class="algo-mode-slider" />
+        <div class="algo-mode-ticks" id="algo-mode-ticks">
+          <span data-idx="0">Cool</span>
+          <span data-idx="1">Normal</span>
+          <span data-idx="2">Renforcé</span>
+          <span data-idx="3">Personnalisé</span>
+        </div>
+      </div>
+
+      <div id="algo-custom-picker" class="algo-custom-picker" hidden>
+        <div class="algo-custom-picker-list" id="algo-custom-picker-list"></div>
+        <div class="algo-custom-picker-actions">
+          <button type="button" class="btn btn--small" id="algo-custom-new-btn">+ Nouveau mode</button>
+          <button type="button" class="btn btn--ghost btn--small" id="algo-custom-rename-btn">Renommer</button>
+          <button type="button" class="btn btn--ghost btn--small" id="algo-custom-delete-btn">Supprimer</button>
+        </div>
+      </div>
+
+      <h3 class="settings-block-title settings-block-title--on-dark">Courbes du rythme d'apprentissage</h3>
+      <p class="field-hint settings-block-hint">
+        Le graphique ci-dessous montre l'évolution du délai d'interrogation
+        d'une fiche dans l'hypothèse où on la note toujours de la même
+        manière (Encore, Difficile, Bien ou Facile) :
+      </p>
+      <div id="algo-chart-wrap"></div>
+
+      <button type="button" class="btn algo-advanced-toggle" id="algo-advanced-toggle">
+        Paramétrages avancés ▾
+      </button>
+
+      <div id="algo-advanced-panel" hidden>
         <p class="field-hint settings-block-hint">
-          Chaque aliment donne toujours le même nombre de points de vie (pour
-          qu'on puisse voir d'un coup d'œil si un aliment est nourrissant).
-          Un cadeau de nourriture dépose en revanche une quantité aléatoire
-          d'aliments dans le pré, entre ces deux bornes.
+          Au début, l'échéance d'une fiche est de 1 jour. À chaque réponse, la
+          nouvelle échéance est multipliée par le coefficient réglé ci-dessous :
         </p>
-        <label class="field settings-bonus-field">
-          <span>Valeur nutritive d'un aliment (points de vie)</span>
-          <input type="number" id="setting-tama-food-value" min="1" max="200" step="1" inputmode="numeric" />
+        <div class="algo-slider-field algo-slider-field--again">
+          <div class="algo-slider-field-head">
+            <span class="algo-slider-field-label">Encore</span>
+            <span class="algo-slider-field-value" id="algo-ka-value">× 1</span>
+          </div>
+          <input type="range" id="algo-ka" min="0" max="11" step="1" />
+        </div>
+        <div class="algo-slider-field algo-slider-field--hard">
+          <div class="algo-slider-field-head">
+            <span class="algo-slider-field-label">Difficile</span>
+            <span class="algo-slider-field-value" id="algo-kh-value">× 1</span>
+          </div>
+          <input type="range" id="algo-kh" min="0" max="11" step="1" />
+        </div>
+        <div class="algo-slider-field algo-slider-field--good">
+          <div class="algo-slider-field-head">
+            <span class="algo-slider-field-label">Bien</span>
+            <span class="algo-slider-field-value" id="algo-kg-value">× 1</span>
+          </div>
+          <input type="range" id="algo-kg" min="0" max="11" step="1" />
+        </div>
+        <div class="algo-slider-field algo-slider-field--easy">
+          <div class="algo-slider-field-head">
+            <span class="algo-slider-field-label">Facile</span>
+            <span class="algo-slider-field-value" id="algo-ke-value">× 1</span>
+          </div>
+          <input type="range" id="algo-ke" min="0" max="11" step="1" />
+        </div>
+
+        <p class="field-hint settings-block-hint">
+          L'échéance est plafonnée par la valeur en jours réglée ci-dessous :
+        </p>
+        <div class="algo-slider-field algo-slider-field--again">
+          <div class="algo-slider-field-head">
+            <span class="algo-slider-field-label">Encore</span>
+            <span class="algo-slider-field-value" id="algo-ma-value">&lt; 1 j</span>
+          </div>
+          <input type="range" id="algo-ma" min="0" max="11" step="1" />
+        </div>
+        <div class="algo-slider-field algo-slider-field--hard">
+          <div class="algo-slider-field-head">
+            <span class="algo-slider-field-label">Difficile</span>
+            <span class="algo-slider-field-value" id="algo-mh-value">&lt; 1 j</span>
+          </div>
+          <input type="range" id="algo-mh" min="0" max="11" step="1" />
+        </div>
+        <div class="algo-slider-field algo-slider-field--good">
+          <div class="algo-slider-field-head">
+            <span class="algo-slider-field-label">Bien</span>
+            <span class="algo-slider-field-value" id="algo-mg-value">&lt; 1 j</span>
+          </div>
+          <input type="range" id="algo-mg" min="0" max="11" step="1" />
+        </div>
+        <div class="algo-slider-field algo-slider-field--easy">
+          <div class="algo-slider-field-head">
+            <span class="algo-slider-field-label">Facile</span>
+            <span class="algo-slider-field-value" id="algo-me-value">&lt; 1 j</span>
+          </div>
+          <input type="range" id="algo-me" min="0" max="11" step="1" />
+        </div>
+
+        <button type="button" class="btn algo-reset-btn-visible" id="algo-reset-btn">
+          Revenir aux réglages d'origine
+        </button>
+      </div>
+    </div>
+</section>
+
+    <!-- VUE DÉVELOPPEUR (item 19) — réglages internes, cachés dans une
+         future version "utilisateur" de l'appli. -->
+    <section id="view-dev" class="view" aria-labelledby="tab-dev">
+      <h2 class="section-title">🧑‍💻 Développeur</h2>
+
+      <!-- 2a -->
+      <div class="card-form">
+        <h3 class="settings-block-title">Boutons d'évaluation</h3>
+        <div id="dev-rating-icons-list" class="dev-nav-icons-list"></div>
+      </div>
+
+      <!-- 2c (2b : bloc "Menu principal" obsolète retiré) -->
+      <div class="card-form">
+        <h3 class="settings-block-title">Icônes de la page d'accueil</h3>
+        <div id="dev-nav-icons-list" class="dev-nav-icons-list"></div>
+      </div>
+
+      <!-- 2d -->
+      <div class="card-form">
+        <h3 class="settings-block-title">Icônes de la fiche</h3>
+        <div id="dev-icon-bank-list" class="dev-nav-icons-list"></div>
+      </div>
+
+      <!-- Item 3 : icônes de la page Organisation. -->
+      <div class="card-form">
+        <h3 class="settings-block-title">Icônes de la page Organisation</h3>
+        <div id="dev-org-icon-bank-list" class="dev-nav-icons-list"></div>
+      </div>
+
+      <!-- 2e -->
+      <div class="card-form">
+        <h3 class="settings-block-title">Couleurs des notes</h3>
+        <div class="dev-color-list" id="dev-rating-colors-list"></div>
+        <!-- Item 4 : fond partagé des 4 boutons, séparé de la couleur de
+             chaque note (qui teinte désormais l'icône). -->
+        <div class="dev-color-row dev-color-row--daynight" style="margin-top:12px;">
+          <span>Fond des boutons (les 4)</span>
+          <span class="dev-color-daynight-pair">
+            <input type="text" class="dev-color-value" id="dev-color-rating-btn-bg" title="Mode jour" />
+            <input type="text" class="dev-color-value" id="dev-color-rating-btn-bg-night" title="Mode nuit" />
+          </span>
+        </div>
+        <button type="button" class="btn btn--ghost" id="dev-rating-colors-reset">Revenir aux couleurs d'origine</button>
+      </div>
+
+      <!-- 2f -->
+      <div class="card-form">
+        <h3 class="settings-block-title">Couleurs des modes d'apprentissage</h3>
+        <div class="dev-color-list" id="dev-mode-colors-list"></div>
+        <button type="button" class="btn btn--ghost" id="dev-mode-colors-reset">Revenir aux couleurs d'origine</button>
+      </div>
+
+      <!-- 2g : bloc "Couleurs des modes personnalisés" retiré (déjà réglable
+           directement dans la page Modes d'apprentissage). -->
+
+      <!-- 2h -->
+      <div class="card-form">
+        <h3 class="settings-block-title">Couleurs des fonds</h3>
+        <div class="dev-color-list" id="dev-bg-colors-list"></div>
+        <button type="button" class="btn btn--ghost" id="dev-bg-colors-reset">Revenir aux couleurs d'origine</button>
+      </div>
+
+      <!-- 2i -->
+      <div class="card-form">
+        <h3 class="settings-block-title">Couleurs des textes</h3>
+        <div class="dev-color-list" id="dev-text-colors-set-list"></div>
+        <button type="button" class="btn btn--ghost" id="dev-text-colors-set-reset">Revenir aux couleurs d'origine</button>
+      </div>
+
+      <!-- Item 5 : ombrage réglable élément par élément. -->
+      <div class="card-form">
+        <h3 class="settings-block-title">Effets d'ombrage</h3>
+        <div id="dev-shadows-list" class="dev-shadows-list"></div>
+      </div>
+
+      <!-- Item 3 : disposition (position + diamètre) des cercles de
+           l'accueil. -->
+      <div class="card-form">
+        <h3 class="settings-block-title">Disposition de la page d'accueil</h3>
+        <p class="field-hint settings-block-hint">Position X/Y (centre du cercle, en % de la largeur/hauteur de l'écran — s'adapte à chaque appareil) et diamètre en pixels.</p>
+        <div id="dev-home-layout-list" class="dev-home-layout-list"></div>
+        <button type="button" class="btn btn--ghost" id="dev-home-layout-reset">Revenir à la disposition d'origine</button>
+      </div>
+
+      <!-- Items 1/2 : position/taille du logo. -->
+      <div class="card-form">
+        <h3 class="settings-block-title">Logo (page d'accueil)</h3>
+        <div id="dev-home-logo-list"></div>
+      </div>
+
+      <!-- Item 1b/1c : disposition de la page Réviser. -->
+      <div class="card-form">
+        <h3 class="settings-block-title">Disposition de la page Réviser</h3>
+        <div class="dev-color-list" id="dev-review-layout-list"></div>
+        <button type="button" class="btn btn--ghost" id="dev-review-layout-reset">Revenir à la disposition d'origine</button>
+      </div>
+
+      <!-- Item 1a/2 : score d'apprentissage des fiches, boîtes et
+           dossiers. -->
+      <div class="card-form">
+        <h3 class="settings-block-title">Score des fiches</h3>
+        <p class="field-hint settings-block-hint">S = ((D-1)^P)/((D-1)^P+B), D = délai avant la prochaine interrogation (jours).</p>
+        <div class="algo-grid algo-grid--4">
+          <label class="field settings-bonus-field">
+            <span>P</span>
+            <input type="number" step="0.1" id="dev-score-p" />
+          </label>
+          <label class="field settings-bonus-field">
+            <span>B</span>
+            <input type="number" step="0.1" id="dev-score-b" />
+          </label>
+        </div>
+        <p class="field-hint settings-block-hint" style="margin-top:12px;">Seuils de la jauge (% de score) :</p>
+        <div class="algo-grid algo-grid--4">
+          <label class="field settings-bonus-field">
+            <span>V1 (Débutant → Fragile)</span>
+            <input type="number" id="dev-score-v1" />
+          </label>
+          <label class="field settings-bonus-field">
+            <span>V2 (Fragile → En bonne voie)</span>
+            <input type="number" id="dev-score-v2" />
+          </label>
+          <label class="field settings-bonus-field">
+            <span>V3 (En bonne voie → Bien)</span>
+            <input type="number" id="dev-score-v3" />
+          </label>
+          <label class="field settings-bonus-field">
+            <span>V4 (Bien → Maîtrisé)</span>
+            <input type="number" id="dev-score-v4" />
+          </label>
+          <label class="field settings-bonus-field">
+            <span>V5 (Maîtrisé → Acquis)</span>
+            <input type="number" id="dev-score-v5" />
+          </label>
+        </div>
+        <label class="field settings-bonus-field" style="margin-top:12px;">
+          <span>Taille de police "Objectif : X" (page Programme de révision)</span>
+          <input type="number" id="dev-score-program-target-font-size" />
         </label>
-        <label class="field settings-bonus-field">
-          <span>Quantité minimum par cadeau</span>
-          <input type="number" id="setting-tama-gift-qty-min" min="1" max="20" step="1" inputmode="numeric" />
+        <p class="field-hint settings-block-hint" style="margin-top:12px;">Couleurs des zones :</p>
+        <div class="dev-color-list" id="dev-gauge-colors-list"></div>
+        <label class="settings-toggle-row" style="margin-top:12px;">
+          <input type="checkbox" id="dev-score-hide-info" />
+          <span>Masquer le délai/score sous les boutons d'évaluation (Réviser)</span>
         </label>
-        <label class="field settings-bonus-field">
-          <span>Quantité maximum par cadeau</span>
-          <input type="number" id="setting-tama-gift-qty-max" min="1" max="20" step="1" inputmode="numeric" />
+        <label class="settings-toggle-row">
+          <input type="checkbox" id="dev-score-hide-subject" />
+          <span>Masquer le score de la boîte sur Réviser</span>
         </label>
+        <button type="button" class="btn btn--ghost" id="dev-score-reset">Revenir aux réglages d'origine</button>
+      </div>
+
+      <!-- 2j : bloc "Palette de couleurs de texte" retiré (la barre d'outils
+           de mise en forme des fiches qui l'utilisait a été retirée). -->
+
+      <!-- 2k -->
+      <div class="card-form">
+        <h3 class="settings-block-title">Paramètres usine des modes d'apprentissage</h3>
+        <p class="field-hint settings-block-hint">
+          Valeurs vers lesquelles "Revenir aux réglages d'origine" ramène
+          chaque mode fixe (Cool / Normal / Renforcé), et valeurs de départ
+          d'une toute nouvelle installation.
+        </p>
+        <div id="dev-factory-defaults"></div>
       </div>
     </section>
 
-    <!-- VUE MODE D'APPRENTISSAGE (par matière, ouverte depuis la page Gérer) -->
-    <section id="view-subject-algo" class="view">
-      <button class="btn btn--ghost btn--small" id="algo-back-btn" type="button">← Retour à Gérer</button>
-      <h2 class="view-title" id="algo-subject-title">Mode d'apprentissage</h2>
-      <p class="field-hint settings-block-hint">
-        Ces réglages ne s'appliquent qu'à cette matière. Au début, l'échéance
-        d'une fiche est de 1 jour. À chaque réponse, la nouvelle échéance est
-        le minimum entre le maximum réglé pour ce bouton et l'échéance
-        actuelle multipliée par son coefficient.
-      </p>
+    <!-- VUE MODES D'APPRENTISSAGE (globale — item 2) -->
+    
 
-      <div class="algo-mode-label" id="algo-mode-label">Mode actuel : —</div>
+    <!-- VUE AFFECTATION D'UN MODE (par boîte ou par dossier, depuis Gérer) -->
+    <section id="view-mode-assign" class="view">
+      <button class="btn btn--ghost btn--small" id="assign-back-btn" type="button">← Retour à Gérer</button>
+      <h2 class="view-title" id="assign-target-title">Affecter un mode</h2>
 
-      <div class="algo-preset-row">
-        <button class="btn btn--small" id="algo-preset-cool" type="button">Apprentissage cool</button>
-        <button class="btn btn--small" id="algo-preset-normal" type="button">Apprentissage normal</button>
-        <button class="btn btn--small" id="algo-preset-renforce" type="button">Apprentissage renforcé</button>
-      </div>
+      <div class="algo-custom-picker-list" id="assign-mode-list"></div>
 
-      <h3 class="settings-block-title">Coefficients multiplicateurs (× 0,1, de 1 à 10)</h3>
-      <div class="algo-grid">
-        <label class="field settings-bonus-field">
-          <span>Encore (Ka)</span>
-          <input type="number" id="algo-ka" min="1" max="10" step="0.1" inputmode="decimal" />
-        </label>
-        <label class="field settings-bonus-field">
-          <span>Difficile (Kh)</span>
-          <input type="number" id="algo-kh" min="1" max="10" step="0.1" inputmode="decimal" />
-        </label>
-        <label class="field settings-bonus-field">
-          <span>Bien (Kg)</span>
-          <input type="number" id="algo-kg" min="1" max="10" step="0.1" inputmode="decimal" />
-        </label>
-        <label class="field settings-bonus-field">
-          <span>Facile (Ke)</span>
-          <input type="number" id="algo-ke" min="1" max="10" step="0.1" inputmode="decimal" />
-        </label>
-      </div>
+      <h3 class="settings-block-title settings-block-title--on-dark">Échéances successives (aperçu)</h3>
+      <div id="assign-chart-wrap"></div>
 
-      <h3 class="settings-block-title">Maximums en jours (par unité, de 1 à 365)</h3>
-      <div class="algo-grid">
-        <label class="field settings-bonus-field">
-          <span>Encore (Ma)</span>
-          <input type="number" id="algo-ma" min="1" max="365" step="1" inputmode="numeric" />
-        </label>
-        <label class="field settings-bonus-field">
-          <span>Difficile (Mh)</span>
-          <input type="number" id="algo-mh" min="1" max="365" step="1" inputmode="numeric" />
-        </label>
-        <label class="field settings-bonus-field">
-          <span>Bien (Mg)</span>
-          <input type="number" id="algo-mg" min="1" max="365" step="1" inputmode="numeric" />
-        </label>
-        <label class="field settings-bonus-field">
-          <span>Facile (Me)</span>
-          <input type="number" id="algo-me" min="1" max="365" step="1" inputmode="numeric" />
-        </label>
-      </div>
-
-      <div class="card-form">
+      <div class="card-form algo-review-old-block" id="assign-review-old-block">
         <h3 class="settings-block-title">Revoir les vieilles fiches</h3>
         <p class="field-hint settings-block-hint">
           Ramène l'échéance (et la date de prochaine interrogation) à 10
-          jours pour toutes les fiches de cette matière dont la prochaine
+          jours pour toutes les fiches de cette boîte dont la prochaine
           interrogation est prévue dans plus de 10 jours.
         </p>
-        <button type="button" class="btn btn--ghost" id="algo-review-old-btn">
+        <button type="button" class="btn algo-review-old-btn" id="algo-review-old-btn">
           Revoir les vieilles fiches
         </button>
       </div>

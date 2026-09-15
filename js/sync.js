@@ -242,6 +242,209 @@ function subscribeRealtime(onRemoteChange) {
 }
 
 /* ---------------------------------------------------------
+   Matières et dossiers (item 1/8) : jusqu'ici jamais vraiment synchronisés
+   (seul le NOM de la matière était recopié sur chaque fiche) — un dossier
+   créé sur un appareil n'apparaissait donc jamais sur les autres, et le
+   classement en dossier / le mode d'apprentissage d'une matière ne
+   voyageaient pas non plus. Même schéma que les fiches : upsert avec file
+   d'attente si hors-ligne, suppression douce ("deleted": true) plutôt
+   qu'un vrai DELETE pour que les autres appareils sachent qu'une matière
+   ou un dossier a disparu au lieu de le voir réapparaître au prochain pull.
+--------------------------------------------------------- */
+function subjectToRow(subject, syncCode) {
+  return {
+    id: subject.id,
+    sync_code: syncCode,
+    name: subject.name,
+    folder_id: subject.folderId || null,
+    mode_id: subject.modeId || "normal",
+    created_at: subject.createdAt,
+    updated_at: subject.updatedAt || subject.createdAt,
+    deleted: Boolean(subject.deleted),
+  };
+}
+function rowToSubject(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    folderId: row.folder_id || null,
+    modeId: row.mode_id || "normal",
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    deleted: Boolean(row.deleted),
+  };
+}
+
+function folderToRow(folder, syncCode) {
+  return {
+    id: folder.id,
+    sync_code: syncCode,
+    name: folder.name,
+    parent_id: folder.parentId || null,
+    created_at: folder.createdAt,
+    updated_at: folder.updatedAt || folder.createdAt,
+    deleted: Boolean(folder.deleted),
+  };
+}
+function rowToFolder(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    parentId: row.parent_id || null,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    deleted: Boolean(row.deleted),
+  };
+}
+
+async function pullTable(tableName, rowMapper) {
+  const c = getClient();
+  const { code } = getConfig();
+  if (!c || !code) return [];
+  const all = [];
+  let from = 0;
+  while (true) {
+    const to = from + PULL_PAGE_SIZE - 1;
+    const { data, error } = await c.from(tableName).select("*").eq("sync_code", code).range(from, to);
+    if (error) {
+      console.warn(`Sync: échec du chargement distant (${tableName})`, error.message);
+      return all.map(rowMapper);
+    }
+    all.push(...data);
+    if (data.length < PULL_PAGE_SIZE) break;
+    from += PULL_PAGE_SIZE;
+  }
+  return all.map(rowMapper);
+}
+
+async function pullSubjects() {
+  return pullTable("subjects", rowToSubject);
+}
+async function pullFolders() {
+  return pullTable("folders", rowToFolder);
+}
+
+async function pushSubject(subject) {
+  const c = getClient();
+  const { code } = getConfig();
+  if (!c || !code) return false;
+  const { error } = await c.from("subjects").upsert(subjectToRow(subject, code));
+  if (error) {
+    console.warn("Sync: échec de l'envoi de la matière", error.message);
+    return false;
+  }
+  return true;
+}
+
+async function pushFolder(folder) {
+  const c = getClient();
+  const { code } = getConfig();
+  if (!c || !code) return false;
+  const { error } = await c.from("folders").upsert(folderToRow(folder, code));
+  if (error) {
+    console.warn("Sync: échec de l'envoi du dossier", error.message);
+    return false;
+  }
+  return true;
+}
+
+function subscribeSubjectsRealtime(onRemoteChange) {
+  const c = getClient();
+  const { code } = getConfig();
+  if (!c || !code) return () => {};
+  const channel = c
+    .channel(`subjects-${code}`)
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "subjects", filter: `sync_code=eq.${code}` },
+      (payload) => {
+        if (payload.new) onRemoteChange(rowToSubject(payload.new));
+      }
+    )
+    .subscribe();
+  return () => c.removeChannel(channel);
+}
+
+function subscribeFoldersRealtime(onRemoteChange) {
+  const c = getClient();
+  const { code } = getConfig();
+  if (!c || !code) return () => {};
+  const channel = c
+    .channel(`folders-${code}`)
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "folders", filter: `sync_code=eq.${code}` },
+      (payload) => {
+        if (payload.new) onRemoteChange(rowToFolder(payload.new));
+      }
+    )
+    .subscribe();
+  return () => c.removeChannel(channel);
+}
+
+/* ---------------------------------------------------------
+   Modes d'apprentissage (item 1, audit synchro) : jusqu'ici jamais
+   synchronisés du tout — seul le modeId de chaque matière l'était. Même
+   schéma que matières/dossiers : upsert, suppression douce, temps réel.
+--------------------------------------------------------- */
+function learningModeToRow(mode, syncCode) {
+  return {
+    id: mode.id,
+    sync_code: syncCode,
+    name: mode.name,
+    builtin: Boolean(mode.builtin),
+    ka: mode.Ka, kh: mode.Kh, kg: mode.Kg, ke: mode.Ke,
+    ma: mode.Ma, mh: mode.Mh, mg: mode.Mg, me: mode.Me,
+    updated_at: mode.updatedAt || new Date().toISOString(),
+    deleted: Boolean(mode.deleted),
+  };
+}
+function rowToLearningMode(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    builtin: Boolean(row.builtin),
+    Ka: row.ka, Kh: row.kh, Kg: row.kg, Ke: row.ke,
+    Ma: row.ma, Mh: row.mh, Mg: row.mg, Me: row.me,
+    updatedAt: row.updated_at,
+    deleted: Boolean(row.deleted),
+  };
+}
+
+async function pullLearningModes() {
+  return pullTable("learning_modes", rowToLearningMode);
+}
+
+async function pushLearningMode(mode) {
+  const c = getClient();
+  const { code } = getConfig();
+  if (!c || !code) return false;
+  const { error } = await c.from("learning_modes").upsert(learningModeToRow(mode, code));
+  if (error) {
+    console.warn("Sync: échec de l'envoi du mode d'apprentissage", error.message);
+    return false;
+  }
+  return true;
+}
+
+function subscribeLearningModesRealtime(onRemoteChange) {
+  const c = getClient();
+  const { code } = getConfig();
+  if (!c || !code) return () => {};
+  const channel = c
+    .channel(`learning-modes-${code}`)
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "learning_modes", filter: `sync_code=eq.${code}` },
+      (payload) => {
+        if (payload.new) onRemoteChange(rowToLearningMode(payload.new));
+      }
+    )
+    .subscribe();
+  return () => c.removeChannel(channel);
+}
+
+/* ---------------------------------------------------------
    État des récompenses (page "Récompenses") : une seule ligne JSON par
    code de synchro, séparée des fiches. Contrairement aux fiches, il n'y a
    rien à fusionner champ par champ ici : on prend l'union des clés
@@ -303,68 +506,60 @@ function subscribeRewardRealtime(onRemoteChange) {
 }
 
 /* ---------------------------------------------------------
-   État du Tamagotchi (page "Tamagotchi") : réutilise la même ligne/table
-   que l'ancien système de récompenses (`reward_state`, une ligne par code
-   de synchro), dans une nouvelle colonne `tamagotchi` séparée de l'ancienne
-   colonne `opened` — pas de migration destructrice nécessaire. Le blob
-   contient à la fois l'état du compagnon (`pet`) et ses cadeaux (`gifts`).
+   Réglages du mode développeur (item 1 — couleurs, icônes, palette de
+   texte...) : jamais synchronisés jusqu'ici, chacun restait propre à
+   l'appareil. Même principe qu'au-dessus (reward_state) : une seule ligne
+   JSON par code de synchro, avec un horodatage pour le dernier écrit
+   gagne en cas de fusion.
 --------------------------------------------------------- */
-async function pullTamaState() {
+async function pullDevSettings() {
   const c = getClient();
   const { code } = getConfig();
   if (!c || !code) return null;
 
   const { data, error } = await c
-    .from("reward_state")
-    .select("tamagotchi")
+    .from("dev_settings")
+    .select("payload, updated_at")
     .eq("sync_code", code)
     .maybeSingle();
 
   if (error) {
-    if (isMissingColumnError(error, "tamagotchi")) {
-      console.warn("Sync: colonne tamagotchi pas encore reconnue côté Supabase (exécute la migration SQL)");
-    } else {
-      console.warn("Sync: échec du chargement du compagnon distant", error.message);
-    }
+    console.warn("Sync: échec du chargement des réglages développeur distants", error.message);
     return null;
   }
-  return (data && data.tamagotchi) || null;
+  return data ? { payload: data.payload || {}, updatedAt: data.updated_at } : null;
 }
 
-async function pushTamaState(blob) {
+async function pushDevSettings(payload) {
   const c = getClient();
   const { code } = getConfig();
   if (!c || !code) return false;
 
-  const { error } = await c.from("reward_state").upsert({
+  const { error } = await c.from("dev_settings").upsert({
     sync_code: code,
-    tamagotchi: blob,
+    payload,
     updated_at: new Date().toISOString(),
   });
 
   if (error) {
-    if (isMissingColumnError(error, "tamagotchi")) {
-      console.warn("Sync: colonne tamagotchi pas encore reconnue côté Supabase (exécute la migration SQL)");
-    } else {
-      console.warn("Sync: échec de l'envoi du compagnon", error.message);
-    }
+    console.warn("Sync: échec de l'envoi des réglages développeur", error.message);
     return false;
   }
   return true;
 }
 
-function subscribeTamaRealtime(onRemoteChange) {
+function subscribeDevSettingsRealtime(onRemoteChange) {
   const c = getClient();
   const { code } = getConfig();
   if (!c || !code) return () => {};
 
   const channel = c
-    .channel(`tama-state-${code}`)
+    .channel(`dev-settings-${code}`)
     .on(
       "postgres_changes",
-      { event: "*", schema: "public", table: "reward_state", filter: `sync_code=eq.${code}` },
+      { event: "*", schema: "public", table: "dev_settings", filter: `sync_code=eq.${code}` },
       (payload) => {
-        if (payload.new && payload.new.tamagotchi) onRemoteChange(payload.new.tamagotchi);
+        if (payload.new && payload.new.payload) onRemoteChange({ payload: payload.new.payload, updatedAt: payload.new.updated_at });
       }
     )
     .subscribe();
@@ -385,9 +580,18 @@ window.Sync = {
   pullRewardState,
   pushRewardState,
   subscribeRewardRealtime,
-  pullTamaState,
-  pushTamaState,
-  subscribeTamaRealtime,
+  pullDevSettings,
+  pushDevSettings,
+  subscribeDevSettingsRealtime,
+  pullSubjects,
+  pushSubject,
+  subscribeSubjectsRealtime,
+  pullFolders,
+  pushFolder,
+  subscribeFoldersRealtime,
+  pullLearningModes,
+  pushLearningMode,
+  subscribeLearningModesRealtime,
   pendingCount: () => getPending().length,
   getLastError: () => lastError,
 };
