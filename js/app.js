@@ -5,7 +5,7 @@
   // à garder alignée avec CACHE_NAME dans sw.js à chaque livraison, pour
   // que l'utilisateur puisse vérifier facilement s'il a bien la dernière
   // version installée.
-  const APP_VERSION = "v125";
+  const APP_VERSION = "v148";
 
   const ICON_LIBRARY = {
     cards: '<rect x="4" y="3" width="16" height="18" rx="2"/><line x1="4" y1="12" x2="20" y2="12"/>',
@@ -395,6 +395,29 @@
      vraie séparation développeur/utilisateur viendra plus tard.
   --------------------------------------------------------- */
   const DEV_SETTINGS_KEY = "fiches_dev_settings";
+  // Round 4, partie 2 : le mode développeur reste dans l'appli (pas de page
+  // séparée) mais n'est plus visible par défaut — il ne l'était pas assez
+  // caché jusqu'ici (bouton/onglet ordinaires, accessibles à n'importe qui,
+  // y compris les élèves/profs des Classes). Débloqué sur un appareil via
+  // un geste discret (7 appuis sur le numéro de version, page Réglages),
+  // mémorisé localement (jamais synchronisé, jamais transmis aux autres
+  // appareils/comptes).
+  const DEV_UNLOCK_KEY = "fiches_dev_unlocked";
+  function isDevUnlocked() {
+    return localStorage.getItem(DEV_UNLOCK_KEY) === "1";
+  }
+  function setDevUnlocked(v) {
+    if (v) localStorage.setItem(DEV_UNLOCK_KEY, "1");
+    else localStorage.removeItem(DEV_UNLOCK_KEY);
+    updateDevModeVisibility();
+  }
+  function updateDevModeVisibility() {
+    const unlocked = isDevUnlocked();
+    const devTab = document.querySelector('.tab[data-view="dev"]');
+    if (devTab) devTab.hidden = !unlocked;
+    const devCircle = document.querySelector('.home-circle[data-key="dev"]');
+    if (devCircle) devCircle.hidden = !unlocked;
+  }
   const DEFAULT_RATING_LABELS = { again: "😵‍💫", hard: "🤔", good: "🙂", easy: "😎" };
   const DEFAULT_NAV_LABELS = {
     review: "🤓", manage: "🗃️", cards: "📄", stats: "📊", settings: "⚙",
@@ -574,6 +597,63 @@
     maitrise: "#2f6fb0",
     acquis: "#5fae7c",
   };
+
+  // Nouvel algorithme de révision (remplace entièrement le système de
+  // modes K/M "again/hard/good/easy" ci-dessus pour le calcul de
+  // l'échéance — celui-ci reste en mémoire pour compat mais n'est plus
+  // utilisé par computeAlgoNext). Chaque fiche porte désormais :
+  //  - dd   : dernier délai d'interrogation appliqué (en MINUTES)
+  //  - pers : persistance de la fiche (en MINUTES)
+  // Chaque bouton (index 0=Encore, 1=Difficile, 2=Bien, 3=Excellent) porte
+  // COEF_TE/COEF_DD/PLAFOND/PLANCHER/ABAT. À l'évaluation :
+  //   TE = temps écoulé (minutes) depuis la dernière interrogation
+  //   NDI = maxi(DD*COEF_DD ; TE*COEF_TE), borné à
+  //         [PLANCHER ; mini(PLAFOND ; DD*COEF_DD)]
+  //   PERS = NDI*ABAT
+  // Remarque (signalée à l'utilisateur, décision explicitement reportée) :
+  // avec cette formule de plafond telle que donnée, mini(PLAFOND ; DD*COEF_DD)
+  // est mathématiquement toujours <= DD*COEF_DD, qui est lui-même toujours
+  // <= maxi(...) — donc TE*COEF_TE n'a, en l'état, aucune influence sur le
+  // résultat final. Implémenté ici littéralement tel que spécifié ; à
+  // corriger une fois la question tranchée avec l'utilisateur.
+  const REVISION_ALGO_RATING_ORDER = ["again", "hard", "good", "easy"];
+  const REVISION_ALGO_RATING_LABELS = {
+    again: "Encore (indice 0)",
+    hard: "Difficile (indice 1)",
+    good: "Bien (indice 2)",
+    easy: "Excellent (indice 3)",
+  };
+  const DEFAULT_REVISION_ALGO_SETTINGS = {
+    coefTe: [0, 0, 1.4, 2],
+    coefDd: [0, 0, 1.1, 1.2],
+    // PLAFOND/PLANCHER en MINUTES.
+    plafondMin: [7, 15, 43200, 86400],
+    plancherMin: [7, 15, 45, 240],
+    abat: [0, 0.1, 0.66, 0.8],
+    // Délai initial (minutes) appliqué à la création d'une fiche.
+    initialDelayMin: 5,
+    // Paliers des jauges — saisis en JOURS dans le mode développeur,
+    // convertis en minutes au moment des calculs (voir revisionAlgoPaliersMin).
+    palierCourtTermeJ: 2,
+    palierMoyenTermeJ: 8,
+    palierLongTermeJ: 30,
+  };
+  // Jauge "persistance" (4 segments) qui remplace l'ancienne jauge de score
+  // 0-100 dans les 3 emplacements où elle apparaissait (Organisation,
+  // Réviser, Programme de révision).
+  const DEFAULT_PERS_GAUGE_COLORS = {
+    court: "#d9dde3", // gris clair : PERS < PALIER_COURT_TERME
+    moyen: "#a7e3b0", // vert clair : entre COURT et MOYEN
+    long: "#4caf6b", // vert : entre MOYEN et LONG
+    tresLong: "#1f7a44", // vert foncé : PERS > PALIER_LONG_TERME
+  };
+  const PERS_GAUGE_ZONE_ORDER = ["court", "moyen", "long", "tresLong"];
+  const PERS_GAUGE_ZONE_LABELS = {
+    court: "Court terme",
+    moyen: "Moyen terme",
+    long: "Long terme",
+    tresLong: "Très long terme",
+  };
   // Disposition dispersée de la page d'accueil (item 3) : position (x,y en
   // pixels, coin haut-gauche du cercle) + diamètre (px) par bouton — tailles
   // différentes selon l'importance (Réviser le plus grand, Développeur le
@@ -583,9 +663,10 @@
   // l'appli s'adapte elle en largeur — le pourcentage, lui, suit toujours
   // la largeur réelle quel que soit l'appareil).
   const HOME_LAYOUT_TITLES = {
-    review: "Réviser", manage: "Dossiers & boîtes", cards: "Fiches", addCard: "Ajouter une fiche",
+    review: "Réviser", manage: "Mes collections", cards: "Fiches", addCard: "Ajouter une fiche",
     stats: "Statistiques", settings: "Réglages", calendar: "Calendrier",
-    sync: "Synchronisation", dev: "Développeur",
+    sync: "Synchronisation", dev: "Développeur", classes: "Classes",
+    account: "Compte", messages: "Messagerie", library: "Bibliothèque",
   };
   // Largeur/hauteur de référence utilisées uniquement pour convertir une
   // seule fois d'anciens réglages enregistrés en pixels (avant ce
@@ -602,10 +683,241 @@
     settings: { x: 16.2, y: 73.8, d: 85 },
     sync: { x: 54.4, y: 76.2, d: 95 },
     dev: { x: 89.0, y: 79.0, d: 80 },
+    classes: { x: 50.0, y: 90.0, d: 85 },
+    account: { x: 15.0, y: 90.0, d: 70 },
+    // Round 6, item 5 : position par défaut du rond Messagerie — zone
+    // encore libre entre "Réviser" et "Ajouter une fiche" en haut, et
+    // "Fiches"/"Stats" en dessous ; ajustable comme les autres via le
+    // mode développeur si jamais ça chevauche un réglage personnalisé.
+    messages: { x: 50.0, y: 26.5, d: 90 },
+    // Nouvelle Bibliothèque (partage public de collections) : zone libre à
+    // gauche, entre "Fiches" et "Réglages".
+    library: { x: 16.0, y: 54.0, d: 90 },
   };
   // Items 1/2 (logo) : position (X/Y en %, centre du logo) et taille (px)
   // du logo sur la page d'accueil.
-  const DEFAULT_HOME_LOGO = { x: 50, y: 7, size: 64 };
+  const DEFAULT_HOME_LOGO = { x: 50, y: 7, size: 64, shadow: false };
+  // Items 1/2/6 (dernier lot) : logo affiché en haut du corps de chaque
+  // autre page (taille + ombre, indépendantes de celles de l'accueil).
+  const DEFAULT_BODY_LOGO = { size: 40, shadow: false };
+  // Items 4 et 5 : le robot (logo en haut du corps de page) peut porter un
+  // ou plusieurs messages d'aide selon la page — un tableau permet une
+  // petite série façon tuto (voir bouton "Suite", round 4), une simple
+  // chaîne reste acceptée pour un message unique.
+  const DEFAULT_HELP_MESSAGES_BY_VIEW = {
+    manage: ["Lorsque tu mets une fiche dans un dossier vide, il se transforme alors en boîte à fiches."],
+    "revision-program": ["A ta place, voici ce que je réviserais en priorité, dans l'ordre :"],
+    review: [],
+    cards: [],
+    stats: [],
+    sync: [],
+    calendar: [],
+    classes: [],
+    "classes-student": [],
+    "classes-teacher": [],
+    "class-detail": [],
+    account: [],
+    settings: [],
+    dev: [],
+    "new-card": [],
+    "boite-picker": [],
+    "mode-assign": [],
+    messages: [],
+    "message-thread": [],
+    library: ["Ici, tu peux prendre des collections de fiches partagées par d'autres — elles s'ajoutent à tes collections, avec cette icône en réseau pour les reconnaître."],
+  };
+  // Round 4, partie 2 : intitulés amicaux de chaque page, pour l'éditeur du
+  // mode développeur — mêmes clés que DEFAULT_HELP_MESSAGES_BY_VIEW.
+  const HELP_VIEW_LABELS = {
+    review: "Réviser",
+    manage: "Mes collections (Organisation)",
+    cards: "Fiches",
+    stats: "Statistiques",
+    sync: "Synchronisation",
+    calendar: "Calendrier",
+    "revision-program": "Programme de révision",
+    classes: "Classes (page d'accueil)",
+    "classes-student": "Classes — J'apprends",
+    "classes-teacher": "Classes — J'enseigne",
+    "class-detail": "Classes — page d'une classe",
+    account: "Compte",
+    settings: "Réglages",
+    dev: "Développeur",
+    "new-card": "Nouvelle fiche",
+    "boite-picker": "Sélecteur de boîte(s)",
+    "mode-assign": "Affecter un mode",
+    messages: "Messagerie",
+    "message-thread": "Messagerie — discussion",
+    library: "Bibliothèque",
+  };
+  // Round 4 : le robot ne dit plus rien par défaut — une petite bulle
+  // "aide" cliquable apparaît à côté de lui quand la page a un message, et
+  // c'est ce clic qui ouvre la bulle de parole (fermée à chaque changement
+  // de page). Une série de plusieurs messages se parcourt avec "Suite".
+  // Round 4, partie 2 : les messages viennent maintenant des réglages
+  // développeur (éditables dans l'appli), avec les valeurs ci-dessus comme
+  // défaut tant que rien n'a été personnalisé.
+  let bodyLogoSpeechMessages = [];
+  let bodyLogoSpeechIndex = 0;
+  function applyBodyLogoSpeech(view) {
+    const raw = loadDevSettings().helpMessagesByView[view];
+    bodyLogoSpeechMessages = Array.isArray(raw) ? raw.filter((m) => m && m.trim()) : raw ? [raw] : [];
+    bodyLogoSpeechIndex = 0;
+    renderBodyLogoSpeechState(false);
+  }
+  function renderBodyLogoSpeechState(open) {
+    const helpBtn = el("body-logo-help-btn");
+    const speechEl = el("body-logo-speech");
+    const textEl = el("body-logo-speech-text");
+    const prevBtn = el("body-logo-speech-prev");
+    const nextBtn = el("body-logo-speech-next");
+    if (!helpBtn || !speechEl || !textEl || !nextBtn) return;
+    const hasMessages = bodyLogoSpeechMessages.length > 0;
+    const isOpen = hasMessages && open;
+    helpBtn.hidden = !hasMessages || isOpen;
+    speechEl.hidden = !isOpen;
+    if (!isOpen) return;
+    const text = bodyLogoSpeechMessages[bodyLogoSpeechIndex] || "";
+    if (textEl.textContent !== text) {
+      textEl.textContent = text;
+      // Petite animation "pop" à chaque nouveau message, pour bien montrer
+      // que c'est un nouveau propos du robot.
+      speechEl.classList.remove("is-popping");
+      void speechEl.offsetWidth;
+      speechEl.classList.add("is-popping");
+    }
+    // Round 4, partie 3 : "Précédent" masqué sur le tout premier message,
+    // "Suite" masqué sur le dernier.
+    if (prevBtn) prevBtn.hidden = bodyLogoSpeechIndex <= 0;
+    nextBtn.hidden = bodyLogoSpeechIndex >= bodyLogoSpeechMessages.length - 1;
+  }
+  const bodyLogoHelpBtn = el("body-logo-help-btn");
+  if (bodyLogoHelpBtn) {
+    bodyLogoHelpBtn.addEventListener("click", () => {
+      bodyLogoSpeechIndex = 0;
+      renderBodyLogoSpeechState(true);
+    });
+  }
+  const bodyLogoSpeechEl = el("body-logo-speech");
+  if (bodyLogoSpeechEl) {
+    // Cliquer sur la bulle elle-même la referme (sauf sur les boutons
+    // "Précédent"/"Suite", qui ont leur propre comportement).
+    bodyLogoSpeechEl.addEventListener("click", (e) => {
+      if (e.target.closest("#body-logo-speech-next") || e.target.closest("#body-logo-speech-prev")) return;
+      renderBodyLogoSpeechState(false);
+    });
+  }
+  const bodyLogoSpeechPrevBtn = el("body-logo-speech-prev");
+  if (bodyLogoSpeechPrevBtn) {
+    bodyLogoSpeechPrevBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      bodyLogoSpeechIndex = Math.max(bodyLogoSpeechIndex - 1, 0);
+      renderBodyLogoSpeechState(true);
+    });
+  }
+  const bodyLogoSpeechNextBtn = el("body-logo-speech-next");
+  if (bodyLogoSpeechNextBtn) {
+    bodyLogoSpeechNextBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      bodyLogoSpeechIndex = Math.min(bodyLogoSpeechIndex + 1, bodyLogoSpeechMessages.length - 1);
+      renderBodyLogoSpeechState(true);
+    });
+  }
+  /* Round 3, item 3 : le robot "parle" pour tous les messages de l'appli
+   *  (information, avertissement, confirmation) — remplace les alert()/
+   *  confirm() natifs du navigateur, jugés trop bruts et pas cohérents
+   *  avec le personnage du robot déjà utilisé ailleurs dans l'appli.
+   *  showRobotMessage(text, {buttons}) affiche la bulle en superposition
+   *  et résout une Promise avec la "value" du bouton cliqué (ou la touche
+   *  Échap, traitée comme une annulation). robotAlert/robotConfirm sont
+   *  des raccourcis pour les deux cas d'usage les plus courants. */
+  function showRobotMessage(text, opts) {
+    opts = opts || {};
+    const buttons = opts.buttons || [{ label: "OK", value: true, primary: true }];
+    const overlay = el("robot-modal-overlay");
+    const textEl = el("robot-modal-text");
+    const actions = el("robot-modal-actions");
+    if (!overlay || !textEl || !actions) {
+      // Repli très défensif si jamais le balisage manque (ne devrait pas
+      // arriver) : on ne bloque pas l'appli, on résout juste positivement.
+      return Promise.resolve(buttons[buttons.length - 1].value);
+    }
+    return new Promise((resolve) => {
+      textEl.textContent = text;
+      actions.innerHTML = "";
+      let settled = false;
+      function close(value) {
+        if (settled) return;
+        settled = true;
+        overlay.hidden = true;
+        document.removeEventListener("keydown", onKeydown, true);
+        resolve(value);
+      }
+      function onKeydown(e) {
+        if (e.key === "Escape") {
+          e.preventDefault();
+          close(opts.cancelValue !== undefined ? opts.cancelValue : false);
+        }
+      }
+      buttons.forEach((b) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className =
+          "robot-modal-btn" +
+          (b.primary ? " robot-modal-btn--primary" : "") +
+          (b.danger ? " robot-modal-btn--danger" : "");
+        btn.textContent = b.label;
+        btn.addEventListener("click", () => close(b.value));
+        actions.appendChild(btn);
+      });
+      overlay.hidden = false;
+      document.addEventListener("keydown", onKeydown, true);
+      requestAnimationFrame(() => {
+        const first = actions.querySelector(".robot-modal-btn--primary") || actions.querySelector("button");
+        if (first) first.focus();
+      });
+    });
+  }
+  /** Remplace alert("...") : un seul bouton OK, résout quand il est fermé. */
+  function robotAlert(text) {
+    return showRobotMessage(text, { buttons: [{ label: "OK", value: true, primary: true }] });
+  }
+  /** Remplace confirm("...") : deux boutons, résout true/false. Le bouton
+   *  de confirmation est marqué "danger" (rouge) pour les actions
+   *  destructrices (suppressions), pour garder le même signal visuel
+   *  qu'ailleurs dans l'appli. */
+  function robotConfirm(text, opts) {
+    opts = opts || {};
+    return showRobotMessage(text, {
+      buttons: [
+        { label: opts.cancelLabel || "Annuler", value: false },
+        {
+          label: opts.okLabel || "Confirmer",
+          value: true,
+          primary: !opts.danger,
+          danger: !!opts.danger,
+        },
+      ],
+    });
+  }
+
+  const LOGO_SHADOW_FILTER = "drop-shadow(0 3px 5px rgba(0,0,0,0.35))";
+  // Hauteur de référence utilisée pour calculer les % verticaux de la page
+  // Réviser (voir applyReviewLayout) : 844px est la hauteur de l'iPhone
+  // standard 13/14/15 (390×844) sur lequel toute la disposition par défaut
+  // ci-dessous a été réglée à l'origine — déductible des anciennes valeurs
+  // par défaut du CSS (ex. 675px de haut de jauge / 80% = 844).
+  const REVIEW_LAYOUT_REF_HEIGHT = 844;
+  // Largeur de référence associée (390px = largeur de ce même iPhone
+  // standard 13/14/15). Corrige un ratio largeur/hauteur incohérent entre
+  // PC et iPhone (round 5, correctif 5) : la hauteur de référence était
+  // déjà plafonnée ci-dessus, mais la largeur (voir applyReviewLayout)
+  // restait calculée sur la largeur RÉELLE de .desk, qui va jusqu'à 560px
+  // sur PC (voir .desk en CSS) contre ~390px sur iPhone — la fiche
+  // s'étalait donc proportionnellement plus en largeur qu'en hauteur sur
+  // un grand écran. Les deux dimensions se basent maintenant sur le même
+  // gabarit fixe 390×844, centré quel que soit l'écran.
+  const REVIEW_LAYOUT_REF_WIDTH = 390;
   // Disposition de la page Réviser (item 1c) : hauteur/largeur de la fiche
   // et position Y de son bord haut, position Y des boutons d'évaluation
   // (tous en % de l'écran), temps de retournement en secondes.
@@ -628,7 +940,7 @@
   const DEFAULT_ICON_BANK_CHOICES = { hibernate: "sleep", edit: "pencil", construction: "cone", undo: "undo" };
   // Icônes de la page Organisation (item 3) : renommer/déplacer/supprimer,
   // sobres, choisies dans la banque d'icônes.
-  const DEFAULT_ORG_ICON_BANK_CHOICES = { orgRename: "pencil", orgMove: "move", orgDelete: "trash" };
+  const DEFAULT_ORG_ICON_BANK_CHOICES = { orgRename: "pencil", orgMove: "move", orgDelete: "trash", orgBoite: "stackedSheets" };
   // Icônes des boutons d'évaluation (item 2a) : plus d'émoticônes libres,
   // uniquement la banque d'icônes sobres.
   const DEFAULT_RATING_ICONS = { again: "faceSad", hard: "faceNeutral", good: "faceSmile", easy: "faceGrin" };
@@ -686,6 +998,56 @@
     );
   }
 
+  // Round 4, partie 3 : réglages développeur PUBLIÉS par Stéphane pour
+  // tout le monde (table Supabase partagée en lecture, voir sync.js et
+  // supabase/dev_settings_public_schema.sql) — récupérés une fois au
+  // démarrage par loadPublicDevSettingsForEveryone(). null tant que rien
+  // n'a encore été récupéré (hors ligne, Sync non configurée, ou pas
+  // encore essayé) : dans ce cas, comportement inchangé (valeurs par
+  // défaut du code).
+  let publicDevSettingsOverride = null;
+  function isPlainDevSettingsObject(v) {
+    return Boolean(v) && typeof v === "object" && !Array.isArray(v);
+  }
+  /** Fusionne récursivement deux "couches" de réglages développeur :
+   *  toute clé présente dans `override` l'emporte sur `base`, mais si les
+   *  deux valeurs sont des objets simples (ex. nightColors.bgColors), on
+   *  fusionne leurs propres clés au lieu de remplacer tout le groupe —
+   *  un tableau (ex. une liste de messages d'aide) est, lui, toujours
+   *  remplacé en bloc, jamais fusionné élément par élément. */
+  function mergeDevSettingsLayer(base, override) {
+    const out = { ...(isPlainDevSettingsObject(base) ? base : {}) };
+    if (!isPlainDevSettingsObject(override)) return out;
+    Object.keys(override).forEach((key) => {
+      const b = out[key];
+      const o = override[key];
+      out[key] = isPlainDevSettingsObject(b) && isPlainDevSettingsObject(o) ? mergeDevSettingsLayer(b, o) : o;
+    });
+    return out;
+  }
+  /** Récupère (une fois, au démarrage) les réglages développeur publiés
+   *  pour tout le monde et les applique — appelée depuis connectSync(),
+   *  donc seulement quand la Sync est configurée (même condition que les
+   *  comptes Classes, qui partagent le même projet Supabase). */
+  async function loadPublicDevSettingsForEveryone() {
+    try {
+      const pub = await Sync.fetchPublicDevSettings();
+      if (pub) {
+        publicDevSettingsOverride = pub;
+        // Invalide le cache ci-dessous pour forcer une refusion au
+        // prochain loadDevSettings(), puis réapplique tout de suite (utile
+        // pour tous les utilisateurs qui n'ont eux-mêmes AUCUN réglage
+        // développeur local — la quasi-totalité des élèves/profs).
+        _devSettingsCacheRaw = undefined;
+        _devSettingsCache = undefined;
+        applyAllDevSettings();
+      }
+    } catch (e) {
+      /* hors ligne, ou pas encore de ligne publiée : on continue avec les
+         valeurs par défaut du code, comme avant cette fonctionnalité. */
+    }
+  }
+
   // Bug corrigé (item 9) : cette fonction est appelée TRÈS souvent (une
   // fois par fiche pour son score, par exemple) et reconstruisait à chaque
   // fois l'objet complet (JSON.parse + fusion de ~15 groupes de réglages)
@@ -703,6 +1065,15 @@
     } catch (e) {
       parsed = {};
     }
+    // Round 4, partie 3 : les réglages publiés pour tout le monde
+    // s'insèrent ICI, comme une "sous-couche" entre les valeurs par
+    // défaut du code et les réglages strictement locaux à cet appareil —
+    // un réglage local reste prioritaire (utile à Stéphane, qui peut
+    // préparer un changement avant de le publier), mais tout le monde
+    // d'autre en hérite tant qu'il n'a pas ses propres réglages locaux.
+    if (publicDevSettingsOverride) {
+      parsed = mergeDevSettingsLayer(publicDevSettingsOverride, parsed);
+    }
     const built = {
       ratingLabels: { ...DEFAULT_RATING_LABELS, ...(parsed.ratingLabels || {}) },
       navLabels: { ...DEFAULT_NAV_LABELS, ...(parsed.navLabels || {}) },
@@ -711,6 +1082,12 @@
       iconBank: { ...DEFAULT_ICON_BANK_CHOICES, ...(parsed.iconBank || {}) },
       orgIconBank: { ...DEFAULT_ORG_ICON_BANK_CHOICES, ...(parsed.orgIconBank || {}) },
       ratingColors: { ...DEFAULT_RATING_COLORS, ...(parsed.ratingColors || {}) },
+      // Round 4, partie 2 : messages d'aide du robot par page, éditables
+      // dans le mode développeur. Fusion clé par clé comme les autres
+      // groupes : une page personnalisée (même avec un tableau vide,
+      // volontairement) remplace entièrement la valeur par défaut de
+      // cette page, elle ne se mélange pas avec elle.
+      helpMessagesByView: { ...DEFAULT_HELP_MESSAGES_BY_VIEW, ...(parsed.helpMessagesByView || {}) },
       ratingBtnBgColor: parsed.ratingBtnBgColor || DEFAULT_RATING_BTN_BG_COLOR,
       modeColors: { ...DEFAULT_MODE_COLORS, ...(parsed.modeColors || {}) },
       customModeColors: { ...(parsed.customModeColors || {}) },
@@ -732,11 +1109,29 @@
       shadows: { ...DEFAULT_SHADOWS, ...(parsed.shadows || {}) },
       homeLayout: migrateHomeLayoutToPercent(parsed),
       homeLogo: { ...DEFAULT_HOME_LOGO, ...(parsed.homeLogo || {}) },
+      bodyLogo: { ...DEFAULT_BODY_LOGO, ...(parsed.bodyLogo || {}) },
       homeLayoutUnit: "percent",
       homeLayoutAnchor: "center",
       reviewLayout: { ...DEFAULT_REVIEW_LAYOUT, ...(parsed.reviewLayout || {}) },
       cardScore: { ...DEFAULT_CARD_SCORE_SETTINGS, ...(parsed.cardScore || {}) },
       gaugeColors: { ...DEFAULT_GAUGE_COLORS, ...(parsed.gaugeColors || {}) },
+      // Clonage explicite des tableaux (coefTe/coefDd/plafondMin/plancherMin/
+      // abat) — bug corrigé : un simple spread superficiel partageait la
+      // même référence de tableau que DEFAULT_REVISION_ALGO_SETTINGS quand
+      // aucun réglage n'était encore enregistré, donc modifier UN index
+      // depuis le mode développeur mutait silencieusement les valeurs PAR
+      // DÉFAUT elles-mêmes — et "Revenir aux valeurs par défaut" n'avait
+      // alors plus aucun effet (il recopiait ce même tableau déjà corrompu).
+      revisionAlgo: {
+        ...DEFAULT_REVISION_ALGO_SETTINGS,
+        ...(parsed.revisionAlgo || {}),
+        coefTe: [...((parsed.revisionAlgo || {}).coefTe || DEFAULT_REVISION_ALGO_SETTINGS.coefTe)],
+        coefDd: [...((parsed.revisionAlgo || {}).coefDd || DEFAULT_REVISION_ALGO_SETTINGS.coefDd)],
+        plafondMin: [...((parsed.revisionAlgo || {}).plafondMin || DEFAULT_REVISION_ALGO_SETTINGS.plafondMin)],
+        plancherMin: [...((parsed.revisionAlgo || {}).plancherMin || DEFAULT_REVISION_ALGO_SETTINGS.plancherMin)],
+        abat: [...((parsed.revisionAlgo || {}).abat || DEFAULT_REVISION_ALGO_SETTINGS.abat)],
+      },
+      persGaugeColors: { ...DEFAULT_PERS_GAUGE_COLORS, ...(parsed.persGaugeColors || {}) },
       // Item 4 : mode nuit — un jeu de couleurs parallèle et réglable pour
       // chacun des groupes ci-dessus, plus un simple drapeau on/off (dont
       // l'état effectif est en réalité piloté par le bouton en topbar, pas
@@ -757,10 +1152,30 @@
         normal: { ...BUILTIN_MODE_DEFAULTS.normal, ...((parsed.factoryDefaults || {}).normal || {}) },
         renforce: { ...BUILTIN_MODE_DEFAULTS.renforce, ...((parsed.factoryDefaults || {}).renforce || {}) },
       },
+      // Bug corrigé (round 4, partie 3) : cette date n'était jusqu'ici
+      // JAMAIS recopiée dans l'objet fusionné, alors que
+      // reconcileDevSettings (synchro personnelle) s'en sert pour savoir
+      // si la version locale est plus récente que celle du serveur — la
+      // comparaison était donc toujours "locale = temps 0", donc toujours
+      // perdante face au serveur.
+      updatedAt: parsed.updatedAt,
     };
     _devSettingsCacheRaw = raw;
     _devSettingsCache = built;
     return built;
+  }
+  /** Round 4, partie 3 : réglages STRICTEMENT locaux à cet appareil, TELS
+   *  QUE STOCKÉS (sans les valeurs par défaut du code ni la "sous-couche"
+   *  publique — voir loadDevSettings) — à utiliser pour toute écriture
+   *  automatique (non déclenchée par une vraie personnalisation de
+   *  l'utilisateur dans le mode développeur), pour ne jamais figer par
+   *  erreur un instantané complet dans le stockage local. */
+  function loadRawDevSettingsOverride() {
+    try {
+      return JSON.parse(localStorage.getItem(DEV_SETTINGS_KEY)) || {};
+    } catch (e) {
+      return {};
+    }
   }
   function saveDevSettings(settings) {
     settings.updatedAt = new Date().toISOString();
@@ -776,8 +1191,12 @@
   function scheduleDevSettingsPush() {
     if (typeof Sync === "undefined" || !Sync.isConfigured || !Sync.isConfigured()) return;
     clearTimeout(devSettingsPushTimer);
-    devSettingsPushTimer = setTimeout(() => {
-      Sync.pushDevSettings({ ...loadDevSettings(), appPrefs: gatherAppPrefs() });
+    devSettingsPushTimer = setTimeout(async () => {
+      // Cloisonné par Compte connecté depuis le round 6 (voir
+      // currentAccountEmailForSync) — corrige une fuite entre deux
+      // Comptes utilisant le même code de synchro perso.
+      const accountEmail = await currentAccountEmailForSync();
+      Sync.pushDevSettings({ ...loadDevSettings(), appPrefs: gatherAppPrefs() }, accountEmail);
     }, 900);
   }
   /** Réglages de la page "Réglages" (item — jusqu'ici jamais synchronisés
@@ -1095,7 +1514,7 @@
     renderIconBankPicker(
       "dev-org-icon-bank-list",
       Object.keys(DEFAULT_ORG_ICON_BANK_CHOICES),
-      { orgRename: "Renommer", orgMove: "Déplacer", orgDelete: "Supprimer" },
+      { orgRename: "Renommer", orgMove: "Déplacer", orgDelete: "Supprimer", orgBoite: "Icône des boîtes" },
       "orgIconBank",
       renderManageList
     );
@@ -1223,10 +1642,51 @@
     // Items 1/2 (logo) : position/taille du logo sur la page d'accueil,
     // réglables depuis le mode développeur.
     const logo = loadDevSettings().homeLogo;
+    const bodyLogo = loadDevSettings().bodyLogo;
     const root = document.documentElement.style;
-    root.setProperty("--home-logo-x", `${logo.x}%`);
+    // Bug corrigé (round 5) : le logo est positionné en absolu par rapport
+    // à #view-home (dont la largeur suit .desk — jusqu'à 560px sur PC,
+    // la largeur réelle de l'écran sur iPhone), alors que les cercles
+    // ci-dessus sont positionnés par rapport à .home-scatter (largeur
+    // FIXE, 354px au maximum, la même partout — voir HOME_SCATTER_MAX_WIDTH
+    // ci-dessous, doit rester synchronisé avec le "width" de .home-scatter
+    // dans style.css). Tant que le logo restait pile centré (x=50%) ça ne
+    // se voyait pas, mais dès qu'on le décale, son offset horizontal
+    // n'était pas calculé sur la même base que les cercles, donc pas le
+    // même écart entre iPhone et PC.
+    // Bug corrigé (round 5, 2e passage) : un premier correctif mesurait la
+    // position RÉELLE de .home-scatter sur la page (getBoundingClientRect)
+    // — correct uniquement quand la page d'accueil est actuellement
+    // affichée. Or applyHomeLayout() s'exécute aussi à chaque changement
+    // dans l'éditeur du mode développeur, PAGE DÉVELOPPEUR ACTIVE — la
+    // page d'accueil est alors masquée (display:none), et un élément
+    // masqué a un rectangle de 0×0 : le calcul retombait sur une valeur
+    // dégénérée, ce qui rendait le glissement du réglage X sans aucun
+    // effet visible tant qu'on ne retournait pas manuellement sur
+    // l'accueil (et donnait des résultats différents iPhone/PC selon la
+    // page qui se trouvait être affichée au moment du calcul). Recalculé
+    // maintenant uniquement à partir de la largeur de .desk (TOUJOURS
+    // visible, quelle que soit la page affichée) et des mêmes règles que
+    // le CSS de .home-scatter (largeur dispo = .desk moins les 18px de
+    // padding de #view-home de chaque côté, plafonnée à 354px) — plus
+    // aucune dépendance à ce qui est affiché à l'écran au moment du calcul.
+    const HOME_SCATTER_MAX_WIDTH = 354;
+    const VIEW_HOME_SIDE_PADDING = 18;
+    const deskWidthForLogo = document.querySelector(".desk")?.getBoundingClientRect().width || window.innerWidth;
+    const viewHomeContentWidth = Math.max(0, deskWidthForLogo - VIEW_HOME_SIDE_PADDING * 2);
+    const scatterWidthForLogo = Math.min(HOME_SCATTER_MAX_WIDTH, viewHomeContentWidth);
+    // "left" d'un élément en position absolue se mesure depuis le bord
+    // EXTÉRIEUR de la boîte de padding du référent (#view-home), donc
+    // depuis avant son propre padding — il faut le rajouter ici pour que
+    // 0px corresponde bien au tout début de la zone de contenu.
+    const scatterLeftOffset = VIEW_HOME_SIDE_PADDING + (viewHomeContentWidth - scatterWidthForLogo) / 2;
+    const logoLeftPx = scatterLeftOffset + (logo.x / 100) * scatterWidthForLogo;
+    root.setProperty("--home-logo-x", `${Math.round(logoLeftPx)}px`);
     root.setProperty("--home-logo-y", `${logo.y}%`);
     root.setProperty("--home-logo-size", `${logo.size}px`);
+    root.setProperty("--home-logo-shadow", logo.shadow ? LOGO_SHADOW_FILTER : "none");
+    root.setProperty("--body-logo-size", `${bodyLogo.size}px`);
+    root.setProperty("--body-logo-shadow", bodyLogo.shadow ? LOGO_SHADOW_FILTER : "none");
   }
 
   /** Retourne le temps de retournement de fiche réglé (item 1c), en
@@ -1251,8 +1711,38 @@
   function applyReviewLayout() {
     const r = loadDevSettings().reviewLayout;
     const root = document.documentElement.style;
-    const vh = window.innerHeight / 100;
-    const vw = window.innerWidth / 100;
+    // Bug corrigé (round 4, partie 4) : ce calcul se basait sur la hauteur
+    // RÉELLE de la fenêtre (window.innerHeight) — cohérent tant qu'on reste
+    // sur le même iPhone que celui utilisé pour régler la disposition, mais
+    // plus du tout dès qu'on change d'appareil : un PC (fenêtre bien plus
+    // haute), ou même un autre iPhone plus grand/petit, donnait alors des %
+    // calculés sur un total différent, donc des positions visuellement
+    // décalées par rapport à ce qui avait été réglé. Comme pour la largeur
+    // juste en dessous (déjà plafonnée à celle de .desk), on plafonne
+    // maintenant la hauteur de référence à REVIEW_LAYOUT_REF_HEIGHT (la
+    // hauteur de l'appareil sur lequel la disposition par défaut a été
+    // pensée) : sur tout écran AU MOINS aussi haut (PC, iPhone Pro Max...),
+    // le calcul retombe toujours sur la même référence fixe, donc le même
+    // rendu que sur l'iPhone d'origine. Sur un écran plus petit qu'elle
+    // (vieux téléphone, fenêtre PC réduite), on garde la hauteur réelle
+    // comme avant, pour ne rien faire déborder.
+    const vh = Math.min(window.innerHeight, REVIEW_LAYOUT_REF_HEIGHT) / 100;
+    // Bug corrigé (item 3, dernier lot) : ce calcul se basait sur la
+    // largeur TOTALE de la fenêtre (window.innerWidth) — correcte sur
+    // iPhone, où l'appli occupe tout l'écran, mais pas sur un écran large
+    // (PC), où .desk est plafonné à 560px et centré. La fiche calculait
+    // alors sa largeur en pourcentage d'un espace bien plus large que
+    // celui réellement disponible, et débordait jusqu'à occuper toute la
+    // largeur de la fenêtre. On se base maintenant sur la largeur RÉELLE
+    // de .desk, la même quel que soit l'appareil.
+    // Correctif 5 (ratio largeur/hauteur) : .desk peut aller jusqu'à 560px
+    // sur PC (voir CSS) contre ~390px sur iPhone, donc utiliser sa largeur
+    // réelle telle quelle déformait le ratio par rapport à la hauteur
+    // (plafonnée, elle, à REVIEW_LAYOUT_REF_HEIGHT). On plafonne de la même
+    // façon la largeur à REVIEW_LAYOUT_REF_WIDTH, pour retomber sur le même
+    // gabarit fixe 390×844 sur tout écran au moins aussi grand.
+    const deskWidth = document.querySelector(".desk")?.getBoundingClientRect().width || window.innerWidth;
+    const vw = Math.min(deskWidth, REVIEW_LAYOUT_REF_WIDTH) / 100;
     // Marge de sécurité fixe sous la barre du haut + la barre de boîte
     // (elle-même posée à 54px + l'encoche) — 110px couvre confortablement
     // les deux sur la quasi-totalité des appareils.
@@ -1303,11 +1793,16 @@
     const wrap = el("dev-home-logo-list");
     if (!wrap) return;
     const logo = loadDevSettings().homeLogo;
+    const bodyLogo = loadDevSettings().bodyLogo;
     wrap.innerHTML = `<div class="dev-home-layout-row">
-      <span class="dev-home-layout-title">Logo</span>
+      <span class="dev-home-layout-title">Logo (accueil)</span>
       <label>X % <input type="number" step="0.1" class="dev-home-logo-input" data-field="x" value="${logo.x}" /></label>
       <label>Y % <input type="number" step="0.1" class="dev-home-logo-input" data-field="y" value="${logo.y}" /></label>
       <label>Taille px <input type="number" class="dev-home-logo-input" data-field="size" value="${logo.size}" /></label>
+    </div>
+    <div class="dev-home-layout-row">
+      <span class="dev-home-layout-title">Logo (autres pages)</span>
+      <label>Taille px <input type="number" class="dev-body-logo-input" data-field="size" value="${bodyLogo.size}" /></label>
     </div>`;
     wrap.querySelectorAll(".dev-home-logo-input").forEach((input) => {
       input.addEventListener("input", () => {
@@ -1316,6 +1811,36 @@
         saveDevSettings(s);
         applyHomeLayout();
       });
+    });
+    wrap.querySelectorAll(".dev-body-logo-input").forEach((input) => {
+      input.addEventListener("input", () => {
+        const s = loadDevSettings();
+        s.bodyLogo[input.dataset.field] = Number(input.value) || 0;
+        saveDevSettings(s);
+        applyHomeLayout();
+      });
+    });
+  }
+
+  // Item 6 (dernier lot) : ombres du logo — réglages utilisateur
+  // (Réglages), la donnée reste dans devSettings pour réutiliser
+  // applyHomeLayout tel quel.
+  const settingBodyLogoShadowEl = el("setting-body-logo-shadow");
+  if (settingBodyLogoShadowEl) {
+    settingBodyLogoShadowEl.addEventListener("change", () => {
+      const s = loadDevSettings();
+      s.bodyLogo.shadow = settingBodyLogoShadowEl.checked;
+      saveDevSettings(s);
+      applyHomeLayout();
+    });
+  }
+  const settingHomeLogoShadowEl = el("setting-home-logo-shadow");
+  if (settingHomeLogoShadowEl) {
+    settingHomeLogoShadowEl.addEventListener("change", () => {
+      const s = loadDevSettings();
+      s.homeLogo.shadow = settingHomeLogoShadowEl.checked;
+      saveDevSettings(s);
+      applyHomeLayout();
     });
   }
 
@@ -1357,6 +1882,106 @@
       applyReviewLayout();
       renderDevView();
     });
+  }
+
+  /** Nouvel algorithme de révision : COEF_TE/COEF_DD/PLAFOND/PLANCHER/ABAT
+   *  par bouton (indices 0-3), délai initial, et les 3 paliers (en jours)
+   *  des jauges de persistance. */
+  const REVISION_ALGO_FIELD_DEFS = [
+    { key: "coefTe", title: "COEF_TE (coefficient sur le temps écoulé)", step: "0.01" },
+    { key: "coefDd", title: "COEF_DD (coefficient sur le dernier délai)", step: "0.01" },
+    { key: "plafondMin", title: "PLAFOND (délai maximal, en minutes)", step: "1" },
+    { key: "plancherMin", title: "PLANCHER (délai minimal, en minutes)", step: "1" },
+    { key: "abat", title: "ABAT (abattement pour la persistance)", step: "0.01" },
+  ];
+  function renderRevisionAlgoEditor() {
+    const wrap = el("dev-revision-algo-list");
+    if (wrap) {
+      const settings = loadDevSettings().revisionAlgo;
+      wrap.innerHTML = REVISION_ALGO_FIELD_DEFS.map(
+        ({ key, title, step }) => `<div class="dev-color-row">
+          <span>${title}</span>
+          <span class="algo-grid algo-grid--4" style="flex:1;">
+            ${REVISION_ALGO_RATING_ORDER.map(
+              (rating, idx) =>
+                `<label class="field settings-bonus-field">
+                  <span>${REVISION_ALGO_RATING_LABELS[rating]}</span>
+                  <input type="number" step="${step}" class="dev-revision-algo-input" data-key="${key}" data-idx="${idx}" value="${settings[key][idx]}" />
+                </label>`
+            ).join("")}
+          </span>
+        </div>`
+      ).join("");
+      wrap.querySelectorAll(".dev-revision-algo-input").forEach((input) => {
+        input.addEventListener("input", () => {
+          const s = loadDevSettings();
+          const idx = Number(input.dataset.idx);
+          s.revisionAlgo[input.dataset.key][idx] = Number(input.value) || 0;
+          saveDevSettings(s);
+          updateRatingPreviews();
+        });
+      });
+    }
+    const initialInput = el("dev-revision-algo-initial-delay");
+    if (initialInput) initialInput.value = loadDevSettings().revisionAlgo.initialDelayMin;
+    ["palierCourtTermeJ", "palierMoyenTermeJ", "palierLongTermeJ"].forEach((k) => {
+      const input = el(`dev-revision-algo-${k}`);
+      if (input) input.value = loadDevSettings().revisionAlgo[k];
+    });
+  }
+  function saveRevisionAlgoFromInputs() {
+    const settings = loadDevSettings();
+    const initialInput = el("dev-revision-algo-initial-delay");
+    if (initialInput) settings.revisionAlgo.initialDelayMin = Number(initialInput.value) || DEFAULT_REVISION_ALGO_SETTINGS.initialDelayMin;
+    ["palierCourtTermeJ", "palierMoyenTermeJ", "palierLongTermeJ"].forEach((k) => {
+      const input = el(`dev-revision-algo-${k}`);
+      if (input) settings.revisionAlgo[k] = Number(input.value) || DEFAULT_REVISION_ALGO_SETTINGS[k];
+    });
+    saveDevSettings(settings);
+    renderManageList();
+    updateRatingPreviews();
+    renderReviewGauge();
+    renderRevisionProgramList();
+  }
+  ["dev-revision-algo-initial-delay", "dev-revision-algo-palierCourtTermeJ", "dev-revision-algo-palierMoyenTermeJ", "dev-revision-algo-palierLongTermeJ"].forEach((id) => {
+    const input = el(id);
+    if (input) input.addEventListener("input", saveRevisionAlgoFromInputs);
+  });
+  const devRevisionAlgoResetBtn = el("dev-revision-algo-reset");
+  if (devRevisionAlgoResetBtn) {
+    devRevisionAlgoResetBtn.addEventListener("click", () => {
+      const settings = loadDevSettings();
+      settings.revisionAlgo = { ...DEFAULT_REVISION_ALGO_SETTINGS };
+      settings.persGaugeColors = { ...DEFAULT_PERS_GAUGE_COLORS };
+      saveDevSettings(settings);
+      renderDevView();
+      renderManageList();
+      updateRatingPreviews();
+      renderReviewGauge();
+      renderRevisionProgramList();
+    });
+  }
+  function renderPersGaugeColorsEditor() {
+    const wrap = el("dev-pers-gauge-colors-list");
+    if (!wrap) return;
+    const settings = loadDevSettings();
+    wrap.innerHTML = PERS_GAUGE_ZONE_ORDER.map(
+      (key) => `<div class="dev-color-row">
+        <span>${PERS_GAUGE_ZONE_LABELS[key]}</span>
+        <input type="text" class="dev-pers-gauge-color-input" data-key="${key}" value="${settings.persGaugeColors[key]}" />
+      </div>`
+    ).join("");
+    wrap.querySelectorAll(".dev-pers-gauge-color-input").forEach((input) => {
+      input.addEventListener("input", () => {
+        const s = loadDevSettings();
+        s.persGaugeColors[input.dataset.key] = input.value;
+        saveDevSettings(s);
+        renderManageList();
+        renderReviewGauge();
+        renderRevisionProgramList();
+      });
+    });
+    enhanceColorInputsWithHsl();
   }
 
   /** Score des fiches (items 1a/1d/2) : P, B, seuils de jauge V1-V4, et
@@ -1712,7 +2337,15 @@
     // et jour juste après l'avoir pressé. saveDevSettings met à jour cet
     // horodatage à chaque fois, donc ce changement est toujours reconnu
     // comme le plus récent.
-    const settings = loadDevSettings();
+    // Bug corrigé (round 4, partie 3) : cette fonction tourne à CHAQUE
+    // démarrage, pour tout le monde (elle fixe le mode nuit selon l'heure)
+    // — en repartant de loadDevSettings() (l'instantané COMPLET, valeurs
+    // par défaut + réglages publiés compris), elle figeait par erreur cet
+    // instantané entier dans le stockage strictement local dès le tout
+    // premier démarrage, ce qui bloquait ensuite toute réception d'un
+    // réglage publié pour tout le monde. On repart maintenant de ce qui
+    // est VRAIMENT propre à cet appareil, sans y mélanger le reste.
+    const settings = loadRawDevSettingsOverride();
     settings.nightMode = value;
     saveDevSettings(settings);
     applyColorSettings();
@@ -2087,15 +2720,65 @@
     return Math.round(S * 100);
   }
 
+  /** Nouvel algorithme de révision (remplace le système de modes K/M
+   *  ci-dessus pour le CALCUL de l'échéance — celui-ci reste en mémoire,
+   *  encore éditable dans le mode développeur, mais n'influence plus la
+   *  planification réelle : décision à trancher avec l'utilisateur). Voir
+   *  DEFAULT_REVISION_ALGO_SETTINGS pour le détail de la formule. */
+  function revisionAlgoPaliersMin(settings) {
+    return {
+      court: (settings.palierCourtTermeJ || 0) * 1440,
+      moyen: (settings.palierMoyenTermeJ || 0) * 1440,
+      long: (settings.palierLongTermeJ || 0) * 1440,
+    };
+  }
+  /** Palier (court/moyen/long/tresLong) dans lequel tombe la persistance
+   *  (en minutes) d'une fiche — utilisé par la jauge à 4 segments. */
+  function classifyPersBracket(persMin, settings) {
+    const p = revisionAlgoPaliersMin(settings);
+    if (persMin < p.court) return "court";
+    if (persMin < p.moyen) return "moyen";
+    if (persMin < p.long) return "long";
+    return "tresLong";
+  }
+  /** Temps écoulé (minutes) depuis la dernière interrogation d'une fiche
+   *  — depuis sa création si elle n'a encore jamais été révisée. */
+  function cardElapsedMinutes(card, now) {
+    const ref = card.lastReviewed || card.createdAt;
+    if (!ref) return 0;
+    return Math.max(0, (now.getTime() - new Date(ref).getTime()) / 60000);
+  }
   function computeAlgoNext(card, rating, subjectId) {
-    const settings = getSubjectAlgoSettings(subjectId);
-    const rawBefore = currentDeadlineRaw(card);
-    const rawAfter = computeNextDeadlineRaw(rawBefore, rating, settings);
-    const rawAfterRounded3 = Math.round(rawAfter * 1000) / 1000;
-    const intervalDays = Math.max(1, Math.round(rawAfter));
-    const due = startOfDay(new Date());
-    due.setDate(due.getDate() + intervalDays);
-    return { deadlineDaysRaw: rawAfterRounded3, interval: intervalDays, dueDate: due.toISOString() };
+    const settings = loadDevSettings().revisionAlgo;
+    const idx = REVISION_ALGO_RATING_ORDER.indexOf(rating);
+    if (idx < 0) return { dd: settings.initialDelayMin, pers: 0, interval: 1, dueDate: new Date().toISOString() };
+    const now = new Date();
+    const dd = typeof card.dd === "number" && Number.isFinite(card.dd) ? card.dd : settings.initialDelayMin;
+    const te = cardElapsedMinutes(card, now);
+    const coefTe = settings.coefTe[idx] || 0;
+    const coefDd = settings.coefDd[idx] || 0;
+    const plafond = settings.plafondMin[idx];
+    const plancher = settings.plancherMin[idx];
+    const abat = settings.abat[idx] || 0;
+
+    const ddTerm = dd * coefDd;
+    const raw = Math.max(ddTerm, te * coefTe);
+    const ceiling = Math.min(plafond, ddTerm);
+    let ndi = Math.min(raw, ceiling);
+    if (ndi < plancher) ndi = plancher;
+    const pers = ndi * abat;
+
+    const due = new Date(now.getTime() + ndi * 60000);
+    // `interval` (jours, arrondi) et `deadlineDaysRaw` sont dérivés pour la
+    // compatibilité des affichages/fonctions encore en jours (histogrammes,
+    // score legacy) — ils ne pilotent plus la planification elle-même.
+    return {
+      dd: Math.round(ndi * 100) / 100,
+      pers: Math.round(pers * 100) / 100,
+      interval: Math.max(0, Math.round(ndi / 1440)),
+      deadlineDaysRaw: Math.round((ndi / 1440) * 1000) / 1000,
+      dueDate: due.toISOString(),
+    };
   }
 
 
@@ -2120,24 +2803,30 @@
     `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
   function newCard(question, answer, subjectId = currentSubjectId) {
-    const now = new Date().toISOString();
+    const now = new Date();
+    const nowIso = now.toISOString();
+    const initialDelayMin = loadDevSettings().revisionAlgo.initialDelayMin;
+    const due = new Date(now.getTime() + initialDelayMin * 60000);
     return {
       id: uid(),
       subject: subjectId,
       question,
       answer,
-      createdAt: now,
-      dueDate: now, // due immédiatement
+      createdAt: nowIso,
+      dueDate: due.toISOString(), // maintenant + délai initial (5 min par défaut)
       lastReviewed: null,
       reviewCount: 0,
-      updatedAt: now,
+      updatedAt: nowIso,
       deleted: false,
       // Chantier (item 16) : fiche marquée à corriger/compléter plus tard.
       underConstruction: false,
-      // Nouvel algorithme (remplace SM-2) : échéance initiale = 1 jour, non
-      // arrondie (voir computeAlgoNext / currentDeadlineRaw).
-      interval: 1,
-      deadlineDaysRaw: 1,
+      // Nouvel algorithme de révision : dd/pers en MINUTES (voir
+      // computeAlgoNext). `interval`/`deadlineDaysRaw` (jours) restent
+      // dérivés pour compat avec les affichages non encore migrés.
+      dd: initialDelayMin,
+      pers: 0,
+      interval: 0,
+      deadlineDaysRaw: Math.round((initialDelayMin / 1440) * 1000) / 1000,
     };
   }
 
@@ -2278,6 +2967,19 @@
     return Math.round(sum / own.length);
   }
 
+  /** Nouvelle jauge de persistance (remplace le score 0-100 dans les 3
+   *  emplacements où il s'affichait) : renvoie le POOL de fiches d'une
+   *  boîte/dossier (ou null si vide), à passer à buildPersGaugeSvg. */
+  function subjectCardsPool(subjectId) {
+    const own = cards.filter((c) => !c.deleted && c.subject === subjectId);
+    return own.length > 0 ? own : null;
+  }
+  function folderCardsPool(folderId) {
+    const subjectIds = subjectIdsInFolder(folderId);
+    const own = cards.filter((c) => !c.deleted && subjectIds.includes(c.subject));
+    return own.length > 0 ? own : null;
+  }
+
   /** Lit le résultat RÉEL d'un picker multi-boîtes/dossiers (bug corrigé
    *  — items 2/4) : jusqu'ici, le résultat final était recalculé en
    *  ré-étendant chaque dossier COCHÉ à toutes ses boîtes, ignorant
@@ -2288,23 +2990,35 @@
    *  répercuté correctement par la cascade dossier -> descendants) ; les
    *  dossiers cochés ne servent plus qu'à décider l'AFFICHAGE (le nom du
    *  dossier si sa sélection correspond exactement à tout son contenu). */
-  function readMultiPickerResult(list) {
-    const resultIds = [...list.querySelectorAll('input[data-kind="subject"]:checked')].map((cb) => cb.value);
-    const checkedFolders = [...list.querySelectorAll('input[data-kind="folder"]:checked')];
+  /** Item 1 (nouveau lot) : la sélection est maintenant portée par un vrai
+   *  Set JS (mutable, transmis par référence aux sélecteurs), plutôt que
+   *  déduite des cases cochées dans le DOM — nécessaire depuis que les
+   *  dossiers peuvent rester repliés (leurs cases à cocher descendantes
+   *  n'existent alors pas dans le DOM). Cette fonction ne fait plus que
+   *  déterminer l'étiquette à afficher (nom d'un dossier si sa sélection
+   *  correspond exactement à tout son contenu, etc.) à partir de ce Set. */
+  function computeMultiPickerResult(selectedSubjectIds) {
+    const resultIds = [...selectedSubjectIds];
+    // Un dossier compte comme "coché" si TOUT son contenu (à toute
+    // profondeur) est dans la sélection — exactement le calcul utilisé
+    // pour cocher visuellement sa case dans l'arbre.
+    const checkedFolders = folders.filter((f) => {
+      if (isFolderABoite(f.id)) return false; // se comporte comme une boîte, pas comme un dossier
+      const ids = subjectIdsInFolder(f.id);
+      return ids.length > 0 && ids.every((id) => selectedSubjectIds.has(id));
+    });
     let label = "";
-    // Bug corrigé (item 2) : un dossier qui ne contient qu'UNE seule boîte
-    // tombait dans le cas "une seule boîte cochée" ci-dessous AVANT même
-    // d'être reconnu comme un dossier — le sélecteur affichait alors le
-    // nom de la boîte à l'intérieur plutôt que celui du dossier choisi.
-    // Il faut donc vérifier le dossier D'ABORD.
+    // Bug corrigé (item 2, lot précédent) : un dossier qui ne contient
+    // qu'UNE seule boîte tombait dans le cas "une seule boîte cochée"
+    // ci-dessous AVANT même d'être reconnu comme un dossier — le
+    // sélecteur affichait alors le nom de la boîte à l'intérieur plutôt
+    // que celui du dossier choisi. Il faut donc vérifier le dossier
+    // D'ABORD.
     if (checkedFolders.length === 1) {
-      const folderSubjectIds = subjectIdsInFolder(checkedFolders[0].value);
+      const folderSubjectIds = subjectIdsInFolder(checkedFolders[0].id);
       const matchesExactly =
         resultIds.length === folderSubjectIds.length && folderSubjectIds.every((id) => resultIds.includes(id));
-      if (matchesExactly) {
-        const f = folders.find((x) => x.id === checkedFolders[0].value);
-        label = f ? f.name : "";
-      }
+      if (matchesExactly) label = checkedFolders[0].name;
     }
     if (!label && resultIds.length === 1) {
       label = null; // signale "une seule boîte" à l'appelant (bascule directe)
@@ -2593,7 +3307,7 @@
    *  fiches/boîtes ; à droite (de droite à gauche) le bouton de dépli des
    *  actions (éditer/déplacer/supprimer, empilées verticalement dans un
    *  petit panneau), la jauge (plus courte/fine), le picto du mode. */
-  function buildRowBody({ nameBtnEl, expandBtnEl, countLabel, score, mode, onRename, onMove, onDelete, onAlgo, deleteTitle }) {
+  function buildRowBody({ nameBtnEl, expandBtnEl, countLabel, score: persPool, mode, onRename, onMove, onDelete, onAlgo, onShare, deleteTitle }) {
     const main = document.createElement("div");
     main.className = "org-row-main";
     if (expandBtnEl) {
@@ -2632,11 +3346,11 @@
     algoWrap.appendChild(algoBtn);
     slot.appendChild(algoWrap);
 
-    if (score !== null) {
+    if (persPool !== null) {
       const gaugeEl = document.createElement("span");
       gaugeEl.className = "org-info-slot-item org-gauge-inline";
       gaugeEl.dataset.slot = "2";
-      gaugeEl.innerHTML = buildLinearGaugeSvg(score, { width: 70, barHeight: 8, scoreFontSize: 11 });
+      gaugeEl.innerHTML = buildPersGaugeSvg(persPool, { width: 70, barHeight: 8 });
       slot.appendChild(gaugeEl);
     }
     main.appendChild(slot);
@@ -2676,6 +3390,19 @@
     });
     popover.appendChild(renameBtn);
     popover.appendChild(moveBtn);
+    // Partager dans la bibliothèque (uniquement pour une boîte — voir
+    // appendBoiteRow, qui est le seul appelant à fournir `onShare`).
+    if (onShare) {
+      const shareBtn = document.createElement("button");
+      shareBtn.type = "button";
+      shareBtn.className = "org-actions-popover-item";
+      shareBtn.innerHTML = `${iconSvgMarkup("share", "icon-inline-svg")}<span>Partager dans la bibliothèque</span>`;
+      shareBtn.addEventListener("click", () => {
+        closeAllOrgActionPopovers();
+        onShare();
+      });
+      popover.appendChild(shareBtn);
+    }
     popover.appendChild(delBtn);
     deployBtn.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -2712,29 +3439,42 @@
       const li = document.createElement("li");
       li.className = "subject-row" + (subjectId === currentSubjectId ? " is-active" : "");
 
+      const subjectForIcon = subjects.find((x) => x.id === subjectId);
+      // Icône en réseau (au lieu de l'icône de boîte habituelle) pour une
+      // collection prise dans la Bibliothèque — pour la reconnaître d'un
+      // coup d'œil dans Mes collections, comme demandé.
+      const boiteIconMarkup = subjectForIcon && subjectForIcon.fromLibrary ? iconSvgMarkup("share", "icon-inline-svg") : orgIconMarkup("orgBoite");
       const nameBtn = document.createElement("button");
       nameBtn.type = "button";
       nameBtn.className = "subject-row-name";
-      nameBtn.innerHTML = `${iconSvgMarkup("stackedSheets", "icon-inline-svg")} <span>${escapeHtml(displayName)}</span>`;
+      nameBtn.innerHTML = `${boiteIconMarkup} <span>${escapeHtml(displayName)}</span>`;
+      nameBtn.title = "Réviser cette boîte";
+      // Item 7 (lot précédent) : un clic sur une boîte mène directement à
+      // la page Réviser correspondante (au lieu de la page Fiches). Item 3
+      // (nouveau lot) : le bouton Accueil de Réviser doit alors ramener ici
+      // (Organisation) plutôt qu'au programme de révision.
       nameBtn.addEventListener("click", () => {
-        switchSubject(subjectId);
-        cardsScopeFilter = CARDS_SCOPE_CURRENT;
-        cardsEntryFromManage = true;
-        const tab = document.querySelector('.tab[data-view="cards"]');
-        if (tab) tab.click();
+        reviewEntryFromManage = true;
+        goToReviewFor(`subject:${subjectId}`);
       });
 
       const n = cards.filter((c) => !c.deleted && c.subject === subjectId).length;
-      const subjScore = computeSubjectScore(subjectId);
+      const subjScore = subjectCardsPool(subjectId);
       const body = buildRowBody({
         nameBtnEl: nameBtn,
         countLabel: `${n} fiche${n > 1 ? "s" : ""}`,
         score: subjScore,
         mode: getSubjectAlgoMode(subjectId),
         onRename: () => (isSelfLinkedFolder ? renameFolder(subjectId) : renameSubject(subjectId)),
-        onMove: () => openMovePicker(isSelfLinkedFolder ? "folder" : "subject", subjectId),
+        onMove: async () => {
+          // Round 3, item 1 : une boîte partagée par un professeur reste
+          // là où LUI l'a organisée — on ne peut pas la déplacer ici.
+          if (!isSelfLinkedFolder && (await blockIfSharedReadonly(subjectId))) return;
+          openMovePicker(isSelfLinkedFolder ? "folder" : "subject", subjectId);
+        },
         onDelete: () => deleteSubject(subjectId),
         onAlgo: () => openSubjectAlgoView(subjectId),
+        onShare: () => shareSubjectToLibrary(subjectId),
         deleteTitle: "Supprimer cette boîte",
       });
       li.appendChild(body);
@@ -2770,14 +3510,19 @@
       const nameBtn = document.createElement("button");
       nameBtn.type = "button";
       nameBtn.className = "subject-row-name";
-      nameBtn.title = "Voir les fiches de ce dossier";
-      nameBtn.innerHTML = `${iconSvgMarkup("folder", "icon-inline-svg")} <span>${escapeHtml(f.name)}</span>`;
+      nameBtn.title = "Réviser ce dossier";
+      // Round 3, item 1 : le dossier racine d'une classe (créé
+      // automatiquement chez l'élève) porte l'icône "classe" plutôt que
+      // l'icône dossier classique, pour qu'on le distingue au premier coup
+      // d'œil dans l'arborescence.
+      const folderIconMarkup = f.sharedClassRoot ? CLASSES_ROW_ICON : iconSvgMarkup("folder", "icon-inline-svg");
+      nameBtn.innerHTML = `${folderIconMarkup} <span>${escapeHtml(f.name)}</span>`;
+      // Item 7 (lot précédent) : un clic sur un dossier mène directement à
+      // la page Réviser correspondante (au lieu de la page Fiches). Item 3
+      // (nouveau lot) : Accueil depuis Réviser ramène alors ici.
       nameBtn.addEventListener("click", () => {
-        cardsScopeFilter = `folder:${f.id}`;
-        cardsEntryFromManage = true;
-        renderManageList();
-        const tab = document.querySelector('.tab[data-view="cards"]');
-        if (tab) tab.click();
+        reviewEntryFromManage = true;
+        goToReviewFor(`folder:${f.id}`);
       });
 
       const childCount = folders.filter((x) => x.parentId === f.id).length + subjects.filter((x) => x.folderId === f.id).length;
@@ -2786,16 +3531,28 @@
       if (!expanded && childCount > 0) li.classList.add("folder-row--stacked");
 
       const n = subjectIdsInFolder(f.id).length;
-      const folderScore = computeFolderScore(f.id);
+      const folderScore = folderCardsPool(f.id);
       const body = buildRowBody({
         nameBtnEl: nameBtn,
         expandBtnEl: expandBtn,
         countLabel: `${n} boîte${n > 1 ? "s" : ""}`,
         score: folderScore,
         mode: "normal",
-        onRename: () => renameFolder(f.id),
-        onMove: () => openMovePicker("folder", f.id),
-        onDelete: () => deleteFolder(f.id),
+        // Round 3, item 1 : un dossier de classe (racine ou reconstitué)
+        // reste organisé par le professeur — le mode d'apprentissage
+        // (onAlgo) reste, lui, un réglage personnel, donc autorisé.
+        onRename: async () => {
+          if (await blockIfSharedClassFolder(f.id)) return;
+          await renameFolder(f.id);
+        },
+        onMove: async () => {
+          if (await blockIfSharedClassFolder(f.id)) return;
+          openMovePicker("folder", f.id);
+        },
+        onDelete: async () => {
+          if (await blockIfSharedClassFolder(f.id)) return;
+          await deleteFolder(f.id);
+        },
         onAlgo: () => openAssignView("folder", f.id, "manage"),
         deleteTitle: "Supprimer ce dossier (doit être vide)",
       });
@@ -2852,6 +3609,9 @@
       selfSubject.updatedAt = f.updatedAt;
       await persistSubject(selfSubject);
     }
+    // Round 3, item 1 : ce renommage peut changer le chemin affiché d'une
+    // boîte partagée nichée plus bas dans ce dossier.
+    await pushSharedBoxUpdatesForAllSharedSubjects();
     renderSubjectManageList();
   }
 
@@ -2863,11 +3623,11 @@
       return;
     }
     if (!folderIsEmpty(folderId)) {
-      alert("Ce dossier n'est pas vide : déplace ou supprime d'abord ce qu'il contient.");
+      await robotAlert("Ce dossier n'est pas vide : déplace ou supprime d'abord ce qu'il contient.");
       return;
     }
     const f = folders.find((x) => x.id === folderId);
-    if (!confirm(`Supprimer le dossier « ${f ? f.name : ""} » ?`)) return;
+    if (!(await robotConfirm(`Supprimer le dossier « ${f ? f.name : ""} » ?`, { danger: true }))) return;
     folders = folders.filter((x) => x.id !== folderId);
     if (f) await pushFolderDeleted(f);
     await DB.removeFolder(folderId);
@@ -2877,76 +3637,46 @@
   /* ---------------------------------------------------------
      Déplacer un dossier ou une boîte vers un autre dossier
   --------------------------------------------------------- */
-  let movePickerKind = null; // "folder" | "subject"
-  let movePickerTargetId = null;
-
   function openMovePicker(kind, targetId) {
-    movePickerKind = kind;
-    movePickerTargetId = targetId;
-    const picker = el("move-picker");
-    const list = el("move-picker-list");
-    const title = el("move-picker-title");
-    if (!picker || !list) return;
-
     // Pour un dossier, on exclut lui-même et tous ses descendants de la
     // liste des destinations possibles (on ne peut pas le déplacer dans
     // lui-même ou l'un de ses propres sous-dossiers).
     const excluded = kind === "folder" ? new Set([targetId, ...folderDescendantIds(targetId)]) : new Set();
+    // Round 3, item 1 : le dossier racine d'une classe (et donc tout son
+    // sous-arbre, jamais atteint puisqu'on ne descend pas dedans) n'est
+    // jamais une destination valide — cette organisation appartient au
+    // professeur, on n'y dépose rien depuis ici.
+    folders.forEach((f) => {
+      if (f.sharedClassRoot) excluded.add(f.id);
+    });
     const name = kind === "folder" ? (folders.find((f) => f.id === targetId) || {}).name : (subjects.find((s) => s.id === targetId) || {}).name;
-    if (title) title.textContent = `Déplacer « ${name || ""} » vers :`;
 
-    list.innerHTML = "";
-    const rootLabel = document.createElement("label");
-    rootLabel.className = "multi-subject-picker-item";
-    rootLabel.innerHTML = `<input type="radio" name="move-target" value="" checked /> <span>🗂️ Racine</span>`;
-    list.appendChild(rootLabel);
-
-    folders
-      .filter((f) => !excluded.has(f.id) && !isFolderABoite(f.id))
-      .sort((a, b) => a.name.localeCompare(b.name, "fr"))
-      .forEach((f) => {
-        const label = document.createElement("label");
-        label.className = "multi-subject-picker-item";
-        const path = folderPath(f.id).map((p) => p.name).join(" / ");
-        label.innerHTML = `<input type="radio" name="move-target" value="${f.id}" /> <span>${folderIcon()} ${escapeHtml(path)}</span>`;
-        list.appendChild(label);
-      });
-
-    picker.hidden = false;
-  }
-
-  function closeMovePicker() {
-    const picker = el("move-picker");
-    if (picker) picker.hidden = true;
-    movePickerKind = null;
-    movePickerTargetId = null;
-  }
-
-  const movePickerCancelBtn = el("move-picker-cancel");
-  if (movePickerCancelBtn) movePickerCancelBtn.addEventListener("click", closeMovePicker);
-
-  const movePickerConfirmBtn = el("move-picker-confirm");
-  if (movePickerConfirmBtn) {
-    movePickerConfirmBtn.addEventListener("click", async () => {
-      const checked = document.querySelector('input[name="move-target"]:checked');
-      const destId = checked && checked.value ? checked.value : ROOT_FOLDER_ID;
-      if (movePickerKind === "folder") {
-        const f = folders.find((x) => x.id === movePickerTargetId);
-        if (f) {
-          f.parentId = destId;
-          f.updatedAt = new Date().toISOString();
-          await persistFolder(f);
+    openBoitePickerView({
+      mode: "single",
+      title: `Déplacer « ${name || ""} » vers :`,
+      excludedFolderIds: excluded,
+      onPick: async (kindPicked, destId) => {
+        if (kind === "folder") {
+          const f = folders.find((x) => x.id === targetId);
+          if (f) {
+            f.parentId = destId;
+            f.updatedAt = new Date().toISOString();
+            await persistFolder(f);
+          }
+        } else if (kind === "subject") {
+          const s = subjects.find((x) => x.id === targetId);
+          if (s) {
+            s.folderId = destId;
+            s.updatedAt = new Date().toISOString();
+            await persistSubject(s);
+          }
         }
-      } else if (movePickerKind === "subject") {
-        const s = subjects.find((x) => x.id === movePickerTargetId);
-        if (s) {
-          s.folderId = destId;
-          s.updatedAt = new Date().toISOString();
-          await persistSubject(s);
-        }
-      }
-      closeMovePicker();
-      renderSubjectManageList();
+        // Round 3, item 1 : ce déplacement peut changer le chemin affiché
+        // d'une (ou, pour un dossier déplacé, plusieurs) boîte(s) partagée(s).
+        await pushSharedBoxUpdatesForAllSharedSubjects();
+        closeBoitePickerView();
+        renderSubjectManageList();
+      },
     });
   }
 
@@ -3317,7 +4047,7 @@
       const modes = loadLearningModes();
       const m = modes[algoEditingModeId];
       if (!m || m.builtin) return;
-      if (!confirm(`Supprimer le mode « ${m.name} » ? Les boîtes qui l'utilisent repasseront en mode Normal.`)) return;
+      if (!(await robotConfirm(`Supprimer le mode « ${m.name} » ? Les boîtes qui l'utilisent repasseront en mode Normal.`, { danger: true }))) return;
       await deleteCustomMode(algoEditingModeId);
       const remaining = Object.values(loadLearningModes()).filter((x) => !x.builtin);
       if (remaining.length > 0) {
@@ -3359,11 +4089,11 @@
 
   const algoResetBtn = el("algo-reset-btn");
   if (algoResetBtn) {
-    algoResetBtn.addEventListener("click", () => {
+    algoResetBtn.addEventListener("click", async () => {
       const modes = loadLearningModes();
       const m = modes[algoEditingModeId];
       if (!m || !m.builtin) return;
-      if (!confirm(`Remettre le mode ${m.name} à ses valeurs d'origine ? Toutes les boîtes qui l'utilisent seront concernées.`)) return;
+      if (!(await robotConfirm(`Remettre le mode ${m.name} à ses valeurs d'origine ? Toutes les boîtes qui l'utilisent seront concernées.`))) return;
       updateModeProfile(algoEditingModeId, getFactoryDefaults()[algoEditingModeId]);
       loadModeFormIntoInputs(algoEditingModeId);
       renderSubjectAlgoBadge();
@@ -3473,6 +4203,7 @@
 
     document.querySelectorAll(".view").forEach((v) => v.classList.remove("is-active"));
     el("view-mode-assign").classList.add("is-active");
+    applyBodyLogoSpeech("mode-assign");
   }
 
   // Conservé pour compatibilité avec les anciens appels (page Réviser) —
@@ -3496,6 +4227,7 @@
       targetTab.classList.add("is-active");
       targetTab.setAttribute("aria-selected", "true");
     }
+    applyBodyLogoSpeech(targetView);
   }
 
   const assignBackBtn = el("assign-back-btn");
@@ -3513,7 +4245,7 @@
         return daysAhead > 10;
       });
       if (targets.length === 0) {
-        alert("Aucune fiche de cette boîte n'a une prochaine interrogation prévue dans plus de 10 jours.");
+        await robotAlert("Aucune fiche de cette boîte n'a une prochaine interrogation prévue dans plus de 10 jours.");
         return;
       }
       const msg =
@@ -3521,7 +4253,7 @@
         `interrogation à 10 jours pour ${targets.length} fiche${targets.length > 1 ? "s" : ""} ` +
         `de « ${subject ? subject.name : ""} » (celles actuellement prévues dans plus de 10 jours). ` +
         `Cette action est irréversible. Continuer ?`;
-      if (!confirm(msg)) return;
+      if (!(await robotConfirm(msg, { danger: true }))) return;
 
       const due = new Date(today);
       due.setDate(due.getDate() + 10);
@@ -3534,7 +4266,7 @@
       renderStats();
       renderManageList();
       renderDuePill();
-      alert(`${targets.length} fiche${targets.length > 1 ? "s" : ""} ramenée${targets.length > 1 ? "s" : ""} à 10 jours.`);
+      await robotAlert(`${targets.length} fiche${targets.length > 1 ? "s" : ""} ramenée${targets.length > 1 ? "s" : ""} à 10 jours.`);
     });
   }
 
@@ -3550,7 +4282,41 @@
     return subject;
   }
 
+  /** item 3 (2e lot, Classes) : une boîte reçue d'un prof (via une classe)
+   *  est un miroir en lecture seule — son contenu (fiches, nom) suit les
+   *  modifications du prof automatiquement, un élève ne peut donc ni le
+   *  renommer, ni le supprimer, ni ajouter/modifier/supprimer une fiche à
+   *  l'intérieur. Seule sa progression personnelle (SM-2) lui appartient. */
+  function isSharedReadonlySubject(subjectId) {
+    const s = subjects.find((x) => x.id === subjectId);
+    return !!(s && s.sharedBoxId);
+  }
+  async function blockIfSharedReadonly(subjectId) {
+    if (isSharedReadonlySubject(subjectId)) {
+      await robotAlert("Cette boîte est partagée par ton professeur : elle se met à jour toute seule, tu ne peux pas la modifier ici.");
+      return true;
+    }
+    return false;
+  }
+  /** Round 3, item 1 : un dossier fait partie du miroir en lecture seule
+   *  d'une classe (dossier racine de la classe, ou sous-dossier reconstitué
+   *  pour suivre l'organisation du prof) si `sharedClassId` est posé dessus
+   *  — toute réorganisation y est bloquée, même logique que pour une boîte
+   *  partagée (voir isSharedReadonlySubject ci-dessus). */
+  function isSharedClassFolder(folderId) {
+    const f = folders.find((x) => x.id === folderId);
+    return !!(f && f.sharedClassId);
+  }
+  async function blockIfSharedClassFolder(folderId) {
+    if (isSharedClassFolder(folderId)) {
+      await robotAlert("Ce dossier fait partie d'une classe : son organisation est gérée par ton professeur, tu ne peux pas la modifier ici.");
+      return true;
+    }
+    return false;
+  }
+
   async function renameSubject(id) {
+    if (await blockIfSharedReadonly(id)) return;
     const s = subjects.find((x) => x.id === id);
     if (!s) return;
     const name = prompt("Nouveau nom de la boîte :", s.name);
@@ -3566,8 +4332,9 @@
   }
 
   async function deleteSubject(id) {
+    if (await blockIfSharedReadonly(id)) return;
     if (subjects.length <= 1) {
-      alert("Impossible de supprimer la dernière boîte restante.");
+      await robotAlert("Impossible de supprimer la dernière boîte restante.");
       return;
     }
     const s = subjects.find((x) => x.id === id);
@@ -3577,7 +4344,7 @@
       n > 0
         ? `Supprimer la boîte « ${s.name} » et ses ${n} fiche(s) ? Cette action est irréversible.`
         : `Supprimer la boîte « ${s.name} » ?`;
-    if (!confirm(confirmMsg)) return;
+    if (!(await robotConfirm(confirmMsg, { danger: true }))) return;
 
     // Suppression douce des fiches de cette boîte (cohérent avec la sync).
     const toDelete = cards.filter((c) => !c.deleted && c.subject === id);
@@ -3654,7 +4421,6 @@
   }
   if (subjectSelectBtn) {
     subjectSelectBtn.addEventListener("click", () => {
-      closeMultiSubjectPicker();
       openSubjectChoiceMenu();
     });
   }
@@ -3691,195 +4457,463 @@
    *  multi-boîtes (item 1) : cocher un dossier inclut TOUTES les boîtes
    *  qu'il contient (y compris dans ses sous-dossiers), sans avoir besoin
    *  de les cocher une par une. */
-  function renderFolderTreeForPicker(container, parentId, depth, selectedSubjectIds) {
-    const childFolders = folders.filter((f) => f.parentId === parentId).sort((a, b) => a.name.localeCompare(b.name, "fr"));
-    const childSubjects = subjects.filter((s) => s.folderId === parentId).sort((a, b) => a.name.localeCompare(b.name, "fr"));
-    childFolders.forEach((f) => {
-      const ids = subjectIdsInFolder(f.id);
-      const label = document.createElement("label");
-      label.className = "multi-subject-picker-item";
-      label.style.paddingLeft = `${depth * 18}px`;
-      const cb = document.createElement("input");
-      cb.type = "checkbox";
-      cb.dataset.kind = "folder";
-      cb.value = f.id;
-      cb.checked = ids.length > 0 && ids.every((id) => selectedSubjectIds.has(id));
-      // Cocher/décocher un dossier répercute le même état sur tout ce
-      // qu'il contient — sous-dossiers et boîtes, à toute profondeur
-      // (item 7).
-      cb.addEventListener("change", () => {
-        const descendantFolderIds = new Set(folderDescendantIds(f.id));
-        const descendantSubjectIds = new Set(subjectIdsInFolder(f.id));
-        container.querySelectorAll('input[type="checkbox"]').forEach((other) => {
-          if (other === cb) return;
-          if (other.dataset.kind === "folder" && descendantFolderIds.has(other.value)) {
-            other.checked = cb.checked;
-          } else if (other.dataset.kind === "subject" && descendantSubjectIds.has(other.value)) {
-            other.checked = cb.checked;
-          }
-        });
+  /** État plié/déplié des dossiers dans TOUS les sélecteurs de boîtes
+   *  (item 1, nouveau lot) — partagé entre eux, séparé de celui de la page
+   *  Organisation elle-même (expandedManageFolders), pour un comportement
+   *  d'ouverture/fermeture identique (dossiers repliés par défaut, chevron
+   *  qui plie/déplie, effet de pile) sans lier les deux pages entre elles. */
+  const pickerExpandedFolders = new Set();
+
+  /** Construit une ligne de sélecteur dans le même style que les blocs de
+   *  la page Organisation (item 1) : flèche de dépli, icône + nom,
+   *  compteur, éventuelle case à cocher — identique à
+   *  buildRowBody/renderTreeLevel de la page Organisation, juste sans les
+   *  actions Éditer/Déplacer/Supprimer (pas de sens dans un sélecteur). */
+  function buildPickerRow({ depth, isFolder, iconMarkup, nameText, countLabel, expandable, expanded, onToggleExpand, selectControl, checked, dataKind, value, onRowSelect, rowSelectable }) {
+    const li = document.createElement("li");
+    li.className = "subject-row picker-row" + (isFolder ? ` folder-row folder-row-depth-${Math.min(depth, 3)}` : "");
+    const main = document.createElement(selectControl === "checkbox" ? "label" : "div");
+    main.className = "org-row-main picker-row-main";
+
+    if (expandable) {
+      const expandBtn = document.createElement("button");
+      expandBtn.type = "button";
+      expandBtn.className = "org-expand-btn";
+      expandBtn.title = expanded ? "Replier ce dossier" : "Déplier ce dossier";
+      expandBtn.innerHTML = iconSvgMarkup(expanded ? "chevronDown" : "chevronRight", "icon-inline-svg");
+      expandBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        onToggleExpand();
       });
-      const span = document.createElement("span");
-      span.textContent = `${folderIcon()} ${f.name}`;
-      label.appendChild(cb);
-      label.appendChild(span);
-      container.appendChild(label);
-      renderFolderTreeForPicker(container, f.id, depth + 1, selectedSubjectIds);
-    });
-    childSubjects.forEach((s) => {
-      const label = document.createElement("label");
-      label.className = "multi-subject-picker-item";
-      label.style.paddingLeft = `${depth * 18}px`;
-      const cb = document.createElement("input");
+      main.appendChild(expandBtn);
+    }
+
+    let cb = null;
+    if (selectControl === "checkbox") {
+      cb = document.createElement("input");
       cb.type = "checkbox";
-      cb.dataset.kind = "subject";
-      cb.value = s.id;
-      cb.checked = selectedSubjectIds.has(s.id);
-      const span = document.createElement("span");
-      span.textContent = s.name;
-      label.appendChild(cb);
-      label.appendChild(span);
-      container.appendChild(label);
-    });
+      cb.className = "picker-row-checkbox";
+      cb.dataset.kind = dataKind;
+      cb.value = value;
+      cb.checked = checked;
+      main.appendChild(cb);
+    }
+
+    const nameWrap = document.createElement("span");
+    nameWrap.className = "subject-row-name";
+    nameWrap.innerHTML = `${iconMarkup} <span>${escapeHtml(nameText)}</span>`;
+    main.appendChild(nameWrap);
+
+    const spacer = document.createElement("span");
+    spacer.className = "org-row-spacer";
+    main.appendChild(spacer);
+
+    if (countLabel) {
+      const count = document.createElement("span");
+      count.className = "org-count";
+      count.textContent = countLabel;
+      main.appendChild(count);
+    }
+
+    if (rowSelectable) {
+      main.classList.add("picker-row-main--selectable");
+      main.addEventListener("click", (e) => {
+        if (e.target.closest(".org-expand-btn")) return;
+        onRowSelect();
+      });
+    }
+
+    li.appendChild(main);
+    return { li, cb, main };
   }
 
-  function openMultiSubjectPicker() {
-    const picker = el("multi-subject-picker");
-    const list = el("multi-subject-picker-list");
-    if (!picker || !list) return;
-    const selected = new Set(loadMultiSelection());
-    list.innerHTML = "";
-    renderFolderTreeForPicker(list, ROOT_FOLDER_ID, 0, selected);
-    picker.hidden = false;
-  }
+  /** Construit récursivement l'arbre dossiers/boîtes utilisé par TOUS les
+   *  sélecteurs de boîtes de l'appli (item 1, nouveau lot) : Réviser,
+   *  Fiches (recherche), Stats, "Nouvelle fiche" et création d'un
+   *  événement de calendrier — présentation, plié/déplié et effet de pile
+   *  strictement identiques à la page Organisation.
+   *  - mode "multi" : case à cocher, cocher un dossier coche tout son
+   *    contenu (item 7 du lot précédent).
+   *  - mode "single" : clic direct sur le nom = choix immédiat. Les
+   *    dossiers non vides ne sont sélectionnables que si
+   *    folderAlwaysSelectable est vrai (événement de calendrier, qui peut
+   *    lier un dossier entier) ; sinon (choix de boîte pour une nouvelle
+   *    fiche) seuls une boîte ou un dossier VIDE (qui deviendra boîte) le
+   *    sont — un dossier non vide reste un simple repère à déplier. */
+  function renderFolderTreeForPicker(container, parentId, depth, ctx) {
+    const excluded = ctx.excludedFolderIds;
+    let childFolders = folders.filter((f) => f.parentId === parentId).sort((a, b) => a.name.localeCompare(b.name, "fr"));
+    if (excluded) childFolders = childFolders.filter((f) => !excluded.has(f.id));
+    // Une boîte auto-liée (même id qu'un dossier) est rendue via la boucle
+    // des dossiers ci-dessous — jamais listée deux fois ici (item 1). Quand
+    // ctx.hideBoites est vrai (sélecteur de destination de déplacement),
+    // aucune boîte n'est un dossier valide où déplacer quoi que ce soit :
+    // on les masque entièrement, elles et les fiches qu'elles contiennent.
+    const childSubjects = ctx.hideBoites
+      ? []
+      : subjects
+          .filter((s) => s.folderId === parentId && !folders.some((f) => f.id === s.id))
+          .filter((s) => !ctx.excludeSubjectIds || !ctx.excludeSubjectIds.has(s.id))
+          .sort((a, b) => a.name.localeCompare(b.name, "fr"));
 
-  function closeMultiSubjectPicker() {
-    const picker = el("multi-subject-picker");
-    if (picker) picker.hidden = true;
-  }
-
-  const multiPickerCancelBtn = el("multi-subject-picker-cancel");
-  if (multiPickerCancelBtn) {
-    // "Annuler" (item 18) : referme la fenêtre et reste sur le choix
-    // précédent, sans rien modifier.
-    multiPickerCancelBtn.addEventListener("click", () => closeMultiSubjectPicker());
-  }
-
-  const multiPickerConfirmBtn = el("multi-subject-picker-confirm");
-  if (multiPickerConfirmBtn) {
-    multiPickerConfirmBtn.addEventListener("click", () => {
-      const list = el("multi-subject-picker-list");
-      const { resultIds, singleSubjectId, label } = readMultiPickerResult(list);
-      if (resultIds.length === 0) {
-        alert("Choisis au moins une boîte ou un dossier.");
-        return;
-      }
-      closeMultiSubjectPicker();
-
-      // Affichage intelligent (item 18) : une seule boîte au final -> on
-      // bascule directement dessus (son nom s'affiche naturellement,
-      // inutile de passer par le mode "sélection"). Sélection qui
-      // correspond exactement à un seul dossier -> son nom. Sinon,
-      // libellé générique "Sélection de boîtes".
-      if (singleSubjectId) {
-        switchSubject(singleSubjectId, true);
-        return;
-      }
-      saveMultiSelection(resultIds);
-      saveMultiSelectionLabel(label || "");
-      switchSubject(MULTI_SUBJECTS_ID, true);
-    });
-  }
-
-  /** Arbre à choix unique (item : boîte de création d'une nouvelle fiche
-   *  dans Fiches) — dossiers en simples en-têtes non cliquables, boîtes
-   *  en boutons ; clic = choix immédiat, pas de coche ni de confirmation. */
-  /** Item 1 : un dossier vide devient sélectionnable (il deviendra une
-   *  boîte au moment où on y ajoute la fiche), une boîte existante reste
-   *  sélectionnable comme avant, et un dossier non vide (qui contient déjà
-   *  un sous-dossier ou une boîte) n'apparaît plus du tout comme
-   *  destination possible — juste un repère non cliquable, comme avant. */
-  function renderSubjectTreeForSingleChoice(container, parentId, depth, onPick) {
-    const childFolders = folders
-      .filter((f) => f.parentId === parentId)
-      .sort((a, b) => a.name.localeCompare(b.name, "fr"));
-    const childSubjects = subjects
-      .filter((s) => s.folderId === parentId && !folders.some((f) => f.id === s.id))
-      .sort((a, b) => a.name.localeCompare(b.name, "fr"));
     childFolders.forEach((f) => {
       if (isFolderABoite(f.id)) {
-        // Ce dossier EST une boîte (auto-liée) : un item cliquable, comme
-        // n'importe quelle autre boîte.
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "subject-choice-tree-item";
-        btn.style.paddingLeft = `${12 + depth * 14}px`;
-        btn.textContent = f.name;
-        btn.addEventListener("click", () => onPick(f.id));
-        container.appendChild(btn);
+        if (ctx.hideBoites) return;
+        if (ctx.excludeSubjectIds && ctx.excludeSubjectIds.has(f.id)) return;
+        const n = cards.filter((c) => !c.deleted && c.subject === f.id).length;
+        appendPickerBoiteRow(container, depth, f.id, f.name, n, ctx);
         return;
       }
-      if (folderIsEmpty(f.id)) {
-        // Dossier vide : sélectionnable, deviendra une boîte à cet instant.
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "subject-choice-tree-item subject-choice-tree-item--empty-folder";
-        btn.style.paddingLeft = `${12 + depth * 14}px`;
-        btn.innerHTML = `${folderIcon()} ${escapeHtml(f.name)} <span class="field-hint" style="display:inline;">(dossier vide)</span>`;
-        btn.addEventListener("click", async () => {
+      const childCount = folders.filter((x) => x.parentId === f.id).length + subjects.filter((x) => x.folderId === f.id).length;
+      const expanded = pickerExpandedFolders.has(f.id);
+      const ids = subjectIdsInFolder(f.id);
+      const isEmpty = folderIsEmpty(f.id);
+      // Round 3, item 1 : un dossier vide de classe ne doit jamais pouvoir
+      // devenir une boîte via ce raccourci (sélecteur "Nouvelle fiche") —
+      // seule une sélection "dossier entier" (folderAlwaysSelectable, ex.
+      // Réviser/événement de calendrier) reste possible dessus.
+      const rowSelectable =
+        ctx.mode === "single" && (ctx.folderAlwaysSelectable || (isEmpty && !f.sharedClassId));
+      const { li, cb } = buildPickerRow({
+        depth,
+        isFolder: true,
+        expandable: true,
+        expanded,
+        onToggleExpand: () => {
+          if (expanded) pickerExpandedFolders.delete(f.id);
+          else pickerExpandedFolders.add(f.id);
+          ctx.rerenderRoot();
+        },
+        iconMarkup: iconSvgMarkup("folder", "icon-inline-svg"),
+        nameText: f.name + (ctx.mode === "single" && isEmpty ? " (dossier vide)" : ""),
+        countLabel: `${ids.length} boîte${ids.length > 1 ? "s" : ""}`,
+        selectControl: ctx.mode === "multi" ? "checkbox" : "none",
+        checked: ctx.mode === "multi" && ids.length > 0 && ids.every((id) => ctx.selectedSubjectIds.has(id)),
+        dataKind: "folder",
+        value: f.id,
+        rowSelectable,
+        onRowSelect: async () => {
+          if (ctx.folderAlwaysSelectable) {
+            ctx.onPick("folder", f.id);
+            return;
+          }
+          // Dossier vide (item 1 du lot précédent) : devient boîte à cet
+          // instant précis, puis se comporte comme n'importe quelle boîte.
           const s = await ensureFolderIsBoite(f.id);
-          if (s) onPick(s.id);
+          if (s) ctx.onPick("subject", s.id);
+        },
+      });
+      if (!expanded && childCount > 0) li.classList.add("folder-row--stacked");
+      if (cb) {
+        // Item 1 (nouveau lot) : la sélection vit dans un vrai Set JS
+        // (ctx.selectedSubjectIds, muté en place puis re-rendu) plutôt que
+        // déduite des cases cochées visibles dans le DOM — nécessaire
+        // puisqu'un dossier replié peut cocher des boîtes qui n'ont pas
+        // (encore) de case affichée à l'écran.
+        cb.addEventListener("change", () => {
+          if (cb.checked) ids.forEach((id) => ctx.selectedSubjectIds.add(id));
+          else ids.forEach((id) => ctx.selectedSubjectIds.delete(id));
+          if (ctx.onSelectionChange) ctx.onSelectionChange();
+          ctx.rerenderRoot();
         });
-        container.appendChild(btn);
-        return;
       }
-      // Dossier non vide (sous-dossiers et/ou boîtes dedans) : simple
-      // repère, on ne peut pas y ranger une fiche directement (item 1).
-      const header = document.createElement("div");
-      header.className = "subject-choice-tree-folder";
-      header.style.paddingLeft = `${10 + depth * 14}px`;
-      header.textContent = `${folderIcon()} ${f.name}`;
-      container.appendChild(header);
-      renderSubjectTreeForSingleChoice(container, f.id, depth + 1, onPick);
+      if (expanded) {
+        const childrenUl = document.createElement("ul");
+        childrenUl.className = "org-children";
+        li.appendChild(childrenUl);
+        renderFolderTreeForPicker(childrenUl, f.id, depth + 1, ctx);
+      }
+      container.appendChild(li);
     });
+
     childSubjects.forEach((s) => {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "subject-choice-tree-item";
-      btn.style.paddingLeft = `${12 + depth * 14}px`;
-      btn.textContent = s.name;
-      btn.addEventListener("click", () => onPick(s.id));
-      container.appendChild(btn);
+      const n = cards.filter((c) => !c.deleted && c.subject === s.id).length;
+      appendPickerBoiteRow(container, depth, s.id, s.name, n, ctx);
     });
   }
 
-  function openCardsSubjectChoiceMenu() {
-    const menu = el("cards-subject-choice-menu");
-    const tree = el("cards-subject-choice-tree");
-    if (!menu || !tree) return;
-    tree.innerHTML = "";
-    renderSubjectTreeForSingleChoice(tree, ROOT_FOLDER_ID, 0, (subjectId) => {
-      closeCardsSubjectChoiceMenu();
-      saveNewCardSubjectId(subjectId);
-      const btn = el("cards-subject-select-btn");
-      if (btn) btn.textContent = subjectName(subjectId);
+  function appendPickerBoiteRow(container, depth, subjectId, name, cardCount, ctx) {
+    const { li, cb } = buildPickerRow({
+      depth,
+      isFolder: false,
+      iconMarkup: orgIconMarkup("orgBoite"),
+      nameText: name,
+      countLabel: `${cardCount} fiche${cardCount > 1 ? "s" : ""}`,
+      selectControl: ctx.mode === "multi" ? "checkbox" : "none",
+      checked: ctx.mode === "multi" && ctx.selectedSubjectIds.has(subjectId),
+      dataKind: "subject",
+      value: subjectId,
+      rowSelectable: ctx.mode === "single",
+      onRowSelect: () => ctx.onPick("subject", subjectId),
     });
-    menu.hidden = false;
+    if (cb) {
+      cb.addEventListener("change", () => {
+        if (cb.checked) ctx.selectedSubjectIds.add(subjectId);
+        else ctx.selectedSubjectIds.delete(subjectId);
+        if (ctx.onSelectionChange) ctx.onSelectionChange();
+        ctx.rerenderRoot();
+      });
+    }
+    container.appendChild(li);
   }
-  function closeCardsSubjectChoiceMenu() {
-    const menu = el("cards-subject-choice-menu");
-    if (menu) menu.hidden = true;
+
+  /** Ajoute, tout en haut d'un sélecteur multi-boîtes, le pseudo-dossier
+   *  racine "Toutes les boîtes" (item 1) : le cocher sélectionne tout,
+   *  exactement comme cocher un dossier normal sélectionne son contenu. */
+  function prependAllBoxesRootRow(container, ctx) {
+    const allIds = subjectIdsInFolder(ROOT_FOLDER_ID);
+    const { li, cb } = buildPickerRow({
+      depth: 0,
+      isFolder: true,
+      iconMarkup: iconSvgMarkup("folder", "icon-inline-svg"),
+      nameText: "Toutes les boîtes",
+      countLabel: `${allIds.length} boîte${allIds.length > 1 ? "s" : ""}`,
+      selectControl: "checkbox",
+      checked: allIds.length > 0 && allIds.every((id) => ctx.selectedSubjectIds.has(id)),
+      dataKind: "all",
+      value: "",
+    });
+    li.classList.add("picker-row--all");
+    cb.addEventListener("change", () => {
+      if (cb.checked) allIds.forEach((id) => ctx.selectedSubjectIds.add(id));
+      else allIds.forEach((id) => ctx.selectedSubjectIds.delete(id));
+      if (ctx.onSelectionChange) ctx.onSelectionChange();
+      ctx.rerenderRoot();
+    });
+    container.appendChild(li);
+  }
+
+  /** Point d'entrée commun (item 1) pour peupler un sélecteur MULTI-boîtes
+   *  dans son style Organisation, pseudo-dossier racine inclus. Le Set
+   *  passé en argument est muté EN PLACE au fil des cases cochées/décochées
+   *  — l'appelant le relit directement (plus besoin de relire le DOM). */
+  function renderMultiBoitePicker(container, selectedSubjectIds, onChange) {
+    const ctx = { mode: "multi", selectedSubjectIds, rerenderRoot: rerender, onSelectionChange: onChange };
+    function rerender() {
+      container.innerHTML = "";
+      container.classList.add("picker-tree");
+      prependAllBoxesRootRow(container, ctx);
+      renderFolderTreeForPicker(container, ROOT_FOLDER_ID, 0, ctx);
+    }
+    rerender();
+  }
+
+  /** Point d'entrée commun (item 1, nouveau lot) pour un sélecteur à choix
+   *  UNIQUE dans le même style Organisation — réutilisé par "Nouvelle
+   *  fiche" (folderAlwaysSelectable: false, boîtes/dossiers vides
+   *  seulement) et par la création d'un événement de calendrier
+   *  (folderAlwaysSelectable: true, un dossier entier est un lien valide). */
+  function renderSingleBoitePicker(container, onPick, folderAlwaysSelectable, excludeSubjectIds) {
+    function rerender() {
+      container.innerHTML = "";
+      container.classList.add("picker-tree");
+      renderFolderTreeForPicker(container, ROOT_FOLDER_ID, 0, { mode: "single", onPick, folderAlwaysSelectable, excludeSubjectIds, container, rerenderRoot: rerender });
+    }
+    rerender();
+  }
+
+  /** Sélecteur de destination pour "Déplacer vers..." (item 1, 3e lot) :
+   *  même arbre Organisation que les autres, mais dossiers UNIQUEMENT
+   *  (aucune boîte n'est une destination valide) et sans le(s) dossier(s)
+   *  exclu(s) (l'élément qu'on déplace, et ses descendants s'il s'agit d'un
+   *  dossier). Ajoute une ligne "Racine" tout en haut : la racine est une
+   *  destination valide mais n'existe pas dans le tableau `folders`. Choix
+   *  immédiat au clic, comme les autres sélecteurs à choix unique. */
+  function renderMoveDestinationPicker(container, excludedFolderIds, onPick) {
+    function rerender() {
+      container.innerHTML = "";
+      container.classList.add("picker-tree");
+      const { li } = buildPickerRow({
+        depth: 0,
+        isFolder: true,
+        iconMarkup: iconSvgMarkup("folder", "icon-inline-svg"),
+        nameText: "Racine",
+        selectControl: "none",
+        rowSelectable: true,
+        onRowSelect: () => onPick(ROOT_FOLDER_ID),
+      });
+      li.classList.add("picker-row--all");
+      container.appendChild(li);
+      renderFolderTreeForPicker(container, ROOT_FOLDER_ID, 0, {
+        mode: "single",
+        onPick: (kind, id) => onPick(id),
+        folderAlwaysSelectable: true,
+        hideBoites: true,
+        excludedFolderIds,
+        container,
+        rerenderRoot: rerender,
+      });
+    }
+    rerender();
+  }
+
+  /* ---------------------------------------------------------
+     Page UNIQUE de sélection de boîte(s) (item 1, 4e lot) : remplace tous
+     les anciens panneaux flottants (Réviser, Fiches, Stats, Nouvelle
+     fiche, Calendrier, "Déplacer vers..." depuis Organisation) par une
+     VRAIE page — #view-boite-picker devient la vue active exactement
+     comme n'importe quel autre onglet ou sous-page (view-mode-assign,
+     view-new-card), donc l'en-tête de l'appli (logo, bouton Home...) reste
+     visible au-dessus, et la liste dessous est rigoureusement celle
+     utilisée par la page Organisation. Au retour ("← Retour" ou choix
+     terminé), on réaffiche la vue d'où on venait. */
+  let boitePickerReturnViewId = "view-home";
+
+  function boitePickerActivateView(viewId) {
+    document.querySelectorAll(".view").forEach((v) => v.classList.remove("is-active"));
+    const target = el(viewId);
+    if (target) target.classList.add("is-active");
+    const shortName = viewId.replace(/^view-/, "");
+    document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("is-active", t.dataset.view === shortName));
+  }
+
+  /** ctx attendu :
+   *  - mode: "multi" | "single"
+   *  - title: titre affiché en haut de la page
+   *  - hint: phrase d'aide optionnelle sous le titre
+   *  - initialSelection (multi) : Set/array des ids déjà sélectionnés
+   *  - onConfirm(selectedSet) (multi) : appelé au clic sur "Valider"
+   *  - folderAlwaysSelectable, excludedFolderIds, hideBoites (single) :
+   *    mêmes réglages que renderFolderTreeForPicker/renderMoveDestinationPicker
+   *  - onPick(kind, id) (single) : appelé dès qu'une ligne est choisie
+   *  - showNoneButton + onNone (single, optionnel) : bouton "Aucun lien"
+   *    (utilisé par le sélecteur de la fiche calendrier). */
+  function openBoitePickerView(ctx) {
+    const view = el("view-boite-picker");
+    const list = el("boite-picker-list");
+    if (!view || !list) return;
+
+    const current = document.querySelector(".view.is-active");
+    boitePickerReturnViewId = current ? current.id : "view-home";
+
+    const titleEl = el("boite-picker-title");
+    if (titleEl) titleEl.textContent = ctx.title || "Choisir une boîte";
+    const hintEl = el("boite-picker-hint");
+    if (hintEl) {
+      hintEl.textContent = ctx.hint || "";
+      hintEl.hidden = !ctx.hint;
+    }
+
+    const actions = el("boite-picker-actions");
+    const confirmBtn = el("boite-picker-confirm");
+    const noneBtn = el("boite-picker-none");
+
+    if (ctx.mode === "multi") {
+      const selection = new Set(ctx.initialSelection || []);
+      renderMultiBoitePicker(list, selection);
+      if (actions) actions.hidden = false;
+      if (confirmBtn) {
+        confirmBtn.hidden = false;
+        confirmBtn.onclick = () => ctx.onConfirm(selection);
+      }
+      if (noneBtn) noneBtn.hidden = true;
+    } else {
+      if (ctx.excludedFolderIds) {
+        renderMoveDestinationPicker(list, ctx.excludedFolderIds, (destId) => ctx.onPick("folder", destId));
+      } else {
+        renderSingleBoitePicker(list, (kind, id) => ctx.onPick(kind, id), !!ctx.folderAlwaysSelectable, ctx.excludeSubjectIds);
+      }
+      if (confirmBtn) confirmBtn.hidden = true;
+      if (noneBtn) {
+        noneBtn.hidden = !ctx.showNoneButton;
+        noneBtn.onclick = ctx.showNoneButton ? ctx.onNone : null;
+      }
+      if (actions) actions.hidden = !ctx.showNoneButton;
+    }
+
+    boitePickerActivateView("view-boite-picker");
+    // Comme toute autre page indépendante (Nouvelle fiche, Affecter un
+    // mode...), l'en-tête de l'appli (bouton Accueil, logo) reste visible.
+    const homeBtnEl = el("home-btn");
+    if (homeBtnEl) homeBtnEl.hidden = false;
+    if (el("body-logo-row")) el("body-logo-row").hidden = false;
+    applyBodyLogoSpeech("boite-picker");
+  }
+
+  function closeBoitePickerView() {
+    const returnViewId = boitePickerReturnViewId || "view-home";
+    boitePickerActivateView(returnViewId);
+    // Round 4, partie 2 : en revenant sur la page d'où on est parti, la
+    // bulle d'aide doit refléter CETTE page, pas garder le message (ou
+    // l'absence de message) du sélecteur de boîte(s).
+    if (returnViewId !== "view-home") {
+      applyBodyLogoSpeech(returnViewId.replace(/^view-/, ""));
+    }
+  }
+
+  const boitePickerBackBtn = el("boite-picker-back-btn");
+  if (boitePickerBackBtn) boitePickerBackBtn.addEventListener("click", () => closeBoitePickerView());
+
+  // Item 6 (nouveau lot) : quand ce sélecteur est ouvert depuis "Sélection
+  // manuelle" (programme de révision), il faut, une fois la sélection
+  // validée, aussi amener sur la page Réviser (pas seulement changer la
+  // boîte en cours) — ce drapeau le signale au bouton "Valider".
+  let multiPickerNavigateToReviewOnConfirm = false;
+  function openMultiSubjectPicker() {
+    openBoitePickerView({
+      mode: "multi",
+      title: "Choisir les boîtes à réviser",
+      hint: "Choisis les boîtes à réviser confondues :",
+      initialSelection: loadMultiSelection(),
+      onConfirm: async (selection) => {
+        const { resultIds, singleSubjectId, label } = computeMultiPickerResult(selection);
+        if (resultIds.length === 0) {
+          await robotAlert("Choisis au moins une boîte ou un dossier.");
+          return;
+        }
+        const shouldNavigateToReview = multiPickerNavigateToReviewOnConfirm;
+        multiPickerNavigateToReviewOnConfirm = false;
+
+        // Affichage intelligent (item 18) : une seule boîte au final -> on
+        // bascule directement dessus (son nom s'affiche naturellement,
+        // inutile de passer par le mode "sélection"). Sélection qui
+        // correspond exactement à un seul dossier -> son nom. Sinon,
+        // libellé générique "Sélection de boîtes".
+        if (singleSubjectId) {
+          switchSubject(singleSubjectId, true);
+        } else {
+          saveMultiSelection(resultIds);
+          saveMultiSelectionLabel(label || "");
+          switchSubject(MULTI_SUBJECTS_ID, true);
+        }
+        // Item 6 (nouveau lot) : "Sélection manuelle" (programme de
+        // révision) amène directement à la page Réviser une fois la
+        // sélection validée ; sinon on revient simplement à la page d'où
+        // on venait (ex. Réviser elle-même).
+        if (shouldNavigateToReview) {
+          boitePickerActivateView("view-review");
+        } else {
+          closeBoitePickerView();
+        }
+      },
+    });
+  }
+
+  /** Item 1 (nouveau lot) : le choix de la boîte pour une nouvelle fiche
+   *  reprend maintenant le même sélecteur Organisation que partout
+   *  ailleurs (renderSingleBoitePicker) — seules une boîte, ou un dossier
+   *  VIDE (qui deviendra boîte à cet instant), sont sélectionnables ; un
+   *  dossier non vide ne sert qu'à déplier/replier, comme sur Organisation. */
+  function openCardsSubjectChoiceMenu() {
+    openBoitePickerView({
+      mode: "single",
+      title: "Choisir la boîte de cette fiche",
+      // item 3 (2e lot, Classes) : une boîte partagée par un prof est en
+      // lecture seule côté élève — on ne peut pas y ajouter de fiche
+      // manuellement, seul le prof la fait évoluer.
+      excludeSubjectIds: new Set(subjects.filter((s) => s.sharedBoxId).map((s) => s.id)),
+      onPick: (kind, subjectId) => {
+        saveNewCardSubjectId(subjectId);
+        const btn = el("cards-subject-select-btn");
+        if (btn) btn.textContent = subjectName(subjectId);
+        closeBoitePickerView();
+      },
+    });
   }
   const cardsSubjectSelectBtn = el("cards-subject-select-btn");
   if (cardsSubjectSelectBtn) {
     cardsSubjectSelectBtn.addEventListener("click", () => openCardsSubjectChoiceMenu());
   }
-  document.addEventListener("pointerdown", (e) => {
-    const menu = el("cards-subject-choice-menu");
-    if (!menu || menu.hidden) return;
-    if (menu.contains(e.target) || e.target === cardsSubjectSelectBtn) return;
-    closeCardsSubjectChoiceMenu();
-  });
 
   const cardsSearchInputEl = el("cards-search-input");
   if (cardsSearchInputEl) {
@@ -3942,6 +4976,43 @@
     await DB.putFolder(folder);
     if (Sync.isConfigured()) {
       Sync.pushFolder(folder).finally(updateSyncStatus);
+    }
+  }
+
+  /** item 3 (2e lot, Classes) : si cette boîte (côté prof) a été partagée à
+   *  une ou plusieurs classes (`subject.sharedShares`), on repousse
+   *  l'intégralité de son contenu actuel vers chaque boîte partagée liée —
+   *  c'est ce qui fait qu'un ajout/modif/suppression de fiche par le prof
+   *  se répercute ensuite chez les élèves (voir `syncSharedBoxesForStudent`
+   *  côté élève, qui compare ce même tableau par id). Ne fait rien si Sync
+   *  n'est pas configurée ou si la boîte n'est liée à aucune classe. */
+  async function pushSharedBoxUpdatesForSubject(subjectId) {
+    if (!Sync.isConfigured()) return;
+    const subject = subjects.find((s) => s.id === subjectId);
+    if (!subject || !subject.sharedShares || !subject.sharedShares.length) return;
+    const boxCards = cards.filter((c) => !c.deleted && c.subject === subjectId);
+    // Round 3, item 1 : le chemin de dossiers actuel (côté prof) est
+    // repoussé en même temps que les fiches, pour que l'élève reconstitue
+    // la même arborescence même après une réorganisation.
+    const folderPathNames = folderPath(subject.folderId).map((f) => f.name);
+    for (const share of subject.sharedShares) {
+      try {
+        await Sync.classes.updateSharedBoxCards(share.boxId, boxCards, folderPathNames);
+      } catch (e) {
+        console.warn("Classes: échec de la mise à jour de la boîte partagée", e);
+      }
+    }
+  }
+  /** Round 3, item 1 : à appeler après tout changement de structure de
+   *  dossiers (renommage, déplacement) qui pourrait affecter le chemin
+   *  d'une ou plusieurs boîtes partagées — re-pousse toutes les boîtes
+   *  partagées d'un coup (simple et largement suffisant à cette échelle,
+   *  plutôt que de calculer précisément lesquelles sont concernées). */
+  async function pushSharedBoxUpdatesForAllSharedSubjects() {
+    if (!Sync.isConfigured()) return;
+    const sharedSubjects = subjects.filter((s) => s.sharedShares && s.sharedShares.length);
+    for (const s of sharedSubjects) {
+      await pushSharedBoxUpdatesForSubject(s.id);
     }
   }
   /** Suppression douce envoyée aux autres appareils AVANT le retrait local
@@ -4191,6 +5262,45 @@
     svg += `</svg>`;
     return svg;
   }
+  /** Nouvelle jauge de persistance (remplace la jauge de score 0-100 dans
+   *  les 3 emplacements où elle apparaissait — Organisation, Réviser,
+   *  Programme de révision) : une barre à 4 segments contigus, proportionnels
+   *  au nombre de fiches du `pool` dont la persistance (PERS, en minutes)
+   *  tombe dans chacun des 4 paliers réglables (gris clair/vert clair/vert/
+   *  vert foncé). `pool` peut être null/vide : jauge grise pleine. */
+  function buildPersGaugeSvg(pool, { width = 200, barHeight = 14, showLabels = false } = {}) {
+    const settings = loadDevSettings();
+    const colors = settings.persGaugeColors;
+    const list = pool || [];
+    const counts = { court: 0, moyen: 0, long: 0, tresLong: 0 };
+    for (const c of list) {
+      const persMin = typeof c.pers === "number" ? c.pers : 0;
+      counts[classifyPersBracket(persMin, settings.revisionAlgo)] += 1;
+    }
+    const total = list.length;
+    const barY = 2;
+    const height = barY * 2 + barHeight + (showLabels ? 14 : 0);
+    let svg = `<svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">`;
+    svg += `<rect x="0" y="${barY}" width="${width}" height="${barHeight}" rx="${barHeight / 2}" fill="${colors.court}" />`;
+    if (total > 0) {
+      let x = 0;
+      for (const key of PERS_GAUGE_ZONE_ORDER) {
+        const w = (counts[key] / total) * width;
+        if (w > 0) {
+          svg += `<rect x="${x.toFixed(1)}" y="${barY}" width="${w.toFixed(1)}" height="${barHeight}" fill="${colors[key]}" />`;
+        }
+        x += w;
+      }
+      // Coins arrondis par-dessus (masque le rectangle plein sous-jacent).
+      svg += `<rect x="0" y="${barY}" width="${width}" height="${barHeight}" rx="${barHeight / 2}" fill="none" stroke="var(--paper, #fff)" stroke-width="0" />`;
+    }
+    if (showLabels) {
+      const pct = (key) => (total > 0 ? Math.round((counts[key] / total) * 100) : 0);
+      svg += `<text x="0" y="${barY + barHeight + 12}" font-size="9" font-family="sans-serif" fill="var(--ink-soft, #64748b)">${PERS_GAUGE_ZONE_ORDER.map((k) => `${PERS_GAUGE_ZONE_LABELS[k]} ${pct(k)}%`).join(" · ")}</text>`;
+    }
+    svg += `</svg>`;
+    return svg;
+  }
   /** Jauge compacte (Organisation) : juste la barre + le score, sans
    *  point de zone ni objectif. */
   function renderMiniGaugeRing(score) {
@@ -4223,14 +5333,18 @@
     const wrap = el("review-gauge-wrap");
     if (!wrap) return;
     const pool = subjectCards();
-    const score = pool.length > 0 ? Math.round(pool.reduce((acc, c) => acc + computeCardScore(c), 0) / pool.length) : 0;
-    const target = computeTodayTargetForCurrentSubject();
-    wrap.innerHTML = buildLinearGaugeSvg(score, { width: 300, barHeight: 18, showZoneLabels: true, scoreFontSize: 20, scoreOnLeft: true, targetValue: target, targetLabel: "Objectif du jour : ", targetStyle: "triangle" });
+    wrap.innerHTML = buildPersGaugeSvg(pool, { width: 300, barHeight: 18, showLabels: true });
   }
 
   function renderDuePill() {
     const due = dueCards().length;
     dueCountEl.textContent = String(due);
+
+    // Item 5 (dernier lot) : la pastille ne s'affiche plus que sur la
+    // page Réviser (elle restait visible partout auparavant).
+    const onReview = el("view-review") && el("view-review").classList.contains("is-active");
+    duePillEl.hidden = !onReview;
+    if (!onReview) return;
 
     // Dès que le compteur atteint 0, la pastille passe en blanc (comme en
     // mode bonus) — que l'on soit ou non dans une session de révision.
@@ -4242,10 +5356,9 @@
     }
 
     duePillEl.classList.remove("is-bonus");
-    const total = subjectCards().length;
-    const fraction = total === 0 ? 0 : due / total;
-    const hue = Math.round(120 - 120 * Math.min(1, Math.max(0, fraction)));
-    duePillEl.style.background = `hsl(${hue}, 62%, 42%)`;
+    // Item 5 : couleur unie et réglable (Réglages), plus de dégradé
+    // rouge → vert selon la proportion de fiches à revoir.
+    duePillEl.style.background = loadDuePillColor();
     duePillEl.style.color = "var(--paper)";
   }
 
@@ -4444,24 +5557,29 @@
       });
       return;
     }
-    el("sub-again").textContent = "< 1 j";
+    el("sub-again").textContent = "…";
     const previews = {};
-    const futureIntervals = {};
+    const futureDelaysMin = {};
     for (const rating of ["again", "hard", "good", "easy"]) {
       const next = computeAlgoNext(currentCard, rating, currentCard.subject);
-      previews[rating] = formatInterval(next.interval);
-      futureIntervals[rating] = next.interval;
+      previews[rating] = formatDelayMinutes(next.dd);
+      futureDelaysMin[rating] = next.dd;
     }
     el("sub-again").textContent = previews.again;
     el("sub-hard").textContent = previews.hard;
     el("sub-good").textContent = previews.good;
     el("sub-easy").textContent = previews.easy;
-    updateReviewScoreInfo(futureIntervals);
+    updateReviewScoreInfo(futureDelaysMin);
   }
 
-  /** Item 1d : délai précédent, score actuel, et pour chaque note le futur
-   *  délai + futur score associé — masquable depuis le mode développeur. */
-  function updateReviewScoreInfo(futureIntervals) {
+  /** Item 1d : délai précédent et, pour chaque note, le futur délai — sous
+   *  le nouvel algorithme de révision (minutes), masquable depuis le mode
+   *  développeur. Le "score" 0-100 historique n'a plus grand sens sous ce
+   *  nouvel algorithme (délais très majoritairement sous 1 jour) : cette
+   *  ligne n'affiche donc plus que les délais, pas de score — voir aussi
+   *  la nouvelle jauge de persistance (buildPersGaugeSvg) qui remplace
+   *  l'ancienne jauge de score ailleurs dans l'appli. */
+  function updateReviewScoreInfo(futureDelaysMin) {
     const wrap = el("review-score-info");
     if (!wrap || !currentCard) return;
     const settings = loadDevSettings().cardScore;
@@ -4470,17 +5588,29 @@
       return;
     }
     wrap.hidden = false;
-    const prevDelay = Math.max(1, currentCard.interval || 1);
-    const currentScore = computeCardScore(currentCard);
-    el("score-info-prev-delay").textContent = `${prevDelay} j`;
-    el("score-info-current").textContent = `${currentScore}`;
-    const labels = { again: "Encore", hard: "Difficile", good: "Bien", easy: "Facile" };
+    const prevDelay = typeof currentCard.dd === "number" ? currentCard.dd : currentCard.interval * 1440 || 0;
+    el("score-info-prev-delay").textContent = formatDelayMinutes(prevDelay);
+    el("score-info-current").textContent = "";
+    const labels = { again: "Encore", hard: "Difficile", good: "Bien", easy: "Excellent" };
     ["again", "hard", "good", "easy"].forEach((r) => {
       const cell = el(`score-info-${r}`);
       if (!cell) return;
-      const futureScore = computeCardScore(currentCard, futureIntervals[r]);
-      cell.textContent = `${labels[r]} : ${formatInterval(futureIntervals[r])} (${futureScore})`;
+      cell.textContent = `${labels[r]} : ${formatDelayMinutes(futureDelaysMin[r])}`;
     });
+  }
+
+  /** Formatage minute/heure/jour-aware du délai d'interrogation (nouvel
+   *  algorithme de révision, granularité minute) — remplace formatInterval
+   *  (jours uniquement) pour les aperçus sous les boutons d'évaluation. */
+  function formatDelayMinutes(minutes) {
+    const m = Math.round(minutes || 0);
+    if (m < 60) return `${m} min`;
+    if (m < 1440) {
+      const h = Math.round(m / 60);
+      return `${h} h`;
+    }
+    const j = Math.round(m / 1440);
+    return `${j} j`;
   }
 
   function formatInterval(days) {
@@ -4755,7 +5885,7 @@
         `Mettre cette fiche en hibernation ?\n\n` +
         `Sa prochaine interrogation sera repoussée de ${hibernateDays} jour${hibernateDays > 1 ? "s" : ""} ` +
         `(réglable dans Réglages), sans compter comme une révision — ni le calcul d'échéance, ni le statut de la fiche ne changent, elle est juste mise de côté pour plus tard.`;
-      if (!confirm(msg)) return;
+      if (!(await robotConfirm(msg))) return;
       await hibernateCurrentCard();
     });
   }
@@ -4785,6 +5915,11 @@
     if (target) target.classList.add("is-active");
     const homeBtnEl = el("home-btn");
     if (homeBtnEl) homeBtnEl.hidden = false;
+    // Item 2 (dernier lot) : le logo (avec sa zone de parole) apparaît
+    // aussi sur "Ajouter une fiche", qui ne passe pas par le clic sur un
+    // onglet normal.
+    if (el("body-logo-row")) el("body-logo-row").hidden = false;
+    applyBodyLogoSpeech("new-card");
   }
   function closeNewCardView(toView) {
     const dest = toView || previousViewBeforeNewCard || "home";
@@ -4820,10 +5955,12 @@
     if (editingId) {
       const idx = cards.findIndex((c) => c.id === editingId);
       if (idx >= 0) {
+        if (await blockIfSharedReadonly(cards[idx].subject)) return;
         const updated = touch({ ...cards[idx], question, answer });
         await persist(updated);
         cards[idx] = updated;
         syncCardEverywhere(updated);
+        await pushSharedBoxUpdatesForSubject(updated.subject);
       }
       exitEditMode();
       resetCardForm();
@@ -4839,12 +5976,14 @@
       // corrigé — la fiche partait auparavant toujours dans la boîte
       // active de Réviser, sans lien avec ce sélecteur).
       if (!newCardSubjectId || !subjects.some((s) => s.id === newCardSubjectId)) {
-        alert("Choisis d'abord une boîte pour cette fiche.");
+        await robotAlert("Choisis d'abord une boîte pour cette fiche.");
         return;
       }
+      if (await blockIfSharedReadonly(newCardSubjectId)) return;
       const card = newCard(question, answer, newCardSubjectId);
       await persist(card);
       cards.push(card);
+      await pushSharedBoxUpdatesForSubject(newCardSubjectId);
       renderAll();
       // Item 5 : on reste sur cette page pour enchaîner la création d'une
       // autre fiche, la boîte choisie est conservée.
@@ -4882,7 +6021,8 @@
 
   const deleteEditingCardBtn = el("delete-editing-card");
 
-  function enterEditMode(card) {
+  async function enterEditMode(card) {
+    if (await blockIfSharedReadonly(card.subject)) return;
     openNewCardView();
     editingId = card.id;
     inputQuestion.innerHTML = toDisplayHtml(card.question);
@@ -4903,7 +6043,7 @@
   if (deleteEditingCardBtn) {
     deleteEditingCardBtn.addEventListener("click", async () => {
       if (!editingId) return;
-      if (!confirm("Supprimer définitivement cette fiche ? Cette action est irréversible.")) return;
+      if (!(await robotConfirm("Supprimer définitivement cette fiche ? Cette action est irréversible.", { danger: true }))) return;
       const id = editingId;
       editReturnToReview = false;
       exitEditMode();
@@ -5043,21 +6183,29 @@
   if (cardsScopeChoiceSelectionBtn) {
     cardsScopeChoiceSelectionBtn.addEventListener("click", () => {
       closeCardsScopeChoiceMenu();
-      // Reste affiché tant que ce périmètre est actif (voir
-      // renderCardsMultiPickerIfActive, appelé depuis renderManageList) —
-      // plus besoin de "Valider" pour VALIDER la sélection (mise à jour en
-      // direct), juste pour refermer le panneau plein écran (bug corrigé).
-      cardsScopeFilter = CARDS_SCOPE_MULTI;
-      const picker = el("cards-multi-picker");
-      if (picker) delete picker.dataset.opened;
-      renderManageList();
-    });
-  }
-  const cardsMultiPickerDoneBtn = el("cards-multi-picker-done");
-  if (cardsMultiPickerDoneBtn) {
-    cardsMultiPickerDoneBtn.addEventListener("click", () => {
-      const picker = el("cards-multi-picker");
-      if (picker) picker.hidden = true;
+      openBoitePickerView({
+        mode: "multi",
+        title: "Choisir des boîtes et/ou dossiers",
+        hint: "Coche des boîtes et/ou dossiers à combiner :",
+        initialSelection: loadCardsMultiSelection(),
+        onConfirm: async (selection) => {
+          const { resultIds, singleSubjectId, label } = computeMultiPickerResult(selection);
+          if (resultIds.length === 0) {
+            await robotAlert("Choisis au moins une boîte ou un dossier.");
+            return;
+          }
+          saveCardsMultiSelection(resultIds);
+          // Une seule boîte au final -> son nom directement
+          // (computeMultiPickerResult renvoie label=null dans ce cas,
+          // réservé ailleurs à un vrai changement de boîte active — ici on
+          // reste en mode "sélection", donc on affiche juste son nom au
+          // lieu du libellé générique).
+          saveCardsMultiLabel(singleSubjectId ? subjectName(singleSubjectId) : label || "");
+          cardsScopeFilter = CARDS_SCOPE_MULTI;
+          closeBoitePickerView();
+          renderManageList();
+        },
+      });
     });
   }
   const cardsScopeChoiceCancelBtn = el("cards-scope-choice-cancel");
@@ -5071,47 +6219,8 @@
     closeCardsScopeChoiceMenu();
   });
 
-  /** Contrairement aux autres pickers de l'appli (qui se ferment après un
-   *  "Valider"), celui-ci reste affiché tant que le périmètre "Sélection de
-   *  boîtes et dossiers" est actif — cocher/décocher met à jour les
-   *  résultats de recherche tout de suite, sans étape de confirmation.
-   *  Bug corrigé : depuis que ce panneau occupe tout l'écran (comme les
-   *  deux autres), il fallait quand même un bouton pour le refermer et
-   *  retrouver la liste filtrée en dessous — "Valider" ici ne fait que
-   *  refermer le panneau, la sélection est déjà enregistrée au fil de l'eau. */
-  function renderCardsMultiPickerIfActive() {
-    const picker = el("cards-multi-picker");
-    const list = el("cards-multi-picker-list");
-    if (!picker || !list) return;
-    if (cardsScopeFilter !== CARDS_SCOPE_MULTI) {
-      picker.hidden = true;
-      return;
-    }
-    if (!picker.dataset.opened) {
-      picker.hidden = false;
-      picker.dataset.opened = "1";
-    }
-    const selected = new Set(loadCardsMultiSelection());
-    list.innerHTML = "";
-    renderFolderTreeForPicker(list, ROOT_FOLDER_ID, 0, selected);
-    list.querySelectorAll("input").forEach((cb) => {
-      cb.addEventListener("change", () => {
-        const { resultIds, singleSubjectId, label } = readMultiPickerResult(list);
-        saveCardsMultiSelection(resultIds);
-        // Une seule boîte au final -> son nom directement (readMultiPickerResult
-        // renvoie label=null dans ce cas précis, réservé ailleurs à un vrai
-        // changement de boîte active — ici on reste en mode "sélection"
-        // puisque les résultats se mettent à jour en direct, donc on
-        // affiche juste son nom au lieu du libellé générique).
-        saveCardsMultiLabel(singleSubjectId ? subjectName(singleSubjectId) : label || "");
-        renderManageList();
-      });
-    });
-  }
-
   function renderManageList() {
     renderCardsScopeSelect();
-    renderCardsMultiPickerIfActive();
     let visible = cardsScopeCards();
     const showSubjectNames = cardsScopeFilter !== CARDS_SCOPE_CURRENT;
     if (cardsConstructionFilter) {
@@ -5279,7 +6388,8 @@
   async function deleteCard(id, skipConfirm) {
     const card = cards.find((c) => c.id === id);
     if (!card) return;
-    if (!skipConfirm && !confirm("Supprimer définitivement cette fiche ? Cette action est irréversible.")) {
+    if (await blockIfSharedReadonly(card.subject)) return;
+    if (!skipConfirm && !(await robotConfirm("Supprimer définitivement cette fiche ? Cette action est irréversible.", { danger: true }))) {
       return;
     }
     const updated = touch({ ...card, deleted: true });
@@ -5288,6 +6398,7 @@
     const idx = cards.findIndex((c) => c.id === id);
     if (idx >= 0) cards[idx] = updated;
     reviewQueue = reviewQueue.filter((c) => c.id !== id);
+    await pushSharedBoxUpdatesForSubject(card.subject);
     // Item 1 : si c'était la dernière fiche d'une boîte "née" d'un dossier
     // vide, ce dossier redevient un dossier normal.
     await revertFolderIfBoiteEmptied(card.subject);
@@ -5378,9 +6489,9 @@
       if (targetId === currentSubjectId) {
         startReviewSession();
       }
-      alert(`${normalized.length} fiche(s) ajoutée(s) à « ${subjectName(targetId)} ». Les fiches existantes n'ont pas été touchées.`);
+      await robotAlert(`${normalized.length} fiche(s) ajoutée(s) à « ${subjectName(targetId)} ». Les fiches existantes n'ont pas été touchées.`);
     } catch (err) {
-      alert("Import impossible : le fichier ne semble pas être un export valide.");
+      await robotAlert("Import impossible : le fichier ne semble pas être un export valide.");
     } finally {
       importInput.value = "";
       importTargetSelect.value = currentSubjectId;
@@ -5475,17 +6586,29 @@
   }
 
   function openStatsMultiPicker() {
-    const picker = el("stats-multi-picker");
-    const list = el("stats-multi-picker-list");
-    if (!picker || !list) return;
-    const selected = new Set(loadStatsMultiSelection());
-    list.innerHTML = "";
-    renderFolderTreeForPicker(list, ROOT_FOLDER_ID, 0, selected);
-    picker.hidden = false;
-  }
-  function closeStatsMultiPicker() {
-    const picker = el("stats-multi-picker");
-    if (picker) picker.hidden = true;
+    openBoitePickerView({
+      mode: "multi",
+      title: "Choisir les boîtes pour les statistiques",
+      hint: "Choisis les boîtes et/ou dossiers à combiner :",
+      initialSelection: loadStatsMultiSelection(),
+      onConfirm: async (selection) => {
+        const { resultIds, singleSubjectId, label } = computeMultiPickerResult(selection);
+        if (resultIds.length === 0) {
+          await robotAlert("Choisis au moins une boîte ou un dossier.");
+          return;
+        }
+        closeBoitePickerView();
+        if (singleSubjectId) {
+          statsSubjectFilter = singleSubjectId;
+          renderStats();
+          return;
+        }
+        saveStatsMultiSelection(resultIds);
+        saveStatsMultiLabel(label || "");
+        statsSubjectFilter = STATS_MULTI_ID;
+        renderStats();
+      },
+    });
   }
 
   function openStatsScopeChoiceMenu() {
@@ -5499,7 +6622,6 @@
   const statsSubjectSelectBtn = el("stats-subject-select-btn");
   if (statsSubjectSelectBtn) {
     statsSubjectSelectBtn.addEventListener("click", () => {
-      closeStatsMultiPicker();
       openStatsScopeChoiceMenu();
     });
   }
@@ -5529,29 +6651,6 @@
     closeStatsScopeChoiceMenu();
   });
 
-  const statsMultiPickerCancelBtn = el("stats-multi-picker-cancel");
-  if (statsMultiPickerCancelBtn) statsMultiPickerCancelBtn.addEventListener("click", closeStatsMultiPicker);
-  const statsMultiPickerConfirmBtn = el("stats-multi-picker-confirm");
-  if (statsMultiPickerConfirmBtn) {
-    statsMultiPickerConfirmBtn.addEventListener("click", () => {
-      const list = el("stats-multi-picker-list");
-      const { resultIds, singleSubjectId, label } = readMultiPickerResult(list);
-      if (resultIds.length === 0) {
-        alert("Choisis au moins une boîte ou un dossier.");
-        return;
-      }
-      closeStatsMultiPicker();
-      if (singleSubjectId) {
-        statsSubjectFilter = singleSubjectId;
-        renderStats();
-        return;
-      }
-      saveStatsMultiSelection(resultIds);
-      saveStatsMultiLabel(label || "");
-      statsSubjectFilter = STATS_MULTI_ID;
-      renderStats();
-    });
-  }
 
   function startOfDay(date) {
     const d = new Date(date);
@@ -6726,6 +7825,26 @@
     });
   }
 
+  // Item 5 (dernier lot) : couleur unie de la pastille "à revoir",
+  // réglable dans Réglages — remplace l'ancien dégradé rouge → vert.
+  const DUE_PILL_COLOR_KEY = "fiches_due_pill_color";
+  const DEFAULT_DUE_PILL_COLOR = "#c25b4a";
+  function loadDuePillColor() {
+    return localStorage.getItem(DUE_PILL_COLOR_KEY) || DEFAULT_DUE_PILL_COLOR;
+  }
+  function saveDuePillColor(value) {
+    localStorage.setItem(DUE_PILL_COLOR_KEY, value);
+    scheduleDevSettingsPush();
+  }
+  const settingDuePillColorEl = el("setting-due-pill-color");
+  if (settingDuePillColorEl) {
+    settingDuePillColorEl.value = loadDuePillColor();
+    settingDuePillColorEl.addEventListener("input", () => {
+      saveDuePillColor(settingDuePillColorEl.value);
+      renderDuePill();
+    });
+  }
+
   /* ---------------------------------------------------------
      Item 3 (dernier lot) : plus d'auto-défilement — 3 pictos en haut de la
      page choisissent MANUELLEMENT ce qui s'affiche (nombre / mode /
@@ -6761,6 +7880,8 @@
     if (settingShowRatingDaysEl) settingShowRatingDaysEl.checked = loadShowRatingDays();
     if (settingShowReviewChartEl) settingShowReviewChartEl.checked = loadShowReviewChart();
     if (settingCardFontSizeEl) settingCardFontSizeEl.value = loadCardFontSize();
+    if (settingBodyLogoShadowEl) settingBodyLogoShadowEl.checked = loadDevSettings().bodyLogo.shadow;
+    if (settingHomeLogoShadowEl) settingHomeLogoShadowEl.checked = loadDevSettings().homeLogo.shadow;
   }
 
   /* ---------------------------------------------------------
@@ -7082,14 +8203,51 @@
     renderHomeLayoutEditor();
     renderHomeLogoEditor();
     renderReviewLayoutEditor();
+    renderRevisionAlgoEditor();
+    renderPersGaugeColorsEditor();
     renderCardScoreEditor();
     renderGaugeColorsEditor();
     renderFactoryDefaultsEditor();
+    renderHelpMessagesEditor();
     // Après TOUS les autres rendus ci-dessus : ils régénèrent leurs propres
     // <input class="dev-color-value"> dynamiquement, donc les pastilles
     // (et curseurs T/S/L) doivent être posées en tout dernier pour ne
     // rater aucun d'entre eux.
     enhanceColorInputsWithHsl();
+  }
+
+  /** Round 4, partie 2 : éditeur des messages d'aide du robot, une textarea
+   *  par page (une ligne = un message, dans l'ordre du bouton "Suite"). */
+  function renderHelpMessagesEditor() {
+    const wrap = el("dev-help-messages-list");
+    if (!wrap) return;
+    const settings = loadDevSettings();
+    const viewKeys = Object.keys(DEFAULT_HELP_MESSAGES_BY_VIEW);
+    wrap.innerHTML = viewKeys
+      .map((key) => {
+        const messages = settings.helpMessagesByView[key] || [];
+        const value = messages.join("\n");
+        return `<div class="dev-help-messages-row">
+          <span class="dev-help-messages-title">${HELP_VIEW_LABELS[key] || key}</span>
+          <textarea class="dev-help-messages-textarea" data-key="${key}" placeholder="Aucun message — pas de bulle d'aide sur cette page.">${value.replace(/</g, "&lt;")}</textarea>
+        </div>`;
+      })
+      .join("");
+    wrap.querySelectorAll(".dev-help-messages-textarea").forEach((textarea) => {
+      textarea.addEventListener("change", () => {
+        const s = loadDevSettings();
+        const lines = textarea.value.split("\n").map((l) => l.trim()).filter((l) => l.length > 0);
+        s.helpMessagesByView[textarea.dataset.key] = lines;
+        saveDevSettings(s);
+        // La page actuellement affichée peut être celle qu'on vient
+        // d'éditer : on rafraîchit sa bulle d'aide tout de suite plutôt
+        // que d'attendre le prochain changement de page.
+        const activeView = document.querySelector(".view.is-active");
+        if (activeView && activeView.id === `view-${textarea.dataset.key}`) {
+          applyBodyLogoSpeech(textarea.dataset.key);
+        }
+      });
+    });
   }
 
 
@@ -7100,6 +8258,47 @@
    *  détection automatique de nouvelle version reste bloquée (observé sur
    *  GitHub Pages, qui ne permet pas de fixer nous-mêmes les en-têtes de
    *  cache HTTP — voir aussi updateViaCache: "none" plus bas). */
+  const devPublishPublicBtn = el("dev-publish-public-btn");
+  const devPublishPublicResultEl = el("dev-publish-public-result");
+  if (devPublishPublicBtn) {
+    devPublishPublicBtn.addEventListener("click", async () => {
+      devPublishPublicBtn.disabled = true;
+      const originalLabel = devPublishPublicBtn.textContent;
+      devPublishPublicBtn.textContent = "Publication…";
+      if (devPublishPublicResultEl) devPublishPublicResultEl.textContent = "";
+      const settings = loadDevSettings();
+      const result = await Sync.pushPublicDevSettings(settings);
+      devPublishPublicBtn.disabled = false;
+      devPublishPublicBtn.textContent = originalLabel;
+      if (result && result.error) {
+        // Round 4, partie 3 (correctif) : on affiche désormais le texte
+        // d'erreur réel renvoyé par Supabase (au lieu d'un message générique
+        // qui masquait la vraie cause), pour pouvoir diagnostiquer ce genre
+        // de souci sans avoir à ouvrir la console.
+        if (devPublishPublicResultEl) {
+          devPublishPublicResultEl.textContent =
+            "Échec — " + result.error + " (vérifie aussi que tu es connecté avec ton compte, page Compte).";
+        }
+        robotAlert("La publication a échoué : " + result.error);
+      } else {
+        publicDevSettingsOverride = settings;
+        if (devPublishPublicResultEl) {
+          devPublishPublicResultEl.textContent = "Publié — tout le monde recevra ces réglages à son prochain démarrage.";
+        }
+        robotAlert("Réglages publiés ! Toutes les installations (élèves, profs, nouveaux appareils) les recevront désormais au démarrage.");
+      }
+    });
+  }
+
+  const devHideDevModeBtn = el("dev-hide-dev-mode-btn");
+  if (devHideDevModeBtn) {
+    devHideDevModeBtn.addEventListener("click", () => {
+      setDevUnlocked(false);
+      const homeBtnEl = el("home-btn");
+      if (homeBtnEl) homeBtnEl.click();
+    });
+  }
+
   const settingHardResetEl = el("setting-hard-reset");
   if (settingHardResetEl) {
     settingHardResetEl.addEventListener("click", async () => {
@@ -7172,6 +8371,11 @@
       // Bouton "retour à l'accueil" (item 1e) : visible partout SAUF sur
       // l'accueil lui-même.
       if (homeBtn) homeBtn.hidden = false;
+      // Items 1/2 (dernier lot) : le logo (en haut du corps de la page)
+      // n'apparaît que sur les pages autres que l'accueil, qui a déjà son
+      // propre grand logo.
+      if (el("body-logo-row")) el("body-logo-row").hidden = false;
+      applyBodyLogoSpeech(view);
 
       if (view === "review") {
         if (!reviewSessionStarted) {
@@ -7186,6 +8390,10 @@
       if (view === "stats") renderStats();
       if (view === "dev") renderDevView();
       if (view === "sync") renderSyncView();
+      if (view === "account") renderAccountView();
+      if (view === "classes") renderClassesView();
+      if (view === "messages") renderMessagesView();
+      if (view === "library") renderLibraryView();
       if (view === "calendar") renderCalendarEvents();
       if (view === "revision-program") renderRevisionProgramList();
       if (view === "settings") {
@@ -7205,6 +8413,12 @@
   // Organisation plutôt qu'au véritable accueil — remis à false dès
   // qu'on entre sur Fiches par un autre chemin (voir plus bas).
   let cardsEntryFromManage = false;
+  // Item 3 (nouveau lot) : si on est arrivé sur Réviser en cliquant un
+  // dossier/une boîte depuis Organisation, Accueil doit y ramener plutôt
+  // qu'au Programme de révision (comportement par défaut, conservé quand
+  // c'est bien par le Programme — ou "Sélection manuelle" — qu'on est
+  // passé).
+  let reviewEntryFromManage = false;
   function goHome() {
     if (cardsEntryFromManage && el("view-cards") && el("view-cards").classList.contains("is-active")) {
       cardsEntryFromManage = false;
@@ -7212,10 +8426,17 @@
       if (tab) tab.click();
       return;
     }
-    // Item 8 : Réviser se rejoint désormais toujours en passant par le
-    // Programme de révision — Accueil y ramène plutôt qu'au véritable
-    // accueil, cohérent avec ce chemin d'entrée unique.
+    // Item 8 (lot précédent) : Réviser se rejoint désormais toujours en
+    // passant par le Programme de révision (ou "Sélection manuelle") —
+    // Accueil y ramène par défaut. Item 3 (nouveau lot) : sauf si on est
+    // arrivé par Organisation, auquel cas Accueil y ramène plutôt.
     if (el("view-review") && el("view-review").classList.contains("is-active")) {
+      if (reviewEntryFromManage) {
+        reviewEntryFromManage = false;
+        const manageTab = document.querySelector('.tab[data-view="manage"]');
+        if (manageTab) manageTab.click();
+        return;
+      }
       const tab = document.querySelector('.tab[data-view="revision-program"]');
       if (tab) tab.click();
       return;
@@ -7227,6 +8448,7 @@
     document.querySelectorAll(".view").forEach((v) => v.classList.remove("is-active"));
     el("view-home").classList.add("is-active");
     if (homeBtn) homeBtn.hidden = true;
+    if (el("body-logo-row")) el("body-logo-row").hidden = true;
   }
   if (homeBtn) homeBtn.addEventListener("click", goHome);
 
@@ -7313,71 +8535,32 @@
     return f ? `${f.name} (dossier)` : "Aucune boîte/dossier liés";
   }
 
-  function renderCalendarLinkTree(container) {
-    container.innerHTML = "";
-    function walk(parentId, depth) {
-      const childFolders = folders
-        .filter((f) => f.parentId === parentId)
-        .sort((a, b) => a.name.localeCompare(b.name, "fr"));
-      const childSubjects = subjects
-        .filter((s) => s.folderId === parentId)
-        .sort((a, b) => a.name.localeCompare(b.name, "fr"));
-      childFolders.forEach((f) => {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "subject-choice-tree-folder";
-        btn.style.cssText = `padding-left:${10 + depth * 14}px; width:100%; text-align:left; background:none; border:none;`;
-        btn.textContent = `${folderIcon()} ${f.name}`;
-        btn.addEventListener("click", () => {
-          calendarEventLinkId = `folder:${f.id}`;
-          closeCalendarSubjectPicker();
-        });
-        container.appendChild(btn);
-        walk(f.id, depth + 1);
-      });
-      childSubjects.forEach((s) => {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "subject-choice-tree-item";
-        btn.style.paddingLeft = `${12 + depth * 14}px`;
-        btn.textContent = s.name;
-        btn.addEventListener("click", () => {
-          calendarEventLinkId = `subject:${s.id}`;
-          closeCalendarSubjectPicker();
-        });
-        container.appendChild(btn);
-      });
-    }
-    walk(ROOT_FOLDER_ID, 0);
-  }
-  // Item 2 : panneau plein écran (bug corrigé : celui-ci s'ouvrait hors
-  // écran, en petit menu déroulant, comme le fixe aussi le correctif du
-  // panneau de la page Fiches).
-  function closeCalendarSubjectPicker() {
-    const picker = el("calendar-event-subject-picker");
-    if (picker) picker.hidden = true;
-    const btn = el("calendar-event-subject-btn");
-    if (btn) btn.textContent = calendarLinkLabel(calendarEventLinkId);
-  }
+  // Item 1 (4e lot) : ce sélecteur utilise désormais la page partagée
+  // #view-boite-picker (rendu de l'arbre identique à Organisation) — ici
+  // un dossier ENTIER reste un lien valide (même non vide), donc
+  // folderAlwaysSelectable est activé, et un bouton "Aucun lien" permet de
+  // retirer le lien existant.
   const calendarEventSubjectBtn = el("calendar-event-subject-btn");
   if (calendarEventSubjectBtn) {
     calendarEventSubjectBtn.addEventListener("click", () => {
-      const picker = el("calendar-event-subject-picker");
-      const tree = el("calendar-event-subject-tree");
-      if (!picker || !tree) return;
-      renderCalendarLinkTree(tree);
-      picker.hidden = false;
+      openBoitePickerView({
+        mode: "single",
+        title: "Choisir la boîte ou le dossier lié",
+        folderAlwaysSelectable: true,
+        showNoneButton: true,
+        onPick: (kind, id) => {
+          calendarEventLinkId = `${kind}:${id}`;
+          calendarEventSubjectBtn.textContent = calendarLinkLabel(calendarEventLinkId);
+          closeBoitePickerView();
+        },
+        onNone: () => {
+          calendarEventLinkId = null;
+          calendarEventSubjectBtn.textContent = calendarLinkLabel(null);
+          closeBoitePickerView();
+        },
+      });
     });
   }
-  const calendarEventSubjectNoneBtn = el("calendar-event-subject-none");
-  if (calendarEventSubjectNoneBtn) {
-    calendarEventSubjectNoneBtn.addEventListener("click", () => {
-      calendarEventLinkId = null;
-      closeCalendarSubjectPicker();
-    });
-  }
-  const calendarEventSubjectDoneBtn = el("calendar-event-subject-done");
-  if (calendarEventSubjectDoneBtn) calendarEventSubjectDoneBtn.addEventListener("click", closeCalendarSubjectPicker);
 
   // Item 2 : le bouton de date ouvre le sélecteur natif (plus explicite
   // qu'un simple champ texte) et affiche la date choisie en toutes lettres.
@@ -7399,7 +8582,7 @@
   // Item 2 : le panneau d'ajout reste caché tant qu'on n'a pas cliqué sur
   // "+ Ajouter un événement" — et sert aussi à MODIFIER un événement
   // existant (même formulaire, prérempli).
-  function openCalendarEventForm(eventToEdit) {
+  async function openCalendarEventForm(eventToEdit) {
     const form = el("calendar-event-form");
     if (!form) return;
     form.hidden = false;
@@ -7423,6 +8606,46 @@
       if (title) title.textContent = "Ajouter un événement";
       if (submitBtn) submitBtn.textContent = "Ajouter à mon calendrier";
     }
+    await populateCalendarEventClassSelect(eventToEdit);
+  }
+  /** Round 3, item 4 (squelette) : remplit le sélecteur "Partager avec une
+   *  classe" avec les classes dont l'utilisateur est prof — masqué s'il
+   *  n'en a aucune (rien à partager) ou si Sync/Compte ne sont pas prêts. */
+  async function populateCalendarEventClassSelect(eventToEdit) {
+    const field = el("calendar-event-class-field");
+    const select = el("calendar-event-class-select");
+    if (!field || !select) return;
+    if (!Sync.isConfigured() || !accountCurrentUser) {
+      field.hidden = true;
+      return;
+    }
+    const myClasses = await Sync.classes.listAsTeacher();
+    if (!myClasses.length) {
+      field.hidden = true;
+      select.value = "";
+      return;
+    }
+    field.hidden = false;
+    select.innerHTML =
+      `<option value="">Ne pas partager</option>` +
+      myClasses.map((k) => `<option value="${k.id}">${escapeHtml(k.name)}</option>`).join("");
+    select.value = eventToEdit && eventToEdit.classShare ? eventToEdit.classShare.classId : "";
+  }
+  /** Garde-fou supplémentaire (round 6, "attention qu'un élève ne puisse
+   *  rien modifier de ce qui est partagé par un prof") : la corbeille
+   *  n'est déjà PAS affichée pour un événement reçu (isReceived, voir
+   *  buildCalendarEventRow) et le clic sur la ligne est déjà bloqué par
+   *  blockIfSharedReadonlyEvent — mais on ajoute ici une deuxième
+   *  barrière, directement à la source de la suppression elle-même,
+   *  pour qu'un événement marqué `sharedEventId` reste structurellement
+   *  impossible à supprimer par ce chemin, même si un futur appel
+   *  oubliait la vérification côté interface. */
+  async function deleteOwnCalendarEvent(ev) {
+    if (isSharedReadonlyEvent(ev)) return;
+    saveCalendarEvents(loadCalendarEvents().filter((x) => x.id !== ev.id));
+    if (ev.classShare && Sync.isConfigured()) {
+      try { await Sync.classes.deleteSharedEvent(ev.classShare.remoteId); } catch (e) { /* best-effort */ }
+    }
   }
   function closeCalendarEventForm() {
     const form = el("calendar-event-form");
@@ -7436,18 +8659,48 @@
 
   const calendarEventForm = el("calendar-event-form");
   if (calendarEventForm) {
-    calendarEventForm.addEventListener("submit", (e) => {
+    calendarEventForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const titleInput = el("calendar-event-title");
       const dateInput = el("calendar-event-date");
       if (!titleInput.value.trim() || !dateInput.value) return;
+      const titleVal = titleInput.value.trim();
+      const dateVal = dateInput.value;
       const events = loadCalendarEvents();
+      const classSelect = el("calendar-event-class-select");
+      const selectedClassId = classSelect && !el("calendar-event-class-field").hidden ? classSelect.value : "";
+
+      let ev;
+      let idx = -1;
       if (calendarEditingEventId) {
-        const idx = events.findIndex((x) => x.id === calendarEditingEventId);
-        if (idx >= 0) events[idx] = { ...events[idx], title: titleInput.value.trim(), date: dateInput.value, linkId: calendarEventLinkId };
+        idx = events.findIndex((x) => x.id === calendarEditingEventId);
+        ev = idx >= 0 ? { ...events[idx], title: titleVal, date: dateVal, linkId: calendarEventLinkId } : null;
       } else {
-        events.push({ id: uid(), title: titleInput.value.trim(), date: dateInput.value, linkId: calendarEventLinkId });
+        ev = { id: uid(), title: titleVal, date: dateVal, linkId: calendarEventLinkId };
       }
+      if (!ev) return;
+
+      // Round 3, item 4 (squelette) : synchronise le partage avec la
+      // classe choisie (aucune, une nouvelle, ou la même déjà en place).
+      if (Sync.isConfigured() && ev.classShare && ev.classShare.classId !== selectedClassId) {
+        // Classe retirée ou changée : on retire d'abord l'ancien partage.
+        try { await Sync.classes.deleteSharedEvent(ev.classShare.remoteId); } catch (err) { /* best-effort */ }
+        delete ev.classShare;
+      }
+      if (Sync.isConfigured() && selectedClassId) {
+        if (ev.classShare && ev.classShare.classId === selectedClassId) {
+          await Sync.classes.updateSharedEvent(ev.classShare.remoteId, titleVal, dateVal);
+        } else {
+          const klass = (await Sync.classes.listAsTeacher()).find((k) => k.id === selectedClassId);
+          const { data, error } = await Sync.classes.shareEvent(selectedClassId, titleVal, dateVal);
+          if (!error && data) {
+            ev.classShare = { classId: selectedClassId, className: klass ? klass.name : "", remoteId: data.id };
+          }
+        }
+      }
+
+      if (idx >= 0) events[idx] = ev;
+      else events.push(ev);
       saveCalendarEvents(events);
       const wasEditing = !!calendarEditingEventId;
       closeCalendarEventForm();
@@ -7458,31 +8711,75 @@
 
   /** Ligne d'événement partagée (item 2) : liste ET popup de jour, avec
    *  modifier + supprimer. */
+  /** Round 3, item 4 (squelette) : un événement REÇU d'une classe (marqué
+   *  sharedEventId) est en lecture seule côté élève, même logique que pour
+   *  une boîte partagée — il se met à jour tout seul, on ne le modifie ni
+   *  ne le supprime ici. */
+  function isSharedReadonlyEvent(ev) {
+    return !!(ev && ev.sharedEventId);
+  }
+  async function blockIfSharedReadonlyEvent(ev) {
+    if (isSharedReadonlyEvent(ev)) {
+      await robotAlert("Cet événement est partagé par ton professeur : il se met à jour tout seul, tu ne peux pas le modifier ici.");
+      return true;
+    }
+    return false;
+  }
   function buildCalendarEventRow(ev, { onEdit, onDelete }) {
     const li = document.createElement("li");
-    li.className = "card-row";
+    // Item 2 (demande de Stéphane) : distinction visuelle nette entre un
+    // événement PERSONNEL (aucune classe liée), un événement PARTAGÉ PAR
+    // MOI (côté prof, ev.classShare) et un événement REÇU d'un prof (côté
+    // élève, ev.sharedEventId, lecture seule) — liseré de couleur + fond
+    // légèrement teinté distincts pour chacun (voir style.css), en plus du
+    // badge texte déjà existant.
+    const isReceived = isSharedReadonlyEvent(ev);
+    const isSharedByMe = !!ev.classShare;
+    li.className =
+      "card-row" +
+      (isReceived ? " calendar-event-row--received" : isSharedByMe ? " calendar-event-row--shared-mine" : "");
     li.style.cssText = "flex-direction:row; align-items:center; justify-content:space-between; cursor:pointer;";
     // Item 6 : cliquer sur l'événement l'ouvre directement en modification
     // — plus besoin d'un bouton crayon séparé.
-    li.title = "Modifier cet événement";
-    li.addEventListener("click", onEdit);
+    li.title = isReceived ? "Événement partagé par ton professeur (lecture seule)" : "Modifier cet événement";
+    li.addEventListener("click", async () => {
+      if (await blockIfSharedReadonlyEvent(ev)) return;
+      onEdit();
+    });
     const main = document.createElement("div");
     main.className = "card-row-main";
-    main.innerHTML = `<strong>${escapeHtml(ev.title)}</strong><br><span class="card-row-meta">${escapeHtml(formatCalendarDate(ev.date))}${ev.linkId ? ` · ${escapeHtml(calendarLinkLabel(ev.linkId))}` : ""}</span>`;
+    const sharedBadge = isReceived
+      ? ` <span class="classes-shared-badge classes-shared-badge--received">${iconSvgMarkup("lock", "icon-inline-svg")} ${escapeHtml(ev.sharedClassName)}</span>`
+      : isSharedByMe
+      ? ` <span class="classes-shared-badge">Partagé : ${escapeHtml(ev.classShare.className)}</span>`
+      : "";
+    main.innerHTML = `<strong>${escapeHtml(ev.title)}</strong>${sharedBadge}<br><span class="card-row-meta">${escapeHtml(formatCalendarDate(ev.date))}${ev.linkId ? ` · ${escapeHtml(calendarLinkLabel(ev.linkId))}` : ""}</span>`;
     const actions = document.createElement("div");
     actions.style.cssText = "display:flex; gap:4px; flex-shrink:0;";
-    const delBtn = document.createElement("button");
-    delBtn.type = "button";
-    delBtn.className = "icon-btn icon-btn--danger";
-    delBtn.innerHTML = iconSvgMarkup("trash", "icon-inline-svg");
-    delBtn.title = "Supprimer cet événement";
-    // Item 4 : confirmation avant suppression, comme pour les fiches et
-    // les boîtes ailleurs dans l'appli.
-    delBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      if (confirm(`Supprimer l'événement « ${ev.title} » ?`)) onDelete();
-    });
-    actions.appendChild(delBtn);
+    if (isReceived) {
+      // Un événement reçu ne peut pas être supprimé (voir
+      // blockIfSharedReadonlyEvent) : plus de bouton corbeille trompeur ici
+      // (auparavant présent mais toujours bloqué au clic), remplacé par un
+      // simple cadenas qui rappelle pourquoi, sans action au clic.
+      const lockBadge = document.createElement("span");
+      lockBadge.className = "icon-btn icon-btn--static";
+      lockBadge.title = "Géré par ton professeur";
+      lockBadge.innerHTML = iconSvgMarkup("lock", "icon-inline-svg");
+      actions.appendChild(lockBadge);
+    } else {
+      const delBtn = document.createElement("button");
+      delBtn.type = "button";
+      delBtn.className = "icon-btn icon-btn--danger";
+      delBtn.innerHTML = iconSvgMarkup("trash", "icon-inline-svg");
+      delBtn.title = "Supprimer cet événement";
+      // Item 4 : confirmation avant suppression, comme pour les fiches et
+      // les boîtes ailleurs dans l'appli.
+      delBtn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        if (await robotConfirm(`Supprimer l'événement « ${ev.title} » ?`, { danger: true })) onDelete();
+      });
+      actions.appendChild(delBtn);
+    }
     li.appendChild(main);
     li.appendChild(actions);
     return li;
@@ -7503,8 +8800,8 @@
       list.appendChild(
         buildCalendarEventRow(ev, {
           onEdit: () => openCalendarEventForm(ev),
-          onDelete: () => {
-            saveCalendarEvents(loadCalendarEvents().filter((x) => x.id !== ev.id));
+          onDelete: async () => {
+            await deleteOwnCalendarEvent(ev);
             renderCalendarEvents();
           },
         })
@@ -7573,6 +8870,15 @@
         for (let i = 0; i < count; i++) {
           const dot = document.createElement("span");
           dot.className = "calendar-day-dot";
+          // Item 2 (demande de Stéphane) : point de couleur différente pour
+          // un événement lié à une classe (reçu OU partagé par moi), pour
+          // repérer un jour de classe d'un simple coup d'œil sur la grille,
+          // avant même d'ouvrir le jour.
+          const dayEv = eventMap[day][i];
+          // Round 6 : couleur différente reçu (sauge) / partagé par moi
+          // (bleu), même distinction qu'en vue liste (voir style.css).
+          if (dayEv && dayEv.sharedEventId) dot.classList.add("calendar-day-dot--shared");
+          else if (dayEv && dayEv.classShare) dot.classList.add("calendar-day-dot--shared-mine");
           if (eventMap[day].length > 3 && i === count - 1) dot.classList.add("calendar-day-dot--more");
           dotsWrap.appendChild(dot);
         }
@@ -7660,8 +8966,8 @@
             popup.hidden = true;
             openCalendarEventForm(ev);
           },
-          onDelete: () => {
-            saveCalendarEvents(loadCalendarEvents().filter((x) => x.id !== ev.id));
+          onDelete: async () => {
+            await deleteOwnCalendarEvent(ev);
             popup.hidden = true;
             renderCalendarEvents();
           },
@@ -7717,8 +9023,14 @@
     const items = Object.values(byLink).map((ev) => {
       const [type, id] = ev.linkId.split(":");
       const isFolder = type === "folder";
-      const score = isFolder ? computeFolderScore(id) : computeSubjectScore(id);
+      const pool = isFolder ? folderCardsPool(id) : subjectCardsPool(id);
       const daysLeft = Math.round((new Date(ev.date + "T00:00:00") - new Date(todayStr + "T00:00:00")) / 86400000);
+      // Nouvel algorithme : plus de score 0-100 — le "score" utilisé pour
+      // le tri à égalité de date devient la proportion (%) de fiches déjà
+      // en persistance moyen/long/très long terme (donc pas "court terme").
+      const list = pool || [];
+      const wellPersisted = list.filter((c) => classifyPersBracket(typeof c.pers === "number" ? c.pers : 0, loadDevSettings().revisionAlgo) !== "court").length;
+      const score = list.length > 0 ? Math.round((wellPersisted / list.length) * 100) : 0;
       return {
         linkId: ev.linkId,
         type,
@@ -7727,7 +9039,8 @@
         eventTitle: ev.title,
         eventDate: ev.date,
         daysLeft,
-        score: score === null ? 0 : score,
+        pool,
+        score,
         target: REVISION_PROGRAM_TARGET_SCORE,
       };
     });
@@ -7786,16 +9099,26 @@
           <strong>${escapeHtml(it.label)}</strong>
           <span class="card-row-meta">« ${escapeHtml(it.eventTitle)} » — ${dueLabel}</span>
         </div>
-        <div class="revision-program-gauge-col">${renderMiniGaugeRingWithTarget(it.score, it.target)}</div>
+        <div class="revision-program-gauge-col">${buildPersGaugeSvg(it.pool, { width: 190, barHeight: 12 })}</div>
       `;
-      li.addEventListener("click", () => goToReviewFor(it.linkId));
+      li.addEventListener("click", () => {
+        reviewEntryFromManage = false;
+        goToReviewFor(it.linkId);
+      });
       list.appendChild(li);
     });
   }
 
   const revisionProgramSkipBtn = el("revision-program-skip");
   if (revisionProgramSkipBtn) {
-    revisionProgramSkipBtn.addEventListener("click", () => goToReviewFor(null));
+    // Item 6 (nouveau lot) : "Sélection manuelle" ouvre directement le
+    // sélecteur de boîtes/dossiers (item 1), puis amène à la page Réviser
+    // une fois la sélection validée (voir multiPickerNavigateToReviewOnConfirm).
+    revisionProgramSkipBtn.addEventListener("click", () => {
+      reviewEntryFromManage = false;
+      multiPickerNavigateToReviewOnConfirm = true;
+      openMultiSubjectPicker();
+    });
   }
 
   function renderSyncView() {
@@ -7897,8 +9220,8 @@
     retrySyncBtn.textContent = "Réessayer maintenant";
   });
 
-  disconnectBtn.addEventListener("click", () => {
-    if (!confirm("Se déconnecter ? Tes fiches restent sur cet appareil, mais ne seront plus synchronisées tant que tu ne reconnectes pas un code.")) {
+  disconnectBtn.addEventListener("click", async () => {
+    if (!(await robotConfirm("Se déconnecter ? Tes fiches restent sur cet appareil, mais ne seront plus synchronisées tant que tu ne reconnectes pas un code."))) {
       return;
     }
     if (unsubscribeRealtime) unsubscribeRealtime();
@@ -7911,6 +9234,1087 @@
     renderSyncView();
     updateSyncStatus();
   });
+
+  /* ---------------------------------------------------------
+     Classes (exploration) : partage prof -> élèves. Contrairement à la
+     Sync perso (un simple code partagé, sans identité), nécessite un
+     vrai compte (email + mot de passe) — voir Sync.auth / Sync.classes
+     dans sync.js, et supabase/classes_schema.sql pour le schéma à créer
+     une fois côté Supabase (même projet que la Sync).
+  --------------------------------------------------------- */
+  /** ---------------------------------------------------------------
+   *  Compte (page dédiée "Se connecter / Créer un compte") — item 1 :
+   *  toute la partie identité (connexion/inscription) vit ici, plus dans
+   *  Classes, qui suppose désormais qu'on est déjà connecté. `accountCurrentUser`
+   *  est LE point d'état global de connexion, lu aussi bien par la page
+   *  Compte que par la page Classes et par le bouton d'accueil.
+   *  ------------------------------------------------------------- */
+  let accountCurrentUser = null;
+  let classesAuthMode = "signin"; // "signin" | "signup"
+
+  /** Correctif (round 6, demande de Stéphane) : les réglages développeur
+   *  personnels (couleurs, icônes... y compris le mode nuit, qui en fait
+   *  partie intégrante — voir setNightModeActive) n'étaient synchronisés
+   *  QUE par code de synchro perso (`dev_settings.sync_code`),
+   *  totalement indépendant du Compte Supabase Auth connecté. Deux
+   *  Comptes différents (ex. un compte prof et un compte élève de test)
+   *  utilisant le MÊME code de synchro perso partageaient donc
+   *  automatiquement ces réglages, y compris en temps réel (abonnement
+   *  Realtime) — même avant tout clic sur "Publier", qui lui ne concerne
+   *  qu'un canal totalement différent (dev_settings_public, round 4).
+   *  Ce canal personnel est maintenant cloisonné par (code de synchro +
+   *  Compte connecté) : `Sync.auth.getUser()` est interrogé directement
+   *  ici, plutôt que de lire la variable `accountCurrentUser`, qui n'est
+   *  pas forcément déjà résolue au tout premier démarrage (connectSync()
+   *  s'exécute avant initAccountState(), voir plus bas) — pour être sûr
+   *  d'avoir la valeur à jour à chaque appel. Chaîne vide si aucun
+   *  Compte n'est connecté, pour ne rien changer à quelqu'un qui
+   *  n'utilise que la synchro perso sans jamais toucher aux
+   *  Comptes/Classes (comportement identique à avant round 6 dans ce cas).
+   */
+  async function currentAccountEmailForSync() {
+    if (!Sync.isConfigured()) return "";
+    try {
+      const u = await Sync.auth.getUser();
+      return u && u.email ? u.email.toLowerCase() : "";
+    } catch (e) {
+      return "";
+    }
+  }
+
+  /** Reflète l'état de connexion sur le bouton d'accueil (item 1/2) : son
+   *  libellé change tout seul, avant même d'avoir ouvert la page Compte. */
+  function updateAccountHomeButton() {
+    const label = document.querySelector('.home-circle[data-key="account"] span');
+    if (label) label.textContent = accountCurrentUser ? "Mon compte" : "Se connecter";
+    const emailEl = el("account-user-email");
+    if (emailEl) emailEl.textContent = (accountCurrentUser && accountCurrentUser.email) || "";
+    const classesEmailEl = el("classes-connected-as");
+    if (classesEmailEl) {
+      classesEmailEl.hidden = !accountCurrentUser;
+      classesEmailEl.textContent = accountCurrentUser ? `Connecté en tant que ${accountCurrentUser.email}` : "";
+    }
+    // Round 6, item 5 : la pastille de notifications de la Messagerie doit
+    // rester à jour dès que l'état de connexion change (connexion,
+    // déconnexion, changement de Compte), pas seulement à l'ouverture de
+    // la page — c'est cette même fonction qui est appelée à chacun de ces
+    // moments (voir initAccountState / Sync.auth.onChange).
+    refreshMessagesBadge();
+  }
+
+  /** item 2 : appelé une seule fois au démarrage — supabase-js garde la
+   *  session dans le stockage local du téléphone et la retrouve tout
+   *  seul ; il suffit de la lire ici pour que l'appli sache déjà "qui
+   *  c'est" sans repasser par un écran de connexion à chaque ouverture,
+   *  et de rester à l'écoute (`onChange`) pour le reste de la session. */
+  async function initAccountState() {
+    if (!Sync.isConfigured()) return;
+    accountCurrentUser = await Sync.auth.getUser();
+    updateAccountHomeButton();
+    if (accountCurrentUser) syncSharedBoxesForStudent();
+    Sync.auth.onChange((user) => {
+      accountCurrentUser = user;
+      updateAccountHomeButton();
+      if (el("view-account") && el("view-account").classList.contains("is-active")) renderAccountView();
+      if (el("view-classes") && el("view-classes").classList.contains("is-active")) renderClassesView();
+      if (el("view-classes-student") && el("view-classes-student").classList.contains("is-active")) renderStudentClasses();
+      if (el("view-classes-teacher") && el("view-classes-teacher").classList.contains("is-active")) renderTeacherClasses();
+      if (el("view-messages") && el("view-messages").classList.contains("is-active")) renderMessagesView();
+      if (user) syncSharedBoxesForStudent();
+      // Correctif (round 6) : les réglages dev perso (dont le mode nuit)
+      // sont maintenant cloisonnés par Compte connecté (voir
+      // currentAccountEmailForSync) — un changement de Compte EN COURS DE
+      // SESSION (connexion, déconnexion, changement de compte) doit donc
+      // recharger et se réabonner avec le bon cloisonnement, sinon
+      // l'appareil resterait accroché aux réglages de l'ancien Compte (ou
+      // d'aucun Compte) jusqu'au prochain redémarrage complet de l'appli.
+      if (Sync.isConfigured()) {
+        (async () => {
+          try {
+            await reconcileDevSettings();
+            applyAllDevSettings();
+            await subscribeDevSettingsForCurrentAccount();
+          } catch (e) {
+            // Best-effort : un accroc réseau ici ne doit jamais faire
+            // planter le reste de la gestion du changement de Compte.
+            console.warn("Réglages dev : échec du rechargement après changement de Compte", e);
+          }
+        })();
+      }
+    });
+  }
+
+  async function renderAccountView() {
+    const needsSync = el("account-needs-sync");
+    const authBlock = el("account-auth-block");
+    const connectedBlock = el("account-connected-block");
+    if (!needsSync || !authBlock || !connectedBlock) return;
+    if (!Sync.isConfigured()) {
+      needsSync.hidden = false;
+      authBlock.hidden = true;
+      connectedBlock.hidden = true;
+      return;
+    }
+    needsSync.hidden = true;
+    accountCurrentUser = await Sync.auth.getUser();
+    updateAccountHomeButton();
+    if (!accountCurrentUser) {
+      authBlock.hidden = false;
+      connectedBlock.hidden = true;
+      return;
+    }
+    authBlock.hidden = true;
+    connectedBlock.hidden = false;
+  }
+
+  function setClassesAuthMode(mode) {
+    classesAuthMode = mode;
+    const tabIn = el("account-auth-tab-signin");
+    const tabUp = el("account-auth-tab-signup");
+    if (tabIn) tabIn.classList.toggle("is-active", mode === "signin");
+    if (tabUp) tabUp.classList.toggle("is-active", mode === "signup");
+    const submitBtn = el("account-auth-submit");
+    if (submitBtn) submitBtn.textContent = mode === "signin" ? "Se connecter" : "Créer le compte";
+    const note = el("account-auth-note");
+    if (note) note.hidden = true;
+  }
+  const accountAuthTabSignin = el("account-auth-tab-signin");
+  if (accountAuthTabSignin) accountAuthTabSignin.addEventListener("click", () => setClassesAuthMode("signin"));
+  const accountAuthTabSignup = el("account-auth-tab-signup");
+  if (accountAuthTabSignup) accountAuthTabSignup.addEventListener("click", () => setClassesAuthMode("signup"));
+
+  const accountAuthSubmitBtn = el("account-auth-submit");
+  if (accountAuthSubmitBtn) {
+    accountAuthSubmitBtn.addEventListener("click", async () => {
+      const emailInput = el("account-auth-email");
+      const passwordInput = el("account-auth-password");
+      const note = el("account-auth-note");
+      const email = (emailInput.value || "").trim();
+      const password = passwordInput.value || "";
+      if (!email || !password) {
+        if (note) {
+          note.hidden = false;
+          note.textContent = "Email et mot de passe requis.";
+        }
+        return;
+      }
+      accountAuthSubmitBtn.disabled = true;
+      const result =
+        classesAuthMode === "signin"
+          ? await Sync.auth.signIn(email, password)
+          : await Sync.auth.signUp(email, password);
+      accountAuthSubmitBtn.disabled = false;
+      if (result.error) {
+        if (note) {
+          note.hidden = false;
+          note.textContent = result.error;
+        }
+        return;
+      }
+      if (classesAuthMode === "signup") {
+        if (note) {
+          note.hidden = false;
+          note.textContent = "Compte créé — vérifie ta boîte mail si une confirmation est demandée, puis connecte-toi.";
+        }
+        setClassesAuthMode("signin");
+        return;
+      }
+      passwordInput.value = "";
+      await renderAccountView();
+      await syncSharedBoxesForStudent();
+    });
+  }
+
+  const accountSignoutBtn = el("account-signout-btn");
+  if (accountSignoutBtn) {
+    accountSignoutBtn.addEventListener("click", async () => {
+      await Sync.auth.signOut();
+      accountCurrentUser = null;
+      updateAccountHomeButton();
+      await renderAccountView();
+    });
+  }
+
+  const accountGotoSyncBtn = el("account-goto-sync-btn");
+  if (accountGotoSyncBtn) {
+    accountGotoSyncBtn.addEventListener("click", () => {
+      const tab = document.querySelector('.tab[data-view="sync"]');
+      if (tab) tab.click();
+    });
+  }
+
+  const accountGotoClassesBtn = el("account-goto-classes-btn");
+  if (accountGotoClassesBtn) {
+    accountGotoClassesBtn.addEventListener("click", () => {
+      const tab = document.querySelector('.tab[data-view="classes"]');
+      if (tab) tab.click();
+    });
+  }
+
+  /** ---------------------------------------------------------------
+   *  Classes — suppose maintenant qu'on est déjà connecté (voir Compte
+   *  ci-dessus). item 3 : plus aucune action manuelle côté élève — dès
+   *  qu'il fait partie d'une classe, les boîtes partagées de cette classe
+   *  apparaissent toutes seules dans ses boîtes (voir
+   *  `syncSharedBoxesForStudent`), et restent lecture seule + toujours à
+   *  jour avec ce que fait le prof.
+   *  ------------------------------------------------------------- */
+  /** Round 3, item 2 : la page Classes est désormais un simple palier
+   *  ("landing page") avec deux boutons ronds "J'apprends" / "J'enseigne",
+   *  chacun menant à sa propre page complète — remplace les deux anciens
+   *  onglets dans une seule page. */
+  async function renderClassesView() {
+    const needsSync = el("classes-needs-sync");
+    const needsAccount = el("classes-needs-account");
+    const mainBlock = el("classes-main-block");
+    if (!needsSync || !needsAccount || !mainBlock) return;
+
+    if (!Sync.isConfigured()) {
+      needsSync.hidden = false;
+      needsAccount.hidden = true;
+      mainBlock.hidden = true;
+      return;
+    }
+    needsSync.hidden = true;
+
+    accountCurrentUser = await Sync.auth.getUser();
+    updateAccountHomeButton();
+    if (!accountCurrentUser) {
+      needsAccount.hidden = false;
+      mainBlock.hidden = true;
+      return;
+    }
+    needsAccount.hidden = true;
+    mainBlock.hidden = false;
+
+    // item 3 (lot précédent) : synchro automatique, sans action de
+    // l'élève, dès qu'on ouvre la page Classes (palier ou sous-page).
+    await syncSharedBoxesForStudent();
+  }
+
+  /** Bascule vers une des deux pages complètes "J'apprends" (which="student")
+   *  ou "J'enseigne" (which="teacher"), et y peuple la liste correspondante. */
+  async function openClassesSubView(which) {
+    document.querySelectorAll(".view").forEach((v) => v.classList.remove("is-active"));
+    el(which === "teacher" ? "view-classes-teacher" : "view-classes-student").classList.add("is-active");
+    applyBodyLogoSpeech(which === "teacher" ? "classes-teacher" : "classes-student");
+    if (which === "teacher") {
+      await renderTeacherClasses();
+    } else {
+      await syncSharedBoxesForStudent();
+      await renderStudentClasses();
+    }
+  }
+  function closeClassesSubView() {
+    document.querySelectorAll(".view").forEach((v) => v.classList.remove("is-active"));
+    el("view-classes").classList.add("is-active");
+    applyBodyLogoSpeech("classes");
+    renderClassesView();
+  }
+  const classesGotoStudentBtn = el("classes-goto-student-btn");
+  if (classesGotoStudentBtn) classesGotoStudentBtn.addEventListener("click", () => openClassesSubView("student"));
+  const classesGotoTeacherBtn = el("classes-goto-teacher-btn");
+  if (classesGotoTeacherBtn) classesGotoTeacherBtn.addEventListener("click", () => openClassesSubView("teacher"));
+  const classesStudentBackBtn = el("classes-student-back-btn");
+  if (classesStudentBackBtn) classesStudentBackBtn.addEventListener("click", closeClassesSubView);
+  const classesTeacherBackBtn = el("classes-teacher-back-btn");
+  if (classesTeacherBackBtn) classesTeacherBackBtn.addEventListener("click", closeClassesSubView);
+
+  /** Icône dédiée aux classes (item 5) — un petit groupe de personnes,
+   *  dans le même style épuré (traits fins, coins arrondis) que les
+   *  autres pictos de l'appli. Utilisée sur le bouton d'accueil (HTML)
+   *  et ici, en tête de chaque ligne de classe. */
+  const CLASSES_ROW_ICON =
+    '<svg class="icon-inline-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><circle cx="9" cy="8" r="3"/><path d="M3.5 20c0-3.6 2.5-6.2 5.5-6.2s5.5 2.6 5.5 6.2"/><circle cx="17" cy="9" r="2.2"/><path d="M15.3 14.3c2.5.5 4.2 2.7 4.2 5.7"/></svg>';
+
+  /** item 3 : un élève reçoit un MIROIR en lecture seule de la boîte du
+   *  prof, jamais une copie figée — appelé silencieusement (pas de bouton
+   *  à cliquer) au démarrage, à la connexion, et à chaque ouverture de la
+   *  page Classes. Le contenu (question/réponse) est comparé par id à ce
+   *  que le prof a en ligne : ajouté si nouveau, mis à jour si changé,
+   *  repassé en "supprimé" localement si le prof l'a retiré — la
+   *  progression SM-2 de chaque fiche, elle, n'est jamais touchée. */
+  async function syncSharedBoxesForStudent() {
+    if (!Sync.isConfigured()) return;
+    if (!accountCurrentUser) return;
+    try {
+      const myClasses = await Sync.classes.listAsStudent();
+      // Round 3, item 1 : dossiers de miroir de classe encore utiles à la
+      // fin de cette synchro (racine de chaque classe + tous les
+      // sous-dossiers reconstitués depuis les chemins reçus) — tout dossier
+      // marqué sharedClassId qui n'y figure plus a été vidé par le prof
+      // (boîte déplacée ailleurs/retirée) et peut être supprimé localement.
+      const usedMirrorFolderIds = new Set();
+      // Round 3, item 4 (squelette) : événements de calendrier reçus des
+      // classes suivies, mêmes id que côté prof (sharedEventId).
+      const remoteEventIds = new Set();
+      // Bug corrigé (item 3, demande de Stéphane) : liste des classes pour
+      // lesquelles la récupération des événements partagés a VRAIMENT
+      // réussi cette fois-ci — sert à ne purger localement que les
+      // événements des classes effectivement interrogées avec succès (voir
+      // pruneStaleSharedEvents ci-dessous et le correctif dans sync.js).
+      const fetchedEventClassIds = new Set();
+      for (const klass of myClasses) {
+        const rootId = await ensureClassMirrorFolder(klass);
+        usedMirrorFolderIds.add(rootId);
+        const boxes = await Sync.classes.listSharedBoxes(klass.id);
+        for (const box of boxes) {
+          const pathNames = Array.isArray(box.folder_path) ? box.folder_path : [];
+          const targetFolderId = await ensureClassMirrorFolderPath(klass, rootId, pathNames, usedMirrorFolderIds);
+          await reconcileSharedBox(klass, box, targetFolderId);
+        }
+        try {
+          const remoteEvents = await Sync.classes.listSharedEvents(klass.id);
+          fetchedEventClassIds.add(klass.id);
+          for (const re of remoteEvents) {
+            remoteEventIds.add(re.id);
+            reconcileSharedEvent(klass, re);
+          }
+        } catch (e) {
+          // Échec ponctuel (réseau, jeton...) : on ne touche à AUCUN
+          // événement déjà reçu de cette classe plutôt que de risquer de
+          // les supprimer localement à tort — voir le correctif dans
+          // sync.js (listSharedEventsForClass lève désormais une erreur au
+          // lieu de rendre un tableau vide indiscernable d'une absence
+          // réelle d'événements).
+          console.warn("Classes: échec du chargement des événements partagés pour cette classe, ignorée pour cette synchro", e);
+        }
+      }
+      pruneStaleSharedEvents(remoteEventIds, fetchedEventClassIds);
+      await pruneStaleClassMirrorFolders(usedMirrorFolderIds);
+      renderAll();
+      renderSubjectManageList();
+      renderCalendarEvents();
+    } catch (e) {
+      console.warn("Classes: échec de la synchro des boîtes partagées", e);
+    }
+  }
+
+  /** Round 3, item 4 (squelette) : ajoute ou met à jour, dans le calendrier
+   *  local (localStorage), la copie en lecture seule d'un événement partagé
+   *  par le prof — même id que côté prof (sharedEventId), pour repérer un
+   *  changement de titre/date au prochain passage. */
+  function reconcileSharedEvent(klass, re) {
+    const events = loadCalendarEvents();
+    const idx = events.findIndex((x) => x.sharedEventId === re.id);
+    if (idx >= 0) {
+      if (events[idx].title !== re.title || events[idx].date !== re.date) {
+        events[idx] = { ...events[idx], title: re.title, date: re.date };
+        saveCalendarEvents(events);
+      }
+    } else {
+      events.push({
+        id: uid(),
+        title: re.title,
+        date: re.date,
+        linkId: null,
+        sharedEventId: re.id,
+        sharedClassId: klass.id,
+        sharedClassName: klass.name,
+      });
+      saveCalendarEvents(events);
+    }
+  }
+  /** Le prof a retiré/supprimé l'événement partagé : suppression locale
+   *  (un événement reçu n'a pas de progression à préserver, contrairement
+   *  à une fiche — contrairement aux boîtes, un vrai delete suffit ici). */
+  function pruneStaleSharedEvents(remoteEventIds, fetchedEventClassIds) {
+    const events = loadCalendarEvents();
+    const kept = events.filter((x) => {
+      if (!x.sharedEventId) return true;
+      // Bug corrigé (item 3, demande de Stéphane) : si la récupération des
+      // événements de CETTE classe a échoué cette fois-ci (réseau, jeton
+      // pas encore prêt...), on garde l'événement tel quel plutôt que de le
+      // supprimer — sinon un simple accroc réseau pendant une synchro
+      // silencieuse en tâche de fond suffisait à faire disparaître un
+      // événement partagé, sans qu'un élève n'ait rien supprimé lui-même.
+      if (!fetchedEventClassIds.has(x.sharedClassId)) return true;
+      return remoteEventIds.has(x.sharedEventId);
+    });
+    if (kept.length !== events.length) saveCalendarEvents(kept);
+  }
+
+  /** Round 3, item 1 : dossier racine (auto-créé, une fois par classe) qui
+   *  représente une classe suivie dans l'arborescence Organisation — porte
+   *  l'icône "classe" (voir renderTreeLevel) et sert de racine à la
+   *  reconstitution de l'organisation du prof. */
+  async function ensureClassMirrorFolder(klass) {
+    let root = folders.find((f) => f.sharedClassId === klass.id && f.sharedClassRoot);
+    if (!root) {
+      root = newFolder(klass.name, ROOT_FOLDER_ID);
+      root.sharedClassId = klass.id;
+      root.sharedClassRoot = true;
+      await persistFolder(root);
+      folders.push(root);
+    } else if (root.name !== klass.name) {
+      root.name = klass.name;
+      root.updatedAt = new Date().toISOString();
+      await persistFolder(root);
+    }
+    return root.id;
+  }
+
+  /** Round 3, item 1 : recrée (ou réutilise) la chaîne de sous-dossiers
+   *  `pathNames` sous le dossier racine de la classe, chacun marqué
+   *  `sharedClassId` (donc en lecture seule côté élève) — reflète
+   *  l'organisation faite par le prof, sans que l'élève ait la main
+   *  dessus. Retourne l'id du dossier local où placer la boîte. */
+  async function ensureClassMirrorFolderPath(klass, rootId, pathNames, usedMirrorFolderIds) {
+    let parentId = rootId;
+    for (const name of pathNames) {
+      let f = folders.find((x) => x.sharedClassId === klass.id && x.parentId === parentId && x.name === name);
+      if (!f) {
+        f = newFolder(name, parentId);
+        f.sharedClassId = klass.id;
+        await persistFolder(f);
+        folders.push(f);
+      }
+      usedMirrorFolderIds.add(f.id);
+      parentId = f.id;
+    }
+    return parentId;
+  }
+
+  /** Round 3, item 1 : nettoie les dossiers de miroir de classe qu'une
+   *  réorganisation côté prof a rendus obsolètes (boîte déplacée ailleurs,
+   *  classe quittée...). Ne supprime que des dossiers effectivement vides
+   *  — une incohérence momentanée se corrige simplement au prochain appel. */
+  async function pruneStaleClassMirrorFolders(usedMirrorFolderIds) {
+    const stale = folders.filter((f) => f.sharedClassId && !usedMirrorFolderIds.has(f.id));
+    // Des enfants avant leurs parents, pour laisser folderIsEmpty() voir un
+    // dossier vidé de ses propres sous-dossiers obsolètes dans la même passe.
+    stale.sort((a, b) => folderPath(b.id).length - folderPath(a.id).length);
+    for (const f of stale) {
+      if (!folderIsEmpty(f.id)) continue;
+      folders = folders.filter((x) => x.id !== f.id);
+      await DB.removeFolder(f.id);
+    }
+  }
+
+  async function reconcileSharedBox(klass, box, targetFolderId) {
+    let subject = subjects.find((s) => s.sharedBoxId === box.id);
+    if (!subject) {
+      subject = newSubject(box.subject_name, targetFolderId != null ? targetFolderId : ROOT_FOLDER_ID);
+      subject.sharedBoxId = box.id;
+      subject.sharedClassId = klass.id;
+      subject.sharedClassName = klass.name;
+      await persistSubject(subject);
+      subjects.push(subject);
+    } else {
+      let changed = false;
+      if (subject.name !== box.subject_name) {
+        // Le prof a renommé sa boîte : la copie miroir suit.
+        subject.name = box.subject_name;
+        changed = true;
+      }
+      if (targetFolderId != null && subject.folderId !== targetFolderId) {
+        // Le prof a réorganisé ses dossiers : la copie miroir suit aussi.
+        subject.folderId = targetFolderId;
+        changed = true;
+      }
+      if (changed) {
+        subject.updatedAt = new Date().toISOString();
+        await persistSubject(subject);
+      }
+    }
+
+    const remoteCards = Array.isArray(box.cards) ? box.cards : [];
+    const remoteIds = new Set(remoteCards.map((c) => c.id).filter(Boolean));
+    const localCardsHere = cards.filter((c) => c.subject === subject.id);
+
+    for (const rc of remoteCards) {
+      if (!rc.id) continue;
+      // Comparaison bornée à CETTE boîte miroir (et pas juste par id global)
+      // : un id de fiche est unique en pratique (uid() aléatoire), mais
+      // rester borné à `subject.id` évite tout risque de confusion avec
+      // une fiche locale sans rapport qui porterait le même id.
+      const idx = cards.findIndex((c) => c.id === rc.id && c.subject === subject.id);
+      if (idx >= 0) {
+        const existing = cards[idx];
+        const contentChanged = existing.question !== (rc.question || "") || existing.answer !== (rc.answer || "");
+        if (existing.deleted || contentChanged) {
+          const updated = {
+            ...existing,
+            question: rc.question || "",
+            answer: rc.answer || "",
+            deleted: false,
+            updatedAt: new Date().toISOString(),
+          };
+          await persist(updated);
+          cards[idx] = updated;
+        }
+      } else {
+        const card = { ...newCard(rc.question || "", rc.answer || "", subject.id), id: rc.id };
+        await persist(card);
+        cards.push(card);
+      }
+    }
+    // Le prof a retiré une fiche : suppression douce locale (jamais un
+    // vrai delete, pour rester cohérent avec le reste de l'appli).
+    for (const c of localCardsHere) {
+      if (!c.deleted && !remoteIds.has(c.id)) {
+        const updated = touch({ ...c, deleted: true });
+        await persist(updated);
+        const idx = cards.findIndex((x) => x.id === c.id);
+        if (idx >= 0) cards[idx] = updated;
+      }
+    }
+  }
+
+  /** Round 6, item 4 : les classes apparaissent désormais en ronds (même
+   *  esprit visuel que les boutons de l'accueil), chacun affichant le nom
+   *  de la classe, le nombre d'élèves et le nombre d'échéances en cours
+   *  (évènements à venir) — le détail (boîtes partagées, évènements...)
+   *  a été déplacé dans la page dédiée view-class-detail, ouverte au clic. */
+  function classCircleHtml(klass, count, upcoming) {
+    return `
+      ${CLASSES_ROW_ICON}
+      <span class="classes-class-circle-name">${escapeHtml(klass.name)}</span>
+      <span class="classes-class-circle-meta">${count} élève${count > 1 ? "s" : ""}</span>
+      <span class="classes-class-circle-meta">${upcoming} échéance${upcoming > 1 ? "s" : ""}</span>
+    `;
+  }
+
+  async function renderStudentClasses() {
+    const list = el("classes-student-list");
+    const empty = el("classes-student-empty");
+    if (!list) return;
+    list.innerHTML = "";
+    const myClasses = await Sync.classes.listAsStudent();
+    if (empty) empty.hidden = myClasses.length > 0;
+    for (const klass of myClasses) {
+      const count = await Sync.classes.memberCount(klass.id);
+      const upcoming = classUpcomingEvents(klass.id, "student").length;
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "classes-class-circle";
+      btn.innerHTML = classCircleHtml(klass, count, upcoming);
+      btn.addEventListener("click", () => openClassDetailView(klass, "student"));
+      list.appendChild(btn);
+    }
+  }
+
+  async function renderTeacherClasses() {
+    const list = el("classes-teacher-list");
+    const empty = el("classes-teacher-empty");
+    if (!list) return;
+    list.innerHTML = "";
+    const myClasses = await Sync.classes.listAsTeacher();
+    if (empty) empty.hidden = myClasses.length > 0;
+    for (const klass of myClasses) {
+      const count = await Sync.classes.memberCount(klass.id);
+      const upcoming = classUpcomingEvents(klass.id, "teacher").length;
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "classes-class-circle";
+      btn.innerHTML = classCircleHtml(klass, count, upcoming);
+      btn.addEventListener("click", () => openClassDetailView(klass, "teacher"));
+      list.appendChild(btn);
+    }
+  }
+
+  const classesJoinBtn = el("classes-join-btn");
+  if (classesJoinBtn) {
+    classesJoinBtn.addEventListener("click", async () => {
+      const input = el("classes-join-code-input");
+      const note = el("classes-join-note");
+      const code = (input.value || "").trim();
+      if (!code) return;
+      classesJoinBtn.disabled = true;
+      const { error } = await Sync.classes.join(code);
+      classesJoinBtn.disabled = false;
+      if (error) {
+        if (note) {
+          note.hidden = false;
+          note.textContent = error;
+        }
+        return;
+      }
+      if (note) note.hidden = true;
+      input.value = "";
+      await syncSharedBoxesForStudent();
+      await renderStudentClasses();
+    });
+  }
+
+  const classesCreateBtn = el("classes-create-btn");
+  if (classesCreateBtn) {
+    classesCreateBtn.addEventListener("click", async () => {
+      const input = el("classes-create-name-input");
+      const name = (input.value || "").trim();
+      if (!name) return;
+      classesCreateBtn.disabled = true;
+      const { error } = await Sync.classes.create(name);
+      classesCreateBtn.disabled = false;
+      if (error) {
+        await robotAlert("Erreur : " + error);
+        return;
+      }
+      input.value = "";
+      await renderTeacherClasses();
+    });
+  }
+
+  const classesGotoSyncBtn = el("classes-goto-sync-btn");
+  if (classesGotoSyncBtn) {
+    classesGotoSyncBtn.addEventListener("click", () => {
+      const tab = document.querySelector('.tab[data-view="sync"]');
+      if (tab) tab.click();
+    });
+  }
+
+  const classesGotoAccountBtn = el("classes-goto-account-btn");
+  if (classesGotoAccountBtn) {
+    classesGotoAccountBtn.addEventListener("click", () => {
+      const tab = document.querySelector('.tab[data-view="account"]');
+      if (tab) tab.click();
+    });
+  }
+
+  /** ---------------------------------------------------------------
+   *  Round 6, item 4 : page dédiée à une classe, ouverte en cliquant son
+   *  rond depuis J'apprends ou J'enseigne — infos, arborescence des
+   *  boîtes partagées et liste des évènements à venir.
+   *  ------------------------------------------------------------- */
+  // {klass, role: "student"|"teacher"} de la classe actuellement ouverte,
+  // ou null si aucune (sert au bouton "Retour" pour savoir où revenir).
+  let classDetailContext = null;
+
+  /** Nombre d'évènements de calendrier à venir liés à cette classe — côté
+   *  prof (ev.classShare.classId) ou côté élève (ev.sharedClassId), selon
+   *  le rôle sous lequel la classe est consultée ici. */
+  function classUpcomingEvents(classId, role) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return loadCalendarEvents()
+      .filter((e) => {
+        if (role === "teacher") {
+          if (!e.classShare || e.classShare.classId !== classId) return false;
+        } else {
+          if (e.sharedClassId !== classId) return false;
+        }
+        if (!e.date) return false;
+        return new Date(e.date + "T00:00:00") >= today;
+      })
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }
+
+  /** Regroupe une liste de boîtes partagées (chacune avec `folder_path`,
+   *  un tableau de noms de dossiers) en arbre, pour un rendu indenté sans
+   *  dépendre de l'arborescence Organisation (qui n'existe que côté prof
+   *  — côté élève, elle est reconstituée en local mais pas nécessairement
+   *  à jour au moment d'ouvrir cette page). */
+  function buildSharedBoxesTree(boxes) {
+    const root = { name: null, children: new Map(), boxes: [] };
+    for (const box of boxes) {
+      let node = root;
+      for (const segment of Array.isArray(box.folder_path) ? box.folder_path : []) {
+        if (!node.children.has(segment)) node.children.set(segment, { name: segment, children: new Map(), boxes: [] });
+        node = node.children.get(segment);
+      }
+      node.boxes.push(box);
+    }
+    return root;
+  }
+  function renderSharedBoxesTreeHtml(node, depth) {
+    let html = "";
+    for (const box of node.boxes) {
+      const n = (box.cards || []).length;
+      html += `<div class="classes-shared-box-row" style="padding-left:${depth * 16}px">${CLASSES_ROW_ICON}<span>${escapeHtml(box.subject_name)} <span class="classes-card-count">(${n} fiche${n > 1 ? "s" : ""})</span></span></div>`;
+    }
+    for (const child of node.children.values()) {
+      html += `<div class="classes-tree-folder" style="padding-left:${depth * 16}px;font-weight:600;">📁 ${escapeHtml(child.name)}</div>`;
+      html += renderSharedBoxesTreeHtml(child, depth + 1);
+    }
+    return html;
+  }
+
+  async function openClassDetailView(klass, role) {
+    classDetailContext = { klass, role };
+    document.querySelectorAll(".view").forEach((v) => v.classList.remove("is-active"));
+    el("view-class-detail").classList.add("is-active");
+    applyBodyLogoSpeech("class-detail");
+    await renderClassDetailView();
+  }
+  function closeClassDetailView() {
+    const role = classDetailContext ? classDetailContext.role : "student";
+    classDetailContext = null;
+    document.querySelectorAll(".view").forEach((v) => v.classList.remove("is-active"));
+    el(role === "teacher" ? "view-classes-teacher" : "view-classes-student").classList.add("is-active");
+    applyBodyLogoSpeech(role === "teacher" ? "classes-teacher" : "classes-student");
+  }
+  async function renderClassDetailView() {
+    if (!classDetailContext) return;
+    const { klass, role } = classDetailContext;
+    const titleEl = el("class-detail-title");
+    if (titleEl) titleEl.textContent = klass.name;
+
+    const [count, sharedBoxes] = await Promise.all([
+      Sync.classes.memberCount(klass.id),
+      Sync.classes.listSharedBoxes(klass.id),
+    ]);
+
+    const statsEl = el("class-detail-stats");
+    if (statsEl) statsEl.innerHTML = `<p class="field-hint">${count} élève${count > 1 ? "s" : ""}</p>`;
+
+    const inviteRow = el("class-detail-invite-row");
+    const shareBtn = el("class-detail-share-btn");
+    const isTeacher = role === "teacher";
+    if (inviteRow) {
+      inviteRow.hidden = !isTeacher;
+      const strong = inviteRow.querySelector("strong");
+      if (strong) strong.textContent = klass.invite_code || "";
+    }
+    if (shareBtn) shareBtn.hidden = !isTeacher;
+
+    const boxesEl = el("class-detail-boxes");
+    if (boxesEl) {
+      boxesEl.innerHTML =
+        sharedBoxes.length === 0
+          ? `<p class="field-hint">Aucune boîte partagée pour l'instant.</p>`
+          : renderSharedBoxesTreeHtml(buildSharedBoxesTree(sharedBoxes), 0);
+    }
+
+    const events = classUpcomingEvents(klass.id, role);
+    const eventsList = el("class-detail-events");
+    const eventsEmpty = el("class-detail-events-empty");
+    if (eventsList) {
+      eventsList.innerHTML = "";
+      for (const ev of events) {
+        const li = document.createElement("li");
+        li.className = "subject-row";
+        li.innerHTML = `<span>${escapeHtml(ev.title)}</span><span class="field-hint">${formatCalendarDate(ev.date)}</span>`;
+        eventsList.appendChild(li);
+      }
+    }
+    if (eventsEmpty) eventsEmpty.hidden = events.length > 0;
+  }
+
+  const classDetailBackBtn = el("class-detail-back-btn");
+  if (classDetailBackBtn) classDetailBackBtn.addEventListener("click", closeClassDetailView);
+
+  const classDetailShareBtn = el("class-detail-share-btn");
+  if (classDetailShareBtn) {
+    classDetailShareBtn.addEventListener("click", () => {
+      if (!classDetailContext) return;
+      const klass = classDetailContext.klass;
+      openBoitePickerView({
+        mode: "single",
+        title: `Partager une boîte à « ${klass.name} »`,
+        folderAlwaysSelectable: false,
+        excludeSubjectIds: new Set(subjects.filter((s) => s.sharedBoxId).map((s) => s.id)),
+        onPick: async (kind, subjectId) => {
+          const subject = subjects.find((s) => s.id === subjectId);
+          if (!subject) return;
+          const boxCards = cards.filter((c) => !c.deleted && c.subject === subjectId);
+          const folderPathNames = folderPath(subject.folderId).map((f) => f.name);
+          const { data, error } = await Sync.classes.shareBox(klass.id, subject.name, boxCards, folderPathNames);
+          closeBoitePickerView();
+          if (error) {
+            await robotAlert("Erreur lors du partage : " + error);
+            return;
+          }
+          subject.sharedShares = subject.sharedShares || [];
+          subject.sharedShares.push({ classId: klass.id, className: klass.name, boxId: data.id });
+          subject.updatedAt = new Date().toISOString();
+          await persistSubject(subject);
+          renderClassDetailView();
+        },
+      });
+    });
+  }
+
+  /** ---------------------------------------------------------------
+   *  Round 6, item 5 : messagerie par classe, façon groupe WhatsApp — le
+   *  prof et tous les élèves d'une classe sont automatiquement membres de
+   *  la même discussion. Messages des élèves alignés à gauche, ceux du
+   *  prof à droite (décidé selon l'expéditeur, pas selon qui regarde) ;
+   *  les messages de l'utilisateur lui-même ressortent en plus dans une
+   *  couleur différente.
+   *  ------------------------------------------------------------- */
+  const MESSAGES_LAST_READ_KEY = "fiches_messages_last_read";
+  function loadMessagesLastRead() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(MESSAGES_LAST_READ_KEY) || "{}");
+      return raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    } catch {
+      return {};
+    }
+  }
+  function markClassMessagesRead(classId) {
+    const map = loadMessagesLastRead();
+    map[classId] = new Date().toISOString();
+    localStorage.setItem(MESSAGES_LAST_READ_KEY, JSON.stringify(map));
+  }
+
+  /** Met à jour la pastille de notifications du bouton d'accueil
+   *  "Messagerie" — appelée à chaque changement d'état de connexion (voir
+   *  updateAccountHomeButton) et après lecture/envoi d'un message. */
+  async function refreshMessagesBadge() {
+    const badge = el("home-messages-badge");
+    if (!badge) return;
+    if (!Sync.isConfigured() || !accountCurrentUser) {
+      badge.hidden = true;
+      return;
+    }
+    try {
+      const classes = await Sync.messages.listClasses();
+      const lastReadMap = loadMessagesLastRead();
+      let total = 0;
+      for (const k of classes) {
+        total += await Sync.messages.countUnread(k.id, lastReadMap[k.id]);
+      }
+      badge.hidden = total <= 0;
+      badge.textContent = total > 99 ? "99+" : String(total);
+    } catch (e) {
+      console.warn("Messagerie : échec du calcul des notifications", e);
+    }
+  }
+
+  async function renderMessagesView() {
+    const needsAccount = el("messages-needs-account");
+    const list = el("messages-class-list");
+    const empty = el("messages-empty");
+    if (!list) return;
+    if (!Sync.isConfigured() || !accountCurrentUser) {
+      if (needsAccount) needsAccount.hidden = false;
+      list.innerHTML = "";
+      if (empty) empty.hidden = true;
+      return;
+    }
+    if (needsAccount) needsAccount.hidden = true;
+    list.innerHTML = "";
+    const classes = await Sync.messages.listClasses();
+    if (empty) empty.hidden = classes.length > 0;
+    const lastReadMap = loadMessagesLastRead();
+    for (const klass of classes) {
+      const unread = await Sync.messages.countUnread(klass.id, lastReadMap[klass.id]);
+      const li = document.createElement("li");
+      li.className = "subject-row messages-class-row";
+      li.innerHTML = `
+        <span class="subject-row-name">${CLASSES_ROW_ICON} <span>${escapeHtml(klass.name)}</span></span>
+        ${unread > 0 ? `<span class="home-circle-badge messages-class-row-badge">${unread > 99 ? "99+" : unread}</span>` : ""}
+      `;
+      li.addEventListener("click", () => openMessageThread(klass));
+      list.appendChild(li);
+    }
+    refreshMessagesBadge();
+  }
+
+  /** Bibliothèque : collections de fiches partagées publiquement (table
+   *  Supabase `library_collections`, lecture publique). Contrairement à
+   *  une boîte partagée avec une classe (miroir en lecture seule, mis à
+   *  jour en direct), "Prendre" ici fait une COPIE INDÉPENDANTE, à un
+   *  instant T, comme un modèle qu'on reprend et qu'on peut ensuite
+   *  modifier librement — cohérent avec l'usage "bibliothèque". */
+  async function renderLibraryView() {
+    const needsSync = el("library-needs-sync");
+    const list = el("library-list");
+    const empty = el("library-empty");
+    if (!list) return;
+    if (!Sync.isConfigured()) {
+      if (needsSync) needsSync.hidden = false;
+      list.innerHTML = "";
+      if (empty) empty.hidden = true;
+      return;
+    }
+    if (needsSync) needsSync.hidden = true;
+    list.innerHTML = `<li class="field-hint">Chargement…</li>`;
+    const collections = await Sync.library.list();
+    list.innerHTML = "";
+    if (empty) empty.hidden = collections.length > 0;
+    for (const col of collections) {
+      const n = Array.isArray(col.cards) ? col.cards.length : 0;
+      const li = document.createElement("li");
+      li.className = "subject-row library-row";
+      li.innerHTML = `
+        <span class="subject-row-name">${iconSvgMarkup("share", "icon-inline-svg")} <span>${escapeHtml(col.name)}</span></span>
+        <span class="card-row-meta">${n} fiche${n > 1 ? "s" : ""} — par ${escapeHtml(col.owner_email || "quelqu'un")}</span>
+        <button type="button" class="btn btn--small library-take-btn">Prendre</button>
+      `;
+      const takeBtn = li.querySelector(".library-take-btn");
+      if (takeBtn) {
+        takeBtn.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          takeBtn.disabled = true;
+          await takeLibraryCollection(col);
+          takeBtn.disabled = false;
+        });
+      }
+      list.appendChild(li);
+    }
+  }
+
+  /** Copie une collection de la bibliothèque dans Mes collections : une
+   *  nouvelle boîte (`fromLibrary: true`, icône en réseau — voir
+   *  `appendBoiteRow`), avec une copie indépendante de chaque fiche
+   *  (nouveaux id locaux, via `newCard` — pas de lien maintenu avec la
+   *  collection d'origine, contrairement aux boîtes partagées par
+   *  classe). */
+  async function takeLibraryCollection(col) {
+    const cardsToCopy = Array.isArray(col.cards) ? col.cards : [];
+    if (cardsToCopy.length === 0) {
+      await robotAlert("Cette collection ne contient aucune fiche.");
+      return;
+    }
+    const subject = newSubject(col.name, ROOT_FOLDER_ID);
+    subject.fromLibrary = true;
+    subject.libraryOriginId = col.id || null;
+    await persistSubject(subject);
+    subjects.push(subject);
+    subjects.sort((a, b) => a.name.localeCompare(b.name, "fr"));
+    for (const rc of cardsToCopy) {
+      const card = newCard(rc.question || "", rc.answer || "", subject.id);
+      await persist(card);
+      cards.push(card);
+    }
+    renderStatsSubjectSelect();
+    renderSubjectSelect();
+    renderSubjectManageList();
+    renderStats();
+    await robotAlert(`« ${subject.name} » a été ajoutée à Mes collections (${cardsToCopy.length} fiche${cardsToCopy.length > 1 ? "s" : ""}).`);
+  }
+
+  /** Partage une boîte existante dans la bibliothèque publique : nécessite
+   *  d'être connecté avec un Compte (sert d'identité/attribution, comme
+   *  pour le partage avec une classe). Simple copie à l'instant du partage
+   *  — republier après modification n'est pas proposé pour l'instant (pas
+   *  demandé), contrairement aux boîtes partagées avec une classe. */
+  async function shareSubjectToLibrary(subjectId) {
+    const s = subjects.find((x) => x.id === subjectId);
+    if (!s) return;
+    if (!Sync.isConfigured()) {
+      await robotAlert("Active d'abord la synchronisation (page Synchronisation) pour pouvoir partager dans la bibliothèque.");
+      return;
+    }
+    if (!accountCurrentUser) {
+      await robotAlert("Connecte-toi avec un Compte (page Compte) pour partager dans la bibliothèque.");
+      return;
+    }
+    const boxCards = cards.filter((c) => !c.deleted && c.subject === subjectId);
+    if (boxCards.length === 0) {
+      await robotAlert("Cette boîte est vide : ajoute des fiches avant de la partager.");
+      return;
+    }
+    const name = prompt("Nom de la collection à partager :", s.name);
+    if (!name || !name.trim()) return;
+    const { error } = await Sync.library.share(name.trim(), boxCards);
+    if (error) {
+      await robotAlert(`Le partage a échoué : ${error}`);
+      return;
+    }
+    await robotAlert(`« ${name.trim()} » a été partagée dans la bibliothèque.`);
+  }
+
+  // {klass} de la discussion actuellement ouverte, ou null.
+  let messageThreadContext = null;
+  let unsubscribeMessageThreadRealtime = null;
+  // Id des messages déjà affichés dans le fil ouvert — évite un doublon
+  // quand le message qu'on vient d'envoyer nous revient aussi par le
+  // canal temps réel (voir sendClassMessage plus bas).
+  let messageThreadRenderedIds = new Set();
+
+  function formatMessageTime(iso) {
+    try {
+      return new Date(iso).toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+    } catch {
+      return "";
+    }
+  }
+  function messageBubbleHtml(msg, klass) {
+    const isMine = !!(accountCurrentUser && msg.sender_id === accountCurrentUser.id);
+    const isTeacherMsg = msg.sender_id === klass.teacher_id;
+    const side = isTeacherMsg ? "right" : "left";
+    const cls = ["message-bubble", `message-bubble--${side}`, isMine ? "message-bubble--mine" : ""].filter(Boolean).join(" ");
+    return `
+      <div class="${cls}">
+        ${!isMine ? `<span class="message-bubble-sender">${escapeHtml(msg.sender_email || "")}</span>` : ""}
+        <span class="message-bubble-body">${escapeHtml(msg.body || "")}</span>
+        <span class="message-bubble-time">${formatMessageTime(msg.created_at)}</span>
+      </div>
+    `;
+  }
+  function appendMessageToThread(msg) {
+    if (!msg || !msg.id || messageThreadRenderedIds.has(msg.id) || !messageThreadContext) return;
+    messageThreadRenderedIds.add(msg.id);
+    const listEl = el("message-thread-list");
+    if (!listEl) return;
+    listEl.insertAdjacentHTML("beforeend", messageBubbleHtml(msg, messageThreadContext.klass));
+    listEl.scrollTop = listEl.scrollHeight;
+  }
+  async function renderMessageThread() {
+    if (!messageThreadContext) return;
+    const { klass } = messageThreadContext;
+    const listEl = el("message-thread-list");
+    if (!listEl) return;
+    const messages = await Sync.messages.list(klass.id);
+    messageThreadRenderedIds = new Set(messages.map((m) => m.id));
+    listEl.innerHTML = messages.map((m) => messageBubbleHtml(m, klass)).join("");
+    listEl.scrollTop = listEl.scrollHeight;
+  }
+
+  async function openMessageThread(klass) {
+    messageThreadContext = { klass };
+    document.querySelectorAll(".view").forEach((v) => v.classList.remove("is-active"));
+    el("view-message-thread").classList.add("is-active");
+    applyBodyLogoSpeech("message-thread");
+    const titleEl = el("message-thread-title");
+    if (titleEl) titleEl.textContent = klass.name;
+    await renderMessageThread();
+    markClassMessagesRead(klass.id);
+    refreshMessagesBadge();
+    if (unsubscribeMessageThreadRealtime) {
+      unsubscribeMessageThreadRealtime();
+      unsubscribeMessageThreadRealtime = null;
+    }
+    unsubscribeMessageThreadRealtime = Sync.messages.subscribeRealtime(klass.id, (msg) => {
+      appendMessageToThread(msg);
+      markClassMessagesRead(klass.id);
+      refreshMessagesBadge();
+    });
+  }
+  function closeMessageThread() {
+    if (unsubscribeMessageThreadRealtime) {
+      unsubscribeMessageThreadRealtime();
+      unsubscribeMessageThreadRealtime = null;
+    }
+    messageThreadContext = null;
+    document.querySelectorAll(".view").forEach((v) => v.classList.remove("is-active"));
+    el("view-messages").classList.add("is-active");
+    applyBodyLogoSpeech("messages");
+    renderMessagesView();
+  }
+
+  const messagesGotoAccountBtn = el("messages-goto-account-btn");
+  if (messagesGotoAccountBtn) {
+    messagesGotoAccountBtn.addEventListener("click", () => {
+      const tab = document.querySelector('.tab[data-view="account"]');
+      if (tab) tab.click();
+    });
+  }
+  const messageThreadBackBtn = el("message-thread-back-btn");
+  if (messageThreadBackBtn) messageThreadBackBtn.addEventListener("click", closeMessageThread);
+
+  const messageThreadForm = el("message-thread-form");
+  if (messageThreadForm) {
+    messageThreadForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!messageThreadContext) return;
+      const input = el("message-thread-input");
+      const body = (input.value || "").trim();
+      if (!body) return;
+      input.value = "";
+      const { data, error } = await Sync.messages.send(messageThreadContext.klass.id, body);
+      if (error) {
+        await robotAlert("Erreur d'envoi : " + error);
+        return;
+      }
+      if (data) {
+        appendMessageToThread(data);
+        markClassMessagesRead(messageThreadContext.klass.id);
+      }
+    });
+  }
 
   /** Trouve (ou crée) localement la boîte référencée par une fiche distante, à partir de son id + nom dénormalisé. */
   async function ensureLocalSubjectFor(remote) {
@@ -8214,21 +10618,41 @@
    *  fiches, il n'y a pas de fusion champ par champ ici, un réglage de
    *  couleurs est cohérent seulement pris comme un tout. */
   async function reconcileDevSettings() {
-    const remote = await Sync.pullDevSettings();
+    // Round 4, partie 3 : un appareil qui n'a JAMAIS personnalisé le mode
+    // développeur (immense majorité des élèves/profs, mais aussi
+    // Stéphane sur un tout nouvel appareil pas encore touché) n'a rien
+    // de "personnel" à synchroniser ici — le laisser participer quand
+    // même figerait, dès sa toute première connexion, un instantané
+    // complet (valeurs par défaut + réglages publics du moment) dans son
+    // stockage local, qui empêcherait ensuite toute future publication
+    // de s'y appliquer (voir loadDevSettings : le local l'emporte
+    // toujours sur le public). On ne pousse donc RIEN côté serveur tant
+    // qu'il n'y a pas de VRAIE personnalisation locale.
+    // Cloisonné par Compte connecté depuis le round 6 (voir
+    // currentAccountEmailForSync) — corrige une fuite entre deux Comptes
+    // utilisant le même code de synchro perso.
+    const accountEmail = await currentAccountEmailForSync();
+    const hasLocalCustomization = localStorage.getItem(DEV_SETTINGS_KEY) !== null;
+    const remote = await Sync.pullDevSettings(accountEmail);
     const local = loadDevSettings();
     if (!remote) {
-      // Rien côté serveur : on y pousse notre réglage local tel quel.
-      Sync.pushDevSettings({ ...local, appPrefs: gatherAppPrefs() });
+      if (hasLocalCustomization) {
+        // Rien côté serveur : on y pousse notre réglage local tel quel.
+        Sync.pushDevSettings({ ...local, appPrefs: gatherAppPrefs() }, accountEmail);
+      }
       return;
     }
     const remoteTime = new Date(remote.updatedAt || 0).getTime();
-    const localTime = new Date(local.updatedAt || 0).getTime();
+    const localTime = hasLocalCustomization ? new Date(local.updatedAt || 0).getTime() : 0;
     if (remoteTime > localTime) {
+      // Un autre de TES appareils (même code de synchro ET même Compte
+      // connecté) a poussé une vraie personnalisation plus récente : on
+      // l'adopte.
       localStorage.setItem(DEV_SETTINGS_KEY, JSON.stringify(remote.payload));
       applyAllDevSettings();
       applyAppPrefsFromRemote(remote.payload.appPrefs);
-    } else if (localTime > remoteTime) {
-      Sync.pushDevSettings({ ...local, appPrefs: gatherAppPrefs() });
+    } else if (hasLocalCustomization && localTime > remoteTime) {
+      Sync.pushDevSettings({ ...local, appPrefs: gatherAppPrefs() }, accountEmail);
     }
   }
 
@@ -8293,6 +10717,11 @@
     if (unsubscribeLearningModesRealtime) unsubscribeLearningModesRealtime();
     if (unsubscribeDevSettingsRealtime) unsubscribeDevSettingsRealtime();
 
+    // Round 4, partie 3 : réglages développeur publiés pour tout le
+    // monde — récupérés AVANT le reste, pour que la synchro perso
+    // (reconcileWithRemote, juste après) parte déjà d'une base à jour.
+    await loadPublicDevSettingsForEveryone();
+
     await reconcileWithRemote();
     await Sync.flushPending((id) => cards.find((c) => c.id === id));
 
@@ -8324,30 +10753,57 @@
       renderSubjectManageList();
       renderSubjectAlgoBadge();
     });
-    unsubscribeDevSettingsRealtime = Sync.subscribeDevSettingsRealtime((remote) => {
-      // Dernier écrit gagne (item 1) : un autre appareil vient de changer
-      // un réglage (couleur, icône...), on adopte tel quel si plus récent.
-      const local = loadDevSettings();
-      if (new Date(remote.updatedAt || 0) > new Date(local.updatedAt || 0)) {
-        localStorage.setItem(DEV_SETTINGS_KEY, JSON.stringify(remote.payload));
-        applyAllDevSettings();
-        applyAppPrefsFromRemote(remote.payload.appPrefs);
-        // Bug corrigé (items 1/2) : si l'utilisateur est EN TRAIN de taper
-        // dans un champ du mode développeur, reconstruire toute la liste
-        // (renderDevView) à cet instant précis lui fait perdre le focus en
-        // plein milieu de la frappe — ou, pour le mode nuit, fait
-        // clignoter l'état si l'écho de sa propre modification revient
-        // alors qu'il vient justement de la changer. On saute ce rendu
-        // tant qu'un champ de ce panneau a le focus ; il se remettra à
-        // jour de toute façon au prochain rendu normal (changement de
-        // page, nouvelle modification, etc.).
-        const devViewActive = el("view-dev") && el("view-dev").classList.contains("is-active");
-        const editingInDevView = document.activeElement && el("view-dev") && el("view-dev").contains(document.activeElement) && document.activeElement.tagName === "INPUT";
-        if (devViewActive && !editingInDevView) renderDevView();
-      }
-    });
+    await subscribeDevSettingsForCurrentAccount();
 
     updateSyncStatus();
+  }
+
+  /** Callback de l'abonnement Realtime aux réglages développeur perso —
+   *  factorisé (round 6) pour être réutilisé aussi bien au démarrage
+   *  (connectSync) qu'à un changement de Compte en cours de session (voir
+   *  subscribeDevSettingsForCurrentAccount / Sync.auth.onChange). */
+  function handleRemoteDevSettings(remote) {
+    // Dernier écrit gagne (item 1) : un autre appareil vient de changer
+    // un réglage (couleur, icône...), on adopte tel quel si plus récent.
+    const local = loadDevSettings();
+    if (new Date(remote.updatedAt || 0) > new Date(local.updatedAt || 0)) {
+      localStorage.setItem(DEV_SETTINGS_KEY, JSON.stringify(remote.payload));
+      applyAllDevSettings();
+      applyAppPrefsFromRemote(remote.payload.appPrefs);
+      // Bug corrigé (items 1/2) : si l'utilisateur est EN TRAIN de taper
+      // dans un champ du mode développeur, reconstruire toute la liste
+      // (renderDevView) à cet instant précis lui fait perdre le focus en
+      // plein milieu de la frappe — ou, pour le mode nuit, fait
+      // clignoter l'état si l'écho de sa propre modification revient
+      // alors qu'il vient justement de la changer. On saute ce rendu
+      // tant qu'un champ de ce panneau a le focus ; il se remettra à
+      // jour de toute façon au prochain rendu normal (changement de
+      // page, nouvelle modification, etc.).
+      const devViewActive = el("view-dev") && el("view-dev").classList.contains("is-active");
+      const editingInDevView = document.activeElement && el("view-dev") && el("view-dev").contains(document.activeElement) && document.activeElement.tagName === "INPUT";
+      if (devViewActive && !editingInDevView) renderDevView();
+    }
+  }
+  /** (Ré)abonne le canal Realtime des réglages développeur perso avec le
+   *  Compte ACTUELLEMENT connecté (round 6) — désabonne d'abord l'ancien
+   *  abonnement s'il y en avait un, pour ne jamais en garder deux en
+   *  parallèle (ex. juste après un changement de Compte). */
+  async function subscribeDevSettingsForCurrentAccount() {
+    if (unsubscribeDevSettingsRealtime) {
+      unsubscribeDevSettingsRealtime();
+      unsubscribeDevSettingsRealtime = null;
+    }
+    if (!Sync.isConfigured()) return;
+    try {
+      const accountEmail = await currentAccountEmailForSync();
+      unsubscribeDevSettingsRealtime = Sync.subscribeDevSettingsRealtime(handleRemoteDevSettings, accountEmail);
+    } catch (e) {
+      // Best-effort, comme le reste de la synchro temps réel : sans
+      // abonnement Realtime, les réglages dev restent quand même à jour
+      // au prochain reconcileDevSettings() (démarrage, changement de
+      // Compte, ouverture de la page Développeur...).
+      console.warn("Réglages dev : échec de l'abonnement temps réel", e);
+    }
   }
 
   window.addEventListener("online", () => {
@@ -8376,6 +10832,29 @@
   --------------------------------------------------------- */
   const appVersionLabelEl = el("app-version-label");
   if (appVersionLabelEl) appVersionLabelEl.textContent = `Version installée : ${APP_VERSION}`;
+  // Round 4, partie 2 : geste discret pour débloquer le mode développeur
+  // sur cet appareil (7 appuis rapides sur le numéro de version) — le
+  // bouton/onglet "Développeur" reste caché pour tout le monde tant que ce
+  // geste n'a pas été fait.
+  if (appVersionLabelEl) {
+    let devTapCount = 0;
+    let devTapTimer = null;
+    appVersionLabelEl.style.cursor = "pointer";
+    appVersionLabelEl.addEventListener("click", () => {
+      if (isDevUnlocked()) return;
+      devTapCount += 1;
+      clearTimeout(devTapTimer);
+      devTapTimer = setTimeout(() => {
+        devTapCount = 0;
+      }, 1500);
+      if (devTapCount >= 7) {
+        devTapCount = 0;
+        setDevUnlocked(true);
+        robotAlert("Mode développeur débloqué sur cet appareil.");
+      }
+    });
+  }
+  updateDevModeVisibility();
   const checkUpdateBtn = el("check-update-btn");
   const checkUpdateResultEl = el("check-update-result");
   if ("serviceWorker" in navigator) {
@@ -8497,22 +10976,37 @@
     if (window.__clearBootWatchdog) window.__clearBootWatchdog();
     if (window.__clearBootRetryFlag) window.__clearBootRetryFlag();
     if (Sync.isConfigured()) {
-      await connectSync();
-      // Doublons "Général" : reconcileWithRemote() peut faire apparaître un
-      // second sujet "Général" arrivé du serveur (fiches distantes sans
-      // boîte) en plus de celui créé localement par défaut avant même que
-      // la synchro n'ait eu le temps de tourner (voir loadSubjects) — d'où
-      // la boîte "Générale" qui apparaissait parfois à la toute première
-      // connexion. On redéduplique donc une fois la synchro effectuée.
-      await dedupeEmptySubjects();
-      renderSubjectSelect();
-      renderStatsSubjectSelect();
-      // Ne relance pas startReviewSession() ici : reconcileWithRemote() a déjà
-      // rafraîchi les données via renderAll(), et relancer une session ici
-      // remélangeait la file et changeait la fiche affichée sous les yeux de
-      // l'utilisateur, sans lien avec son évaluation. On ajoute juste
-      // discrètement les éventuelles nouvelles fiches dues à la file en cours.
-      mergeNewDueCardsIntoQueue();
+      // Correctif : ce bloc n'était protégé par aucun try/catch — un
+      // accroc réseau ponctuel pendant connectSync() (ou l'une des étapes
+      // suivantes) levait une exception qui interrompait silencieusement
+      // TOUT le reste du démarrage, y compris ce qui suit (dont, plus bas,
+      // la reconnexion automatique au compte Classes). On l'isole donc
+      // pour que la sync perso ne puisse plus jamais bloquer le reste.
+      try {
+        await connectSync();
+        // Doublons "Général" : reconcileWithRemote() peut faire apparaître un
+        // second sujet "Général" arrivé du serveur (fiches distantes sans
+        // boîte) en plus de celui créé localement par défaut avant même que
+        // la synchro n'ait eu le temps de tourner (voir loadSubjects) — d'où
+        // la boîte "Générale" qui apparaissait parfois à la toute première
+        // connexion. On redéduplique donc une fois la synchro effectuée.
+        await dedupeEmptySubjects();
+        renderSubjectSelect();
+        renderStatsSubjectSelect();
+        // Ne relance pas startReviewSession() ici : reconcileWithRemote() a déjà
+        // rafraîchi les données via renderAll(), et relancer une session ici
+        // remélangeait la file et changeait la fiche affichée sous les yeux de
+        // l'utilisateur, sans lien avec son évaluation. On ajoute juste
+        // discrètement les éventuelles nouvelles fiches dues à la file en cours.
+        mergeNewDueCardsIntoQueue();
+      } catch (e) {
+        console.warn("Sync perso : échec au démarrage (l'appli continue en local)", e);
+      }
     }
+    // Item 1/2 (Classes) : retrouve une éventuelle session déjà ouverte
+    // (compte Supabase persistant) et lance en tâche de fond la synchro
+    // des boîtes partagées d'un élève — indépendant du reste de la sync
+    // perso ci-dessus, peut échouer sans bloquer l'appli.
+    initAccountState();
   })();
 })();

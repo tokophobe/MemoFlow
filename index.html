@@ -117,7 +117,6 @@
   <header class="topbar">
     <div class="brand">
       <h1 class="sr-only">Fiches</h1>
-      <img src="./icons/logo.png" alt="" class="topbar-logo" id="topbar-logo" />
       <button type="button" class="btn btn--ghost home-btn" id="home-btn" title="Retour à l'accueil" aria-label="Retour à l'accueil" hidden>
         <svg class="tab-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
       </button>
@@ -136,11 +135,47 @@
     </div>
   </header>
 
+  <!-- Items 1/2 (dernier lot) : logo affiché en haut du CORPS de chaque
+       page (pas dans l'en-tête) — masqué uniquement sur l'accueil, qui a
+       déjà son propre grand logo. Taille réglable dans le mode
+       développeur (voir dev-body-logo-list). -->
+  <div class="body-logo-row" id="body-logo-row" hidden>
+    <img src="./icons/logo.png" alt="" id="body-logo" class="body-logo" />
+    <!-- Round 4 : le robot ne parle plus tout seul par défaut — une petite
+         bulle "aide" cliquable apparaît à côté de lui quand cette page a un
+         message, et c'est ce clic qui affiche la bulle de parole complète. -->
+    <button type="button" class="body-logo-help-btn" id="body-logo-help-btn" title="Aide" hidden>
+      <svg class="icon-inline-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.2 9a2.8 2.8 0 0 1 5.4 1c0 1.8-2.6 2.2-2.6 3.8"/><circle cx="12" cy="17.3" r="0.9" fill="currentColor" stroke="none"/></svg>
+    </button>
+    <div class="body-logo-speech" id="body-logo-speech" hidden>
+      <p class="body-logo-speech-text" id="body-logo-speech-text"></p>
+      <!-- Round 4, partie 3 : bouton "Précédent" en plus de "Suite", pour
+           revenir en arrière dans une série de plusieurs messages. -->
+      <div class="body-logo-speech-nav" id="body-logo-speech-nav">
+        <button type="button" class="body-logo-speech-prev" id="body-logo-speech-prev" hidden>← Précédent</button>
+        <button type="button" class="body-logo-speech-next" id="body-logo-speech-next" hidden>Suite →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Round 3, item 3 : remplace toutes les alert()/confirm() natives par
+       un message "dit" par le robot (même esprit que la bulle de la page,
+       mais en superposition modale, avec bouton(s) d'action). -->
+  <div class="robot-modal-overlay" id="robot-modal-overlay" hidden>
+    <div class="robot-modal" role="alertdialog" aria-modal="true">
+      <img src="./icons/logo.png" alt="" class="robot-modal-logo" />
+      <div class="robot-modal-bubble">
+        <p class="robot-modal-text" id="robot-modal-text"></p>
+        <div class="robot-modal-actions" id="robot-modal-actions"></div>
+      </div>
+    </div>
+  </div>
+
   <nav class="tabs" role="tablist" aria-label="Navigation" hidden>
     <button class="tab tab--icon is-active" role="tab" aria-selected="true" data-view="review" title="Réviser" aria-label="Réviser">
       <svg class="tab-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="4" y1="12" x2="20" y2="12"/></svg>
     </button>
-    <button class="tab tab--icon" role="tab" aria-selected="false" data-view="manage" title="Gérer" aria-label="Gérer">
+    <button class="tab tab--icon" role="tab" aria-selected="false" data-view="manage" title="Mes collections" aria-label="Mes collections">
       <svg class="tab-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg>
     </button>
     <button class="tab tab--icon" role="tab" aria-selected="false" data-view="cards" title="Fiches" aria-label="Fiches">
@@ -152,6 +187,10 @@
     <button class="tab" role="tab" aria-selected="false" data-view="sync" hidden>Sync</button>
     <button class="tab" role="tab" aria-selected="false" data-view="calendar" hidden>Calendrier</button>
     <button class="tab" role="tab" aria-selected="false" data-view="revision-program" hidden>Programme</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="classes" hidden>Classes</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="messages" hidden>Messagerie</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="library" hidden>Bibliothèque</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="account" hidden>Compte</button>
     <button class="tab tab--icon" role="tab" aria-selected="false" data-view="settings" title="Réglages" aria-label="Réglages">
       <svg class="tab-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     </button>
@@ -171,7 +210,7 @@
         </button>
         <button type="button" class="home-circle" data-key="manage" data-go="manage">
           <svg class="home-circle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg>
-          <span>Dossiers &amp; boîtes</span>
+          <span>Mes collections</span>
         </button>
         <button type="button" class="home-circle" data-key="cards" data-go="cards">
           <svg class="home-circle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M15 2v5h5"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
@@ -201,6 +240,25 @@
           <svg class="home-circle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16,18 22,12 16,6"/><polyline points="8,6 2,12 8,18"/></svg>
           <span>Développeur</span>
         </button>
+        <button type="button" class="home-circle" data-key="classes" data-go="classes">
+          <svg class="home-circle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3.5 20c0-3.6 2.5-6.2 5.5-6.2s5.5 2.6 5.5 6.2"/><circle cx="17" cy="9" r="2.2"/><path d="M15.3 14.3c2.5.5 4.2 2.7 4.2 5.7"/></svg>
+          <span>Classes</span>
+        </button>
+        <button type="button" class="home-circle" data-key="account" data-go="account">
+          <svg class="home-circle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+          <span>Se connecter</span>
+        </button>
+        <!-- Round 6, item 5 : bouton Messagerie — pastille avec le nombre
+             de notifications non lues, masquée s'il n'y en a aucune. -->
+        <button type="button" class="home-circle" data-key="messages" data-go="messages">
+          <svg class="home-circle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span>Messagerie</span>
+          <span class="home-circle-badge" id="home-messages-badge" hidden>0</span>
+        </button>
+        <button type="button" class="home-circle" data-key="library" data-go="library">
+          <svg class="home-circle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.5" x2="15.4" y2="6.5"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/></svg>
+          <span>Bibliothèque</span>
+        </button>
       </div>
     </section>
 
@@ -208,32 +266,20 @@
          Réviser, qui conseille par ordre de priorité les boîtes/dossiers
          à exercer en fonction des échéances du calendrier. -->
     <section id="view-revision-program" class="view" aria-labelledby="tab-revision-program">
-      <h2 class="section-title">Programme de révision</h2>
-      <p class="field-hint settings-block-hint">Conseillé en fonction de tes échéances du calendrier — objectif de score à atteindre avant chaque échéance.</p>
-      <ul class="card-list" id="revision-program-list"></ul>
+      <ul class="card-list card-list--tight" id="revision-program-list"></ul>
       <p class="chart-empty" id="revision-program-empty" hidden>Pas d'échéance à venir — programme aucune priorité particulière.</p>
-      <button type="button" class="revision-program-skip-btn" id="revision-program-skip">Ne pas suivre le programme → aller directement à Réviser</button>
+      <button type="button" class="revision-program-skip-btn" id="revision-program-skip">Sélection manuelle</button>
     </section>
 
     <!-- VUE RÉVISION -->
     <section id="view-review" class="view" aria-labelledby="tab-review">
       <div class="subject-bar" id="subject-bar">
         <button type="button" class="subject-select-btn" id="subject-select-btn" aria-label="Choisir les boîtes à réviser"></button>
-        <span class="review-subject-score" id="review-subject-score"></span>
 
         <div class="subject-choice-menu" id="subject-choice-menu" hidden>
           <button type="button" class="subject-choice-item" id="subject-choice-all">Toutes les boîtes</button>
           <button type="button" class="subject-choice-item" id="subject-choice-selection">Sélection des boîtes</button>
           <button type="button" class="subject-choice-item subject-choice-item--cancel" id="subject-choice-cancel">Annuler</button>
-        </div>
-      </div>
-
-      <div class="multi-subject-picker" id="multi-subject-picker" hidden>
-        <p class="field-hint settings-block-hint">Choisis les boîtes à réviser confondues :</p>
-        <div class="multi-subject-picker-list" id="multi-subject-picker-list"></div>
-        <div class="multi-subject-picker-actions">
-          <button type="button" class="btn btn--small" id="multi-subject-picker-confirm">Valider</button>
-          <button type="button" class="btn btn--ghost btn--small" id="multi-subject-picker-cancel">Annuler</button>
         </div>
       </div>
 
@@ -316,13 +362,16 @@
       <div class="review-gauge-wrap" id="review-gauge-wrap"></div>
     </section>
 
+
     <!-- VUE GESTION -->
     <section id="view-manage" class="view" aria-labelledby="tab-manage">
       <div class="subjects-panel">
         <div class="list-header">
-          <!-- Item 3 (dernier lot) : titre retiré, remplacé par 3 pictos
-               qui choisissent CE QUI s'affiche à droite des blocs (au lieu
-               de tout faire tenir à la fois) — laisse plus de place au nom. -->
+          <!-- Item 3 (nouveau lot) : le bouton "+ Nouveau dossier" passe à
+               gauche, les 3 pictos d'affichage passent à droite. -->
+          <div class="list-header-actions">
+            <button class="btn btn--small" id="manage-add-folder-btn" type="button">+ Nouveau dossier</button>
+          </div>
           <div class="org-display-toggle" id="org-display-toggle">
             <button type="button" class="org-display-toggle-btn is-active" data-org-display="count" title="Nombre de fiches/boîtes">
               <svg class="icon-inline-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><line x1="7" y1="20" x2="17" y2="20"/><line x1="7" y1="9" x2="17" y2="9"/><line x1="7" y1="13" x2="14" y2="13"/></svg>
@@ -334,20 +383,8 @@
               <svg class="icon-inline-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="10" width="18" height="4" rx="2"/><rect x="3" y="10" width="11" height="4" rx="2" fill="currentColor" stroke="none"/></svg>
             </button>
           </div>
-          <div class="list-header-actions">
-            <button class="btn btn--small" id="manage-add-folder-btn" type="button">+ Nouveau dossier</button>
-          </div>
         </div>
         <ul class="subject-list" id="subject-list"></ul>
-      </div>
-
-      <div class="move-picker" id="move-picker" hidden>
-        <p class="field-hint settings-block-hint" id="move-picker-title">Déplacer vers :</p>
-        <div class="move-picker-list" id="move-picker-list"></div>
-        <div class="multi-subject-picker-actions">
-          <button type="button" class="btn btn--small" id="move-picker-confirm">Déplacer ici</button>
-          <button type="button" class="btn btn--ghost btn--small" id="move-picker-cancel">Annuler</button>
-        </div>
       </div>
     </section>
 
@@ -364,10 +401,6 @@
              lui-même. -->
         <div class="subject-bar" id="cards-subject-bar">
           <button type="button" class="subject-select-btn subject-select-btn--prominent" id="cards-subject-select-btn" aria-label="Choisir la boîte de cette nouvelle fiche"></button>
-
-          <div class="subject-choice-menu subject-choice-menu--tree" id="cards-subject-choice-menu" hidden>
-            <div id="cards-subject-choice-tree"></div>
-          </div>
         </div>
 
         <label class="field">
@@ -398,14 +431,6 @@
           <button type="button" class="subject-choice-item" id="cards-scope-choice-all">Toutes les boîtes</button>
           <button type="button" class="subject-choice-item" id="cards-scope-choice-selection">Sélection de boîtes et dossiers</button>
           <button type="button" class="subject-choice-item subject-choice-item--cancel" id="cards-scope-choice-cancel">Annuler</button>
-        </div>
-      </div>
-
-      <div class="multi-subject-picker" id="cards-multi-picker" hidden>
-        <p class="field-hint settings-block-hint">Coche des boîtes et/ou dossiers — les résultats se mettent à jour tout de suite :</p>
-        <div class="multi-subject-picker-list" id="cards-multi-picker-list"></div>
-        <div class="multi-subject-picker-actions">
-          <button type="button" class="btn btn--small" id="cards-multi-picker-done">Valider</button>
         </div>
       </div>
 
@@ -461,15 +486,6 @@
           <button type="button" class="subject-choice-item" data-scale="byweek">Par semaine</button>
           <button type="button" class="subject-choice-item" data-scale="bymonth">Par mois</button>
           <button type="button" class="subject-choice-item subject-choice-item--cancel" id="stats-scale-choice-cancel">Annuler</button>
-        </div>
-      </div>
-
-      <div class="multi-subject-picker" id="stats-multi-picker" hidden>
-        <p class="field-hint settings-block-hint">Choisis les boîtes et/ou dossiers à combiner :</p>
-        <div class="multi-subject-picker-list" id="stats-multi-picker-list"></div>
-        <div class="multi-subject-picker-actions">
-          <button type="button" class="btn btn--small" id="stats-multi-picker-confirm">Valider</button>
-          <button type="button" class="btn btn--ghost btn--small" id="stats-multi-picker-cancel">Annuler</button>
         </div>
       </div>
 
@@ -543,17 +559,16 @@
         </label>
         <button type="button" class="subject-select-btn" id="calendar-event-subject-btn" aria-label="Choisir la boîte ou le dossier lié">Aucune boîte/dossier liés</button>
 
-        <!-- Item 2 : panneau plein écran, comme les autres sélecteurs de
-             boîtes de l'appli (bug corrigé : celui-ci s'ouvrait hors
-             écran, en petit menu déroulant). -->
-        <div class="multi-subject-picker" id="calendar-event-subject-picker" hidden>
-          <p class="field-hint settings-block-hint">Choisis la boîte ou le dossier lié :</p>
-          <div class="multi-subject-picker-list" id="calendar-event-subject-tree"></div>
-          <div class="multi-subject-picker-actions">
-            <button type="button" class="btn btn--small" id="calendar-event-subject-none">Aucun lien</button>
-            <button type="button" class="btn btn--ghost btn--small" id="calendar-event-subject-done">Fermer</button>
-          </div>
-        </div>
+        <!-- Round 3, item 4 (squelette) : un prof peut partager cet
+             événement avec une de ses classes — n'apparaît que si Sync est
+             configurée, connecté(e), et prof d'au moins une classe (rempli
+             par JS à l'ouverture du formulaire). -->
+        <label class="field" id="calendar-event-class-field" hidden>
+          <span>Partager avec une classe (optionnel)</span>
+          <select id="calendar-event-class-select">
+            <option value="">Ne pas partager</option>
+          </select>
+        </label>
 
         <div style="display:flex; gap:8px; margin-top:12px;">
           <button type="submit" class="btn btn--primary" id="calendar-event-submit">Ajouter à mon calendrier</button>
@@ -662,6 +677,191 @@
       </div>
     </section>
 
+    <!-- VUE COMPTE (item 1) : toute la connexion/inscription vit ici —
+         page dédiée, distincte de la synchro perso (code partagé), sur le
+         même projet Supabase. Classes (plus bas) suppose qu'on est déjà
+         connecté depuis cette page. -->
+    <section id="view-account" class="view" aria-labelledby="tab-account">
+      <h2 class="section-title">Compte</h2>
+
+      <div id="account-needs-sync" hidden>
+        <p class="field-hint settings-block-hint">
+          Un compte a besoin que la Synchronisation soit configurée
+          d'abord (même projet Supabase).
+        </p>
+        <button type="button" class="btn btn--small" id="account-goto-sync-btn">Aller à Synchronisation</button>
+      </div>
+
+      <div id="account-auth-block" hidden>
+        <p class="field-hint settings-block-hint">
+          Différent du code de synchro : un vrai compte, qui te permet
+          notamment de rejoindre ou créer des Classes.
+        </p>
+        <div class="card-form">
+          <div class="classes-auth-tabs" id="account-auth-tabs">
+            <button type="button" class="btn btn--small is-active" id="account-auth-tab-signin" data-mode="signin">Se connecter</button>
+            <button type="button" class="btn btn--small" id="account-auth-tab-signup" data-mode="signup">Créer un compte</button>
+          </div>
+          <label class="field">
+            <span>Email</span>
+            <input type="email" id="account-auth-email" autocomplete="email" />
+          </label>
+          <label class="field">
+            <span>Mot de passe</span>
+            <input type="password" id="account-auth-password" autocomplete="current-password" />
+          </label>
+          <button type="button" class="btn btn--primary" id="account-auth-submit">Se connecter</button>
+          <p class="field-hint" id="account-auth-note" hidden></p>
+        </div>
+      </div>
+
+      <div id="account-connected-block" hidden>
+        <div class="classes-user-row">
+          <span id="account-user-email"></span>
+          <button type="button" class="btn btn--ghost btn--small" id="account-signout-btn">Se déconnecter</button>
+        </div>
+        <button type="button" class="btn btn--small" id="account-goto-classes-btn">Aller à Classes</button>
+      </div>
+    </section>
+
+    <!-- VUE CLASSES : partage prof -> élèves. Suppose qu'on est déjà
+         connecté (voir Compte ci-dessus) — une boîte partagée par un prof
+         apparaît toute seule (miroir en lecture seule, toujours à jour)
+         dans les boîtes d'un élève dès qu'il fait partie de la classe. -->
+    <section id="view-classes" class="view" aria-labelledby="tab-classes">
+      <h2 class="section-title">Classes</h2>
+
+      <div id="classes-needs-sync" hidden>
+        <p class="field-hint settings-block-hint">
+          Les Classes ont besoin que la Synchronisation soit configurée
+          d'abord (même projet Supabase).
+        </p>
+        <button type="button" class="btn btn--small" id="classes-goto-sync-btn">Aller à Synchronisation</button>
+      </div>
+
+      <div id="classes-needs-account" hidden>
+        <p class="field-hint settings-block-hint">
+          Connecte-toi d'abord pour accéder à tes classes.
+        </p>
+        <button type="button" class="btn btn--small" id="classes-goto-account-btn">Aller à Se connecter</button>
+      </div>
+
+      <div id="classes-main-block" hidden>
+        <p class="field-hint" id="classes-connected-as" hidden></p>
+
+        <!-- Round 3, item 2 : deux boutons ronds (même esprit que ceux de
+             l'accueil) plutôt que deux onglets — chacun mène à sa propre
+             page complète (view-classes-student / view-classes-teacher). -->
+        <div class="classes-role-circles" id="classes-role-circles">
+          <button type="button" class="classes-role-circle" id="classes-goto-student-btn">
+            <span class="classes-role-circle-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="30" height="30"><path d="M12 5 2 9l10 4 10-4-10-4Z"/><path d="M6 11v5c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5v-5"/></svg>
+            </span>
+            <span>J'apprends</span>
+          </button>
+          <button type="button" class="classes-role-circle" id="classes-goto-teacher-btn">
+            <span class="classes-role-circle-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="30" height="30"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4"/><path d="M7 9.5 10.5 12 7 14.5"/></svg>
+            </span>
+            <span>J'enseigne</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Round 3, item 2 : page "J'apprends" (anciennement l'onglet Élève). -->
+    <section id="view-classes-student" class="view" aria-labelledby="tab-classes">
+      <button type="button" class="btn btn--ghost" id="classes-student-back-btn">← Retour à Classes</button>
+      <h2 class="section-title">J'apprends</h2>
+      <div class="classes-section" id="classes-section-eleve">
+        <p class="field-hint settings-block-hint">
+          Rejoins une classe avec le code donné par ton professeur — les
+          boîtes qu'il partage avec cette classe apparaissent ensuite
+          automatiquement dans tes boîtes (Organisation), toujours à jour.
+        </p>
+        <div class="classes-join-row">
+          <input type="text" id="classes-join-code-input" placeholder="Code d'invitation" />
+          <button type="button" class="btn btn--small" id="classes-join-btn">Rejoindre</button>
+        </div>
+        <p class="field-hint" id="classes-join-note" hidden></p>
+        <!-- Round 6, item 4 : les classes apparaissent en ronds (même
+             esprit que les boutons de l'accueil), chacun menant à sa page
+             dédiée (view-class-detail) plutôt qu'à une ligne dépliée ici. -->
+        <div class="classes-class-circles" id="classes-student-list"></div>
+        <p class="field-hint" id="classes-student-empty" hidden>Tu n'as encore rejoint aucune classe.</p>
+      </div>
+    </section>
+
+    <!-- Round 3, item 2 : page "J'enseigne" (anciennement l'onglet Professeur). -->
+    <section id="view-classes-teacher" class="view" aria-labelledby="tab-classes">
+      <button type="button" class="btn btn--ghost" id="classes-teacher-back-btn">← Retour à Classes</button>
+      <h2 class="section-title">J'enseigne</h2>
+      <div class="classes-section" id="classes-section-prof">
+        <div class="classes-create-row">
+          <input type="text" id="classes-create-name-input" placeholder="Nom de la classe" />
+          <button type="button" class="btn btn--small" id="classes-create-btn">Créer une classe</button>
+        </div>
+        <div class="classes-class-circles" id="classes-teacher-list"></div>
+        <p class="field-hint" id="classes-teacher-empty" hidden>Tu n'as encore créé aucune classe.</p>
+      </div>
+    </section>
+
+    <!-- Round 6, item 4 : page dédiée à une classe (ouverte en cliquant
+         son rond, depuis J'apprends ou J'enseigne) — infos, arborescence
+         des boîtes partagées et liste des évènements à venir. -->
+    <section id="view-class-detail" class="view" aria-labelledby="tab-classes">
+      <button type="button" class="btn btn--ghost" id="class-detail-back-btn">← Retour</button>
+      <h2 class="section-title" id="class-detail-title">Classe</h2>
+      <div id="class-detail-stats"></div>
+      <p class="field-hint classes-invite-hint" id="class-detail-invite-row" hidden>Code d'invitation : <strong></strong></p>
+      <h3 class="settings-block-title">Boîtes partagées</h3>
+      <div id="class-detail-boxes"></div>
+      <button type="button" class="btn btn--small" id="class-detail-share-btn" hidden>Partager une boîte</button>
+      <h3 class="settings-block-title">Évènements à venir</h3>
+      <ul class="subject-list" id="class-detail-events"></ul>
+      <p class="field-hint" id="class-detail-events-empty" hidden>Aucun évènement à venir pour cette classe.</p>
+    </section>
+
+    <!-- Round 6, item 5 : messagerie — une discussion par classe, façon
+         groupe WhatsApp (prof + tous les élèves automatiquement membres). -->
+    <section id="view-messages" class="view" aria-labelledby="tab-messages">
+      <h2 class="section-title">Messagerie</h2>
+      <div id="messages-needs-account" hidden>
+        <p class="field-hint settings-block-hint">
+          Connecte-toi pour accéder à la messagerie de tes classes.
+        </p>
+        <button type="button" class="btn btn--small" id="messages-goto-account-btn">Aller à Se connecter</button>
+      </div>
+      <ul class="subject-list" id="messages-class-list"></ul>
+      <p class="field-hint" id="messages-empty" hidden>Rejoins ou crée une classe (page Classes) pour pouvoir discuter.</p>
+    </section>
+
+    <!-- Round 6, item 5 : fil de discussion d'une classe. Messages des
+         élèves alignés à gauche, ceux du prof à droite ; les messages de
+         l'utilisateur lui-même ressortent dans une couleur différente. -->
+    <section id="view-message-thread" class="view" aria-labelledby="tab-messages">
+      <button type="button" class="btn btn--ghost" id="message-thread-back-btn">← Retour à Messagerie</button>
+      <h2 class="section-title" id="message-thread-title">Discussion</h2>
+      <div class="message-thread-list" id="message-thread-list"></div>
+      <form class="message-thread-form" id="message-thread-form">
+        <input type="text" id="message-thread-input" placeholder="Écrire un message…" autocomplete="off" />
+        <button type="submit" class="btn btn--primary btn--small">Envoyer</button>
+      </form>
+    </section>
+
+    <!-- Bibliothèque : collections de fiches partagées publiquement,
+         "prendre" en copie une collection l'ajoute à Mes collections avec
+         une icône en réseau distincte. -->
+    <section id="view-library" class="view" aria-labelledby="tab-library">
+      <h2 class="section-title">Bibliothèque</h2>
+      <p class="field-hint settings-block-hint">Des collections de fiches partagées par d'autres utilisateurs. Prends-en une : elle s'ajoute à tes collections (avec l'icône en réseau, pour la reconnaître).</p>
+      <div id="library-needs-sync" hidden>
+        <p class="field-hint settings-block-hint">Active la synchronisation (page Synchronisation) pour accéder à la bibliothèque.</p>
+      </div>
+      <ul class="subject-list" id="library-list"></ul>
+      <p class="field-hint" id="library-empty" hidden>Aucune collection partagée pour l'instant.</p>
+    </section>
+
     <!-- VUE RÉGLAGES -->
     <section id="view-settings" class="view" aria-labelledby="tab-settings">
       <h2 class="section-title">Réglages</h2>
@@ -676,6 +876,31 @@
         <button type="button" class="btn btn--ghost" id="check-update-btn">Vérifier les mises à jour</button>
         <p class="field-hint" id="check-update-result" style="margin-top:8px;"></p>
       </div>
+
+      <!-- Item 6 (dernier lot) : ombre du logo — réglage utilisateur, pas
+           développeur (la taille et la position, elles, restent dans le
+           mode développeur). -->
+      <div class="card-form">
+        <h3 class="settings-block-title">Logo</h3>
+        <label class="settings-toggle-row">
+          <input type="checkbox" id="setting-body-logo-shadow" />
+          <span>Ombre sous le logo (toutes les pages)</span>
+        </label>
+        <label class="settings-toggle-row">
+          <input type="checkbox" id="setting-home-logo-shadow" />
+          <span>Ombre sous le logo (page d'accueil)</span>
+        </label>
+      </div>
+
+      <!-- Item 5 (dernier lot) : couleur unie de la pastille "à revoir". -->
+      <div class="card-form">
+        <h3 class="settings-block-title">Pastille "à revoir"</h3>
+        <label class="field">
+          <span>Couleur</span>
+          <input type="color" id="setting-due-pill-color" />
+        </label>
+      </div>
+
 
       <div class="card-form">
         <h3 class="settings-block-title">Page Réviser</h3>
@@ -981,6 +1206,37 @@
         <button type="button" class="btn btn--ghost" id="dev-review-layout-reset">Revenir à la disposition d'origine</button>
       </div>
 
+      <!-- Nouvel algorithme de révision (remplace SM-2/les modes K-M) :
+           NDI = maxi(DD*COEF_DD ; TE*COEF_TE), borné à
+           [PLANCHER ; mini(PLAFOND ; DD*COEF_DD)] ; PERS = NDI*ABAT. -->
+      <div class="card-form">
+        <h3 class="settings-block-title">Algorithme de révision</h3>
+        <p class="field-hint settings-block-hint">NDI = maxi(DD×COEF_DD ; TE×COEF_TE), borné entre PLANCHER et mini(PLAFOND ; DD×COEF_DD). PERS = NDI×ABAT. Un bouton par colonne : Encore / Difficile / Bien / Excellent.</p>
+        <div id="dev-revision-algo-list"></div>
+        <label class="field settings-bonus-field" style="margin-top:12px;">
+          <span>Délai initial à la création d'une fiche (minutes)</span>
+          <input type="number" step="1" id="dev-revision-algo-initial-delay" />
+        </label>
+        <p class="field-hint settings-block-hint" style="margin-top:12px;">Paliers des jauges de persistance (en jours) :</p>
+        <div class="algo-grid algo-grid--4">
+          <label class="field settings-bonus-field">
+            <span>Palier court terme</span>
+            <input type="number" step="0.1" id="dev-revision-algo-palierCourtTermeJ" />
+          </label>
+          <label class="field settings-bonus-field">
+            <span>Palier moyen terme</span>
+            <input type="number" step="0.1" id="dev-revision-algo-palierMoyenTermeJ" />
+          </label>
+          <label class="field settings-bonus-field">
+            <span>Palier long terme</span>
+            <input type="number" step="0.1" id="dev-revision-algo-palierLongTermeJ" />
+          </label>
+        </div>
+        <p class="field-hint settings-block-hint" style="margin-top:12px;">Couleurs de la jauge de persistance (gris clair → vert foncé) :</p>
+        <div class="dev-color-list" id="dev-pers-gauge-colors-list"></div>
+        <button type="button" class="btn btn--ghost" id="dev-revision-algo-reset" style="margin-top:12px;">Revenir aux valeurs par défaut</button>
+      </div>
+
       <!-- Item 1a/2 : score d'apprentissage des fiches, boîtes et
            dossiers. -->
       <div class="card-form">
@@ -1049,6 +1305,51 @@
         </p>
         <div id="dev-factory-defaults"></div>
       </div>
+
+      <!-- Round 4, partie 2 : messages d'aide du robot, éditables ici pour
+           chaque page de l'appli (plutôt que codés en dur), avec plusieurs
+           messages possibles par page (un par ligne = un message, façon
+           tuto avec bouton "Suite"). -->
+      <div class="card-form">
+        <h3 class="settings-block-title">Messages d'aide du robot 🤖</h3>
+        <p class="field-hint settings-block-hint">
+          Un message par ligne. Sur la page concernée, le robot affichera le
+          premier message, puis un bouton "Suite →" fera défiler les
+          suivants s'il y en a plusieurs. Laisser vide = pas de bulle
+          "aide" sur cette page.
+        </p>
+        <div id="dev-help-messages-list" class="dev-help-messages-list"></div>
+      </div>
+
+      <!-- Round 4, partie 3 : publie TOUS les réglages ci-dessus (couleurs,
+           icônes, messages d'aide...) pour qu'ils s'appliquent à tout le
+           monde (élèves, profs, nouveaux appareils) dès leur prochain
+           démarrage, sans attendre une nouvelle version de l'appli. -->
+      <div class="card-form">
+        <h3 class="settings-block-title">Publication</h3>
+        <p class="field-hint settings-block-hint">
+          Par défaut, tout ce que tu changes ci-dessus ne s'applique que sur
+          CET appareil. Ce bouton publie l'ensemble des réglages actuels
+          pour qu'ils deviennent ceux de tout le monde (nécessite d'être
+          connecté avec ton compte, page Compte).
+        </p>
+        <button type="button" class="btn" id="dev-publish-public-btn">Publier ces réglages pour tous les utilisateurs</button>
+        <p class="field-hint" id="dev-publish-public-result" style="margin-top:8px;"></p>
+      </div>
+
+      <!-- Round 4, partie 2 : le mode développeur reste dans l'appli mais
+           n'est visible que sur les appareils débloqués (7 appuis sur le
+           numéro de version, page Réglages) — ce bouton permet de le
+           recacher facilement sur cet appareil. -->
+      <div class="card-form">
+        <h3 class="settings-block-title">Accès à ce mode</h3>
+        <p class="field-hint settings-block-hint">
+          Ce mode est caché aux autres utilisateurs. Il n'est visible sur
+          cet appareil que parce qu'il a été débloqué (7 appuis sur le
+          numéro de version, dans Réglages).
+        </p>
+        <button type="button" class="btn btn--ghost" id="dev-hide-dev-mode-btn">Recacher le mode développeur sur cet appareil</button>
+      </div>
     </section>
 
     <!-- VUE MODES D'APPRENTISSAGE (globale — item 2) -->
@@ -1074,6 +1375,27 @@
         <button type="button" class="btn algo-review-old-btn" id="algo-review-old-btn">
           Revoir les vieilles fiches
         </button>
+      </div>
+    </section>
+
+    <!-- VUE SÉLECTEUR DE BOÎTE(S) (item 1, 4e lot) : page UNIQUE et PARTAGÉE
+         par tous les endroits de l'appli où il faut choisir un ou plusieurs
+         dossiers/boîtes (Réviser, Fiches, Stats, Nouvelle fiche, Calendrier,
+         "Déplacer vers..." depuis Organisation) — une vraie page comme les
+         autres (même en-tête de l'appli visible au-dessus, même liste que
+         la page Organisation), et non plus un panneau flottant par-dessus
+         l'écran en cours. Seule différence visuelle autorisée : les cases à
+         cocher, affichées uniquement en mode multi-sélection. -->
+    <section id="view-boite-picker" class="view">
+      <div class="list-header boite-picker-header">
+        <button class="btn btn--ghost btn--small" id="boite-picker-back-btn" type="button">← Retour</button>
+      </div>
+      <h2 class="view-title" id="boite-picker-title">Choisir une boîte</h2>
+      <p class="field-hint settings-block-hint" id="boite-picker-hint" hidden></p>
+      <ul class="subject-list" id="boite-picker-list"></ul>
+      <div class="multi-subject-picker-actions boite-picker-actions" id="boite-picker-actions" hidden>
+        <button type="button" class="btn btn--small" id="boite-picker-confirm">Valider</button>
+        <button type="button" class="btn btn--ghost btn--small" id="boite-picker-none" hidden>Aucun lien</button>
       </div>
     </section>
   </main>
