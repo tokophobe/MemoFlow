@@ -517,70 +517,16 @@ function subscribeRewardRealtime(onRemoteChange) {
  *  totalement indépendante du Compte Supabase Auth éventuellement
  *  connecté par-dessus. Deux Comptes différents (ex. un compte prof et
  *  un compte élève de test) utilisant le même code de synchro perso
- *  partageaient donc automatiquement ces réglages (dont le mode nuit,
- *  qui en fait partie — voir app.js), y compris en temps réel. La table
- *  a maintenant une clé composite (sync_code, account_email) — voir
- *  supabase/fix_dev_settings_account_scope.sql — et `accountEmail`
- *  (chaîne vide si aucun Compte connecté, pour ne rien changer à qui
- *  n'utilise que la synchro perso) doit être fourni par l'appelant
- *  (voir currentAccountEmailForSync dans app.js). */
-async function pullDevSettings(accountEmail) {
-  const c = getClient();
-  const { code } = getConfig();
-  if (!c || !code) return null;
-  const email = accountEmail || "";
-
-  const { data, error } = await c
-    .from("dev_settings")
-    .select("payload, updated_at")
-    .eq("sync_code", code)
-    .eq("account_email", email)
-    .maybeSingle();
-
-  if (error) {
-    console.warn("Sync: échec du chargement des réglages développeur distants", error.message);
-    return null;
-  }
-  if (data) return { payload: data.payload || {}, updatedAt: data.updated_at };
-
-  // Migration en douceur (round 6) : un Compte fraîchement connecté n'a
-  // encore aucune ligne à SON nom — on reprend une fois l'ancienne ligne
-  // "sans Compte" (account_email = '') comme point de départ plutôt que
-  // de repartir de zéro, pour ne pas faire disparaître les réglages déjà
-  // personnalisés par Stéphane avant l'introduction de ce cloisonnement.
-  if (email !== "") {
-    const { data: legacy, error: legacyError } = await c
-      .from("dev_settings")
-      .select("payload, updated_at")
-      .eq("sync_code", code)
-      .eq("account_email", "")
-      .maybeSingle();
-    if (!legacyError && legacy) return { payload: legacy.payload || {}, updatedAt: legacy.updated_at };
-  }
-  return null;
-}
-
-async function pushDevSettings(payload, accountEmail) {
-  const c = getClient();
-  const { code } = getConfig();
-  if (!c || !code) return false;
-
-  const { error } = await c.from("dev_settings").upsert(
-    {
-      sync_code: code,
-      account_email: accountEmail || "",
-      payload,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "sync_code,account_email" }
-  );
-
-  if (error) {
-    console.warn("Sync: échec de l'envoi des réglages développeur", error.message);
-    return false;
-  }
-  return true;
-}
+ *  Round 16 : cette table "dev_settings" (une ligne par code de synchro,
+ *  éventuellement cloisonnée par Compte) n'est plus utilisée — sur demande
+ *  de Stéphane, toute la logique de réconciliation "le plus récent gagne"
+ *  a été retirée car elle pouvait, dans certains cas (horloge locale en
+ *  avance, données locales périmées), écraser silencieusement de bons
+ *  réglages distants avec une copie locale obsolète. `dev_settings_public`
+ *  (plus bas) est maintenant l'unique source de vérité, lue et écrite par
+ *  toutes les installations. Les fonctions pullDevSettings/pushDevSettings/
+ *  subscribeDevSettingsRealtime ci-dessous ont donc été retirées ; la table
+ *  Supabase elle-même n'a pas été touchée (aucune migration nécessaire).
 
 /* ---------------------------------------------------------
    Round 4, partie 3 : réglages développeur PUBLIÉS pour tout le monde —
@@ -628,27 +574,23 @@ async function pushPublicDevSettings(settings) {
   }
 }
 
-function subscribeDevSettingsRealtime(onRemoteChange, accountEmail) {
+// Round 16 : abonnement temps réel à l'UNIQUE ligne publique
+// (dev_settings_public, id='global') — remplace subscribeDevSettingsRealtime
+// (canal "personnel" par compte, retiré). Toute modification, par
+// n'importe quelle installation ayant le droit d'écrire (RLS réservée à
+// Stéphane), est immédiatement répercutée à toutes les sessions ouvertes.
+function subscribePublicDevSettingsRealtime(onRemoteChange) {
   const c = getClient();
-  const { code } = getConfig();
-  if (!c || !code) return () => {};
-  const email = accountEmail || "";
+  if (!c) return () => {};
 
-  // Le filtre Realtime de Supabase (`postgres_changes`) ne peut porter que
-  // sur UNE colonne à la fois — on garde donc le filtre serveur sur
-  // sync_code (comme avant, limite déjà le volume aux lignes de CE code de
-  // synchro) et on vérifie account_email côté client avant de prévenir
-  // l'appelant (round 6) : sinon un changement fait par un AUTRE Compte
-  // partageant le même code de synchro perso continuerait de remonter ici.
   const channel = c
-    .channel(`dev-settings-${code}-${email || "none"}`)
+    .channel("dev-settings-public-global")
     .on(
       "postgres_changes",
-      { event: "*", schema: "public", table: "dev_settings", filter: `sync_code=eq.${code}` },
+      { event: "*", schema: "public", table: "dev_settings_public", filter: "id=eq.global" },
       (payload) => {
-        if (!payload.new || !payload.new.payload) return;
-        if ((payload.new.account_email || "") !== email) return;
-        onRemoteChange({ payload: payload.new.payload, updatedAt: payload.new.updated_at });
+        if (!payload.new || !payload.new.settings) return;
+        onRemoteChange({ payload: payload.new.settings, updatedAt: payload.new.updated_at });
       }
     )
     .subscribe();
@@ -665,10 +607,28 @@ function subscribeDevSettingsRealtime(onRemoteChange, accountEmail) {
    la Sync soit déjà configurée (voir supabase/classes_schema.sql pour le
    schéma à créer une fois, côté Supabase).
 --------------------------------------------------------- */
-async function authSignUp(email, password) {
+// Round 10 : nom/prénom demandés à la création d'un compte, stockés dans les
+// métadonnées du compte Supabase Auth (`user_metadata`) — pas besoin d'une
+// table dédiée, récupérables ensuite via authGetUser() -> user.user_metadata.
+async function authSignUp(email, password, firstName, lastName) {
   const c = getClient();
   if (!c) return { error: "Sync non configurée (URL/clé Supabase manquantes)." };
-  const { data, error } = await c.auth.signUp({ email, password });
+  const options = {};
+  if (firstName || lastName) {
+    options.data = { first_name: (firstName || "").trim(), last_name: (lastName || "").trim() };
+  }
+  const { data, error } = await c.auth.signUp({ email, password, options });
+  return { data, error: error ? error.message : null };
+}
+
+/** Permet aussi de renseigner/corriger nom-prénom après coup, depuis la page
+ *  Mon Compte, pour les comptes déjà créés avant ce round. */
+async function authUpdateProfile(firstName, lastName) {
+  const c = getClient();
+  if (!c) return { error: "Sync non configurée (URL/clé Supabase manquantes)." };
+  const { data, error } = await c.auth.updateUser({
+    data: { first_name: (firstName || "").trim(), last_name: (lastName || "").trim() },
+  });
   return { data, error: error ? error.message : null };
 }
 
@@ -912,6 +872,21 @@ async function listLibraryCollections() {
   return data || [];
 }
 
+/** Round 10, item 2 : une collection prise dans la Bibliothèque devient un
+ *  miroir en lecture seule (même principe que shared_boxes pour une classe)
+ *  plutôt qu'une copie figée — il faut donc pouvoir relire une collection
+ *  précise par son id pour la reconcilier périodiquement côté client. */
+async function getLibraryCollection(id) {
+  const c = getClient();
+  if (!c || !id) return null;
+  const { data, error } = await c.from("library_collections").select("*").eq("id", id).maybeSingle();
+  if (error) {
+    console.warn("Bibliothèque : échec du rechargement d'une collection", error.message);
+    return null;
+  }
+  return data || null;
+}
+
 /* ---- Round 6, item 5 : messagerie par classe (façon groupe WhatsApp) ---- */
 
 /** Liste, en une seule fois, toutes les classes où l'utilisateur peut
@@ -969,8 +944,30 @@ async function countUnreadClassMessages(classId, sinceIso) {
   return count || 0;
 }
 
+/** Round 10, item 11 : date/heure du dernier message d'une classe, pour
+ *  l'afficher dans le bloc de la discussion (liste Messagerie). Une requête
+ *  par classe, comme `countUnreadClassMessages` déjà appelé juste à côté
+ *  dans la même boucle (`renderMessagesView`) — même précédent N+1, pas de
+ *  souci de volume pour le nombre de classes usuel d'un compte. */
+async function getLastClassMessage(classId) {
+  const c = getClient();
+  if (!c) return null;
+  const { data, error } = await c
+    .from("class_messages")
+    .select("created_at")
+    .eq("class_id", classId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) {
+    console.warn("Messagerie : échec de la lecture du dernier message", error.message);
+    return null;
+  }
+  return data || null;
+}
+
 /** Filtre serveur borné à une seule colonne (comme pour les autres canaux
- *  temps réel de cette appli, voir subscribeDevSettingsRealtime) : ici
+ *  temps réel de cette appli, voir subscribePublicDevSettingsRealtime) : ici
  *  `class_id` seul suffit, aucun filtrage client supplémentaire n'est
  *  nécessaire (les droits de lecture sont de toute façon déjà garantis
  *  par la RLS côté serveur). */
@@ -1003,11 +1000,9 @@ window.Sync = {
   pullRewardState,
   pushRewardState,
   subscribeRewardRealtime,
-  pullDevSettings,
-  pushDevSettings,
-  subscribeDevSettingsRealtime,
   fetchPublicDevSettings,
   pushPublicDevSettings,
+  subscribePublicDevSettingsRealtime,
   pullSubjects,
   pushSubject,
   subscribeSubjectsRealtime,
@@ -1025,6 +1020,7 @@ window.Sync = {
     signOut: authSignOut,
     getUser: authGetUser,
     onChange: authOnChange,
+    updateProfile: authUpdateProfile,
   },
   classes: {
     create: createClass,
@@ -1046,9 +1042,11 @@ window.Sync = {
     send: sendClassMessage,
     countUnread: countUnreadClassMessages,
     subscribeRealtime: subscribeClassMessagesRealtime,
+    getLastMessage: getLastClassMessage,
   },
   library: {
     share: shareCollectionToLibrary,
     list: listLibraryCollections,
+    get: getLibraryCollection,
   },
 };

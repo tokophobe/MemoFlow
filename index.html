@@ -114,6 +114,15 @@
 <body>
 
 <div class="desk">
+  <!-- Round 15, item 5 : topbar + titre de page + robot (logo "corps de
+       page") regroupés dans un bandeau qui reste FIXE quand la page
+       défile — corrige le bug où le robot (et donc la bulle de la modale
+       robot, positionnée juste sous lui en JS) pouvait sortir de l'écran
+       si on avait scrollé, rendant messages/boutons inatteignables. La
+       hauteur réelle de ce bandeau est mesurée en JS (ResizeObserver) et
+       posée en variable CSS (--sticky-header-h) pour pousser le contenu
+       en dessous d'autant. -->
+  <div class="app-sticky-header" id="app-sticky-header">
   <header class="topbar">
     <div class="brand">
       <h1 class="sr-only">Fiches</h1>
@@ -122,8 +131,25 @@
       </button>
     </div>
     <div class="header-right">
+      <!-- Round 14 : petit logo "darwin" dans le bandeau du haut, entre le
+           bouton Accueil et le bouton mode nuit. Round 15, item 2 : passé
+           d'une image <img> à un <div> avec mask-image, pour pouvoir le
+           recolorer en CSS (--darwin-logo-color) plutôt que rester figé
+           en noir. Round 17, item 1 : masqué sur l'accueil UNIQUEMENT
+           (qui a déjà son propre grand logo darwin) — bascule en JS,
+           voir onActiveViewChanged ; commence masqué car l'accueil est
+           la page de départ. -->
+      <div id="topbar-darwin-logo" class="topbar-darwin-logo" role="img" aria-label="darwin" hidden></div>
       <button type="button" class="night-mode-toggle-btn" id="night-mode-toggle-btn" title="Mode nuit" aria-label="Basculer le mode nuit">
         <svg class="icon-inline-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      </button>
+      <!-- Round 15, item 6 : aide contextuelle — en plus de la bulle
+           d'aide par page déjà existante (body-logo-help-btn), ce bouton
+           bascule un mode "pointer" : le prochain clic sur un élément de
+           la page est intercepté et le robot explique cet élément-là au
+           lieu de déclencher son action normale. -->
+      <button type="button" class="contextual-help-toggle-btn" id="contextual-help-toggle-btn" title="Aide sur un élément : touche ce bouton puis l'élément qui t'intéresse" aria-label="Aide contextuelle">
+        <svg class="icon-inline-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.2 9a2.8 2.8 0 0 1 5.4 1c0 1.8-2.6 2.2-2.6 3.8"/><circle cx="12" cy="17.3" r="0.9" fill="currentColor" stroke="none"/></svg>
       </button>
       <button class="sync-status" id="sync-status" type="button" title="État de la synchronisation">
         <span class="sync-dot" id="sync-dot"></span>
@@ -135,6 +161,46 @@
     </div>
   </header>
 
+  <!-- Round 17, item 3 : le titre de page (round 15, item 1) a été retiré
+       — jugé inutile et prenant de la place ; JS conserve tout de même le
+       nom de la page courante à jour dans <title> (onglet du navigateur),
+       voir onActiveViewChanged, js/app.js. -->
+
+  <!-- Round 17, item 3 (suite) : sur "Mon bureau" uniquement, les actions
+       de la liste (+ Nouveau dossier, Bibliothèque, les 3 pictos
+       d'affichage) sont intégrées ICI, dans le bandeau fixe, plutôt que de
+       défiler avec le contenu — déplacées depuis #view-manage (mêmes id,
+       simplement déplacés, pas dupliqués). Bascule en JS
+       (onActiveViewChanged). -->
+  <div class="manage-sticky-actions" id="manage-sticky-actions" hidden>
+    <div class="list-header">
+      <div class="list-header-actions">
+        <button class="btn btn--small" id="manage-add-folder-btn" type="button">+ Nouveau dossier</button>
+        <button class="btn btn--small" id="manage-goto-library-btn" type="button">
+          <svg class="icon-inline-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.5" x2="15.4" y2="6.5"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/></svg>
+          Bibliothèque
+        </button>
+      </div>
+      <div class="org-display-toggle" id="org-display-toggle">
+        <button type="button" class="org-display-toggle-btn is-active" data-org-display="count" title="Nombre de fiches/boîtes">
+          <svg class="icon-inline-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><line x1="7" y1="20" x2="17" y2="20"/><line x1="7" y1="9" x2="17" y2="9"/><line x1="7" y1="13" x2="14" y2="13"/></svg>
+        </button>
+        <button type="button" class="org-display-toggle-btn" data-org-display="mode" title="Mode d'apprentissage">
+          <svg class="icon-inline-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9l10-5 10 5-10 5-10-5z"/><path d="M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/><line x1="22" y1="9" x2="22" y2="15.5"/></svg>
+        </button>
+        <button type="button" class="org-display-toggle-btn" data-org-display="gauge" title="Jauge de score">
+          <svg class="icon-inline-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="10" width="18" height="4" rx="2"/><rect x="3" y="10" width="11" height="4" rx="2" fill="currentColor" stroke="none"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Round 15, item 6 (suite) : petite bannière de guidage, affichée
+       uniquement pendant que l'aide contextuelle est active. -->
+  <div class="contextual-help-hint" id="contextual-help-hint" hidden>
+    Touche un élément de la page pour voir son aide (Échap pour annuler).
+  </div>
+
   <!-- Items 1/2 (dernier lot) : logo affiché en haut du CORPS de chaque
        page (pas dans l'en-tête) — masqué uniquement sur l'accueil, qui a
        déjà son propre grand logo. Taille réglable dans le mode
@@ -143,9 +209,14 @@
     <img src="./icons/logo.png" alt="" id="body-logo" class="body-logo" />
     <!-- Round 4 : le robot ne parle plus tout seul par défaut — une petite
          bulle "aide" cliquable apparaît à côté de lui quand cette page a un
-         message, et c'est ce clic qui affiche la bulle de parole complète. -->
+         message, et c'est ce clic qui affiche la bulle de parole complète.
+         Round 17, item 2 : icône changée pour une bulle de parole (plutôt
+         qu'un "?" dans un rond, devenu ambigu depuis l'ajout du bouton
+         d'aide CONTEXTUELLE du bandeau, round 15, qui a la même forme) —
+         plus cohérent avec ce que ce bouton fait réellement (ouvrir une
+         bulle de parole), et visuellement distinct du "?" contextuel. -->
     <button type="button" class="body-logo-help-btn" id="body-logo-help-btn" title="Aide" hidden>
-      <svg class="icon-inline-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.2 9a2.8 2.8 0 0 1 5.4 1c0 1.8-2.6 2.2-2.6 3.8"/><circle cx="12" cy="17.3" r="0.9" fill="currentColor" stroke="none"/></svg>
+      <svg class="icon-inline-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-8.4 8.4 8.3 8.3 0 0 1-3.8-.9L3 21l1.9-5.8a8.3 8.3 0 0 1-.9-3.7A8.4 8.4 0 1 1 21 11.5z"/><circle cx="8.3" cy="11.5" r="1" fill="currentColor" stroke="none"/><circle cx="12.6" cy="11.5" r="1" fill="currentColor" stroke="none"/><circle cx="16.9" cy="11.5" r="1" fill="currentColor" stroke="none"/></svg>
     </button>
     <div class="body-logo-speech" id="body-logo-speech" hidden>
       <p class="body-logo-speech-text" id="body-logo-speech-text"></p>
@@ -157,15 +228,26 @@
       </div>
     </div>
   </div>
+  </div>
+  <!-- /Round 15 : fin du bandeau fixe (#app-sticky-header). -->
 
   <!-- Round 3, item 3 : remplace toutes les alert()/confirm() natives par
        un message "dit" par le robot (même esprit que la bulle de la page,
-       mais en superposition modale, avec bouton(s) d'action). -->
+       mais en superposition modale, avec bouton(s) d'action).
+       Round 11 (suite item 6) : n'affiche plus son propre logo dupliqué —
+       la bulle est repositionnée en JS (positionRobotModal, js/app.js)
+       juste sous le robot déjà présent en haut de la page (#body-logo ou
+       #home-logo selon la vue), qui reste éclairé au-dessus de
+       l'assombrissement plutôt que d'être recouvert par un second robot
+       flottant au centre de l'écran. -->
   <div class="robot-modal-overlay" id="robot-modal-overlay" hidden>
-    <div class="robot-modal" role="alertdialog" aria-modal="true">
-      <img src="./icons/logo.png" alt="" class="robot-modal-logo" />
-      <div class="robot-modal-bubble">
+    <div class="robot-modal" id="robot-modal" role="alertdialog" aria-modal="true">
+      <div class="robot-modal-bubble" id="robot-modal-bubble">
         <p class="robot-modal-text" id="robot-modal-text"></p>
+        <!-- Round 10, item 6 : variante "prompt" (saisie d'un nom), pour
+             remplacer les derniers prompt() natifs restants — masqué pour
+             un simple message/confirmation. -->
+        <input type="text" class="robot-modal-input" id="robot-modal-input" hidden />
         <div class="robot-modal-actions" id="robot-modal-actions"></div>
       </div>
     </div>
@@ -187,7 +269,10 @@
     <button class="tab" role="tab" aria-selected="false" data-view="sync" hidden>Sync</button>
     <button class="tab" role="tab" aria-selected="false" data-view="calendar" hidden>Calendrier</button>
     <button class="tab" role="tab" aria-selected="false" data-view="revision-program" hidden>Programme</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="school-hub" hidden>École</button>
     <button class="tab" role="tab" aria-selected="false" data-view="classes" hidden>Classes</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="classes-join" hidden>Rejoindre une classe</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="classes-create" hidden>Créer une classe</button>
     <button class="tab" role="tab" aria-selected="false" data-view="messages" hidden>Messagerie</button>
     <button class="tab" role="tab" aria-selected="false" data-view="library" hidden>Bibliothèque</button>
     <button class="tab" role="tab" aria-selected="false" data-view="account" hidden>Compte</button>
@@ -202,23 +287,47 @@
          chaque fois pour aller d'une page à l'autre (item, confirmé). -->
     <section id="view-home" class="view is-active">
       <img src="./icons/logo.png" alt="" id="home-logo" class="home-logo" />
-      <h1 class="home-title">Fiches</h1>
+      <!-- Round 14 : logo "darwin" affiché en plus du robot, position/
+           taille/ombre réglables en mode développeur (dev-darwin-logo-list). -->
+      <!-- Round 15, item 2 : <div> masqué (mask-image) plutôt qu'<img>,
+           pour pouvoir recolorer le logo en CSS (--darwin-logo-color). -->
+      <div id="darwin-home-logo" class="darwin-home-logo" role="img" aria-label="darwin"></div>
+      <!-- Round 14 : texte sous le logo darwin — contenu/position/taille
+           réglables en mode développeur (dev-darwin-text-list) ; masqué
+           tant qu'aucun texte n'est saisi. -->
+      <p id="darwin-home-text" class="darwin-home-text" hidden></p>
+      <!-- Round 15, item 3 : le titre texte "Fiches" est retiré (remplacé
+           par le logo darwin) — à la demande de Stéphane. -->
       <div class="home-scatter" id="home-scatter">
+        <button type="button" class="home-circle home-circle--accent" data-key="addCard" id="home-new-card-btn">
+          <svg class="home-circle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span>Ajouter une fiche</span>
+        </button>
         <button type="button" class="home-circle" data-key="review" data-go="revision-program">
           <svg class="home-circle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="4" y1="12" x2="20" y2="12"/></svg>
           <span>Réviser</span>
         </button>
+        <!-- Round 13, item 3 : "Mon bureau" remplace "Mes collections" (même
+             data-key/data-go pour ne rien casser des maps de mise en page/
+             icônes) ; la page elle-même gagne un accès Bibliothèque et fait
+             mener les clics de ligne vers Fiches (cf. #view-manage). -->
         <button type="button" class="home-circle" data-key="manage" data-go="manage">
           <svg class="home-circle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg>
-          <span>Mes collections</span>
+          <span>Mon bureau</span>
         </button>
-        <button type="button" class="home-circle" data-key="cards" data-go="cards">
-          <svg class="home-circle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M15 2v5h5"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
-          <span>Fiches</span>
+        <!-- Round 13, item 4 : "École" remplace "Classes" et mène désormais
+             au nouveau hub (#view-school-hub) plutôt qu'à la page Classes
+             directement ; conserve data-key="classes" pour ne pas casser
+             DEFAULT_HOME_LAYOUT, mais data-go pointe vers le hub. La pastille
+             de messagerie migre ici. -->
+        <button type="button" class="home-circle" data-key="classes" data-go="school-hub">
+          <svg class="home-circle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3.5 20c0-3.6 2.5-6.2 5.5-6.2s5.5 2.6 5.5 6.2"/><circle cx="17" cy="9" r="2.2"/><path d="M15.3 14.3c2.5.5 4.2 2.7 4.2 5.7"/></svg>
+          <span>École</span>
+          <span class="home-circle-badge" id="home-school-badge" hidden>0</span>
         </button>
-        <button type="button" class="home-circle home-circle--accent" data-key="addCard" id="home-new-card-btn">
-          <svg class="home-circle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          <span>Ajouter une fiche</span>
+        <button type="button" class="home-circle" data-key="calendar" data-go="calendar">
+          <svg class="home-circle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span>Calendrier</span>
         </button>
         <button type="button" class="home-circle" data-key="stats" data-go="stats">
           <svg class="home-circle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="20" x2="6" y2="14"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="10"/><line x1="3" y1="20" x2="21" y2="20"/></svg>
@@ -228,36 +337,16 @@
           <svg class="home-circle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           <span>Réglages</span>
         </button>
-        <button type="button" class="home-circle" data-key="sync" data-go="sync">
-          <svg class="home-circle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2.1l4 4-4 4"/><path d="M3 12v-2a4 4 0 0 1 4-4h14"/><path d="M7 21.9l-4-4 4-4"/><path d="M21 12v2a4 4 0 0 1-4 4H3"/></svg>
-          <span>Synchronisation</span>
-        </button>
-        <button type="button" class="home-circle" data-key="calendar" data-go="calendar">
-          <svg class="home-circle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          <span>Calendrier</span>
-        </button>
-        <button type="button" class="home-circle" data-key="dev" data-go="dev">
-          <svg class="home-circle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16,18 22,12 16,6"/><polyline points="8,6 2,12 8,18"/></svg>
-          <span>Développeur</span>
-        </button>
-        <button type="button" class="home-circle" data-key="classes" data-go="classes">
-          <svg class="home-circle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3.5 20c0-3.6 2.5-6.2 5.5-6.2s5.5 2.6 5.5 6.2"/><circle cx="17" cy="9" r="2.2"/><path d="M15.3 14.3c2.5.5 4.2 2.7 4.2 5.7"/></svg>
-          <span>Classes</span>
-        </button>
+        <!-- Round 13, item 8 : "Mon compte" (libellé toujours géré
+             dynamiquement par updateAccountHomeButton — Se connecter/Mon
+             compte) gagne un accès à la Synchronisation (cf. #view-account). -->
         <button type="button" class="home-circle" data-key="account" data-go="account">
           <svg class="home-circle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
           <span>Se connecter</span>
         </button>
-        <!-- Round 6, item 5 : bouton Messagerie — pastille avec le nombre
-             de notifications non lues, masquée s'il n'y en a aucune. -->
-        <button type="button" class="home-circle" data-key="messages" data-go="messages">
-          <svg class="home-circle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          <span>Messagerie</span>
-          <span class="home-circle-badge" id="home-messages-badge" hidden>0</span>
-        </button>
-        <button type="button" class="home-circle" data-key="library" data-go="library">
-          <svg class="home-circle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.5" x2="15.4" y2="6.5"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/></svg>
-          <span>Bibliothèque</span>
+        <button type="button" class="home-circle" data-key="dev" data-go="dev">
+          <svg class="home-circle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16,18 22,12 16,6"/><polyline points="8,6 2,12 8,18"/></svg>
+          <span>Développeur</span>
         </button>
       </div>
     </section>
@@ -365,25 +454,11 @@
 
     <!-- VUE GESTION -->
     <section id="view-manage" class="view" aria-labelledby="tab-manage">
+      <!-- Round 17, item 3 : le bloc d'actions (+ Nouveau dossier,
+           Bibliothèque, pictos d'affichage) a été déplacé dans le bandeau
+           fixe (#manage-sticky-actions, voir plus haut) — il ne défile
+           donc plus avec la liste ci-dessous. -->
       <div class="subjects-panel">
-        <div class="list-header">
-          <!-- Item 3 (nouveau lot) : le bouton "+ Nouveau dossier" passe à
-               gauche, les 3 pictos d'affichage passent à droite. -->
-          <div class="list-header-actions">
-            <button class="btn btn--small" id="manage-add-folder-btn" type="button">+ Nouveau dossier</button>
-          </div>
-          <div class="org-display-toggle" id="org-display-toggle">
-            <button type="button" class="org-display-toggle-btn is-active" data-org-display="count" title="Nombre de fiches/boîtes">
-              <svg class="icon-inline-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><line x1="7" y1="20" x2="17" y2="20"/><line x1="7" y1="9" x2="17" y2="9"/><line x1="7" y1="13" x2="14" y2="13"/></svg>
-            </button>
-            <button type="button" class="org-display-toggle-btn" data-org-display="mode" title="Mode d'apprentissage">
-              <svg class="icon-inline-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9l10-5 10 5-10 5-10-5z"/><path d="M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/><line x1="22" y1="9" x2="22" y2="15.5"/></svg>
-            </button>
-            <button type="button" class="org-display-toggle-btn" data-org-display="gauge" title="Jauge de score">
-              <svg class="icon-inline-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="10" width="18" height="4" rx="2"/><rect x="3" y="10" width="11" height="4" rx="2" fill="currentColor" stroke="none"/></svg>
-            </button>
-          </div>
-        </div>
         <ul class="subject-list" id="subject-list"></ul>
       </div>
     </section>
@@ -684,6 +759,12 @@
     <section id="view-account" class="view" aria-labelledby="tab-account">
       <h2 class="section-title">Compte</h2>
 
+      <!-- Round 13, item 8 : accès à la Synchronisation toujours visible
+           (avant : seulement affiché quand la synchro n'était pas encore
+           configurée) — nécessaire maintenant que le cercle d'accueil
+           dédié "Synchronisation" a été retiré. -->
+      <button type="button" class="btn btn--ghost btn--small" id="account-goto-sync-btn2">Synchronisation</button>
+
       <div id="account-needs-sync" hidden>
         <p class="field-hint settings-block-hint">
           Un compte a besoin que la Synchronisation soit configurée
@@ -702,6 +783,16 @@
             <button type="button" class="btn btn--small is-active" id="account-auth-tab-signin" data-mode="signin">Se connecter</button>
             <button type="button" class="btn btn--small" id="account-auth-tab-signup" data-mode="signup">Créer un compte</button>
           </div>
+          <!-- Round 10, item 7 : nom/prénom demandés uniquement à la
+               création du compte (masqués en mode "Se connecter"). -->
+          <label class="field" id="account-auth-firstname-field" hidden>
+            <span>Prénom</span>
+            <input type="text" id="account-auth-firstname" autocomplete="given-name" />
+          </label>
+          <label class="field" id="account-auth-lastname-field" hidden>
+            <span>Nom</span>
+            <input type="text" id="account-auth-lastname" autocomplete="family-name" />
+          </label>
           <label class="field">
             <span>Email</span>
             <input type="email" id="account-auth-email" autocomplete="email" />
@@ -720,6 +811,20 @@
           <span id="account-user-email"></span>
           <button type="button" class="btn btn--ghost btn--small" id="account-signout-btn">Se déconnecter</button>
         </div>
+        <!-- Round 10, item 7 : nom/prénom modifiables après coup, pour les
+             comptes créés avant ce round ou pour corriger une saisie. -->
+        <div class="card-form">
+          <label class="field">
+            <span>Prénom</span>
+            <input type="text" id="account-profile-firstname" autocomplete="given-name" />
+          </label>
+          <label class="field">
+            <span>Nom</span>
+            <input type="text" id="account-profile-lastname" autocomplete="family-name" />
+          </label>
+          <button type="button" class="btn btn--small" id="account-profile-save-btn">Enregistrer</button>
+          <p class="field-hint" id="account-profile-note" hidden></p>
+        </div>
         <button type="button" class="btn btn--small" id="account-goto-classes-btn">Aller à Classes</button>
       </div>
     </section>
@@ -728,6 +833,29 @@
          connecté (voir Compte ci-dessus) — une boîte partagée par un prof
          apparaît toute seule (miroir en lecture seule, toujours à jour)
          dans les boîtes d'un élève dès qu'il fait partie de la classe. -->
+    <!-- Round 13, item 4 : nouveau palier "École" — deux boutons ronds
+         (même esprit que la page Classes) : Messagerie et Mes classes.
+         Le cercle d'accueil "École" mène ici plutôt que directement sur
+         la page Classes. -->
+    <section id="view-school-hub" class="view" aria-labelledby="tab-school-hub">
+      <h2 class="section-title">École</h2>
+      <div class="classes-role-circles" id="school-hub-circles">
+        <button type="button" class="classes-role-circle" id="school-hub-messages-btn">
+          <span class="classes-role-circle-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="30" height="30"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </span>
+          <span>Messagerie</span>
+          <span class="home-circle-badge" id="school-hub-messages-badge" hidden>0</span>
+        </button>
+        <button type="button" class="classes-role-circle" id="school-hub-classes-btn">
+          <span class="classes-role-circle-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="30" height="30"><circle cx="9" cy="8" r="3"/><path d="M3.5 20c0-3.6 2.5-6.2 5.5-6.2s5.5 2.6 5.5 6.2"/><circle cx="17" cy="9" r="2.2"/><path d="M15.3 14.3c2.5.5 4.2 2.7 4.2 5.7"/></svg>
+          </span>
+          <span>Mes classes</span>
+        </button>
+      </div>
+    </section>
+
     <section id="view-classes" class="view" aria-labelledby="tab-classes">
       <h2 class="section-title">Classes</h2>
 
@@ -757,33 +885,33 @@
             <span class="classes-role-circle-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="30" height="30"><path d="M12 5 2 9l10 4 10-4-10-4Z"/><path d="M6 11v5c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5v-5"/></svg>
             </span>
-            <span>J'apprends</span>
+            <span>Élève</span>
           </button>
           <button type="button" class="classes-role-circle" id="classes-goto-teacher-btn">
             <span class="classes-role-circle-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="30" height="30"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4"/><path d="M7 9.5 10.5 12 7 14.5"/></svg>
             </span>
-            <span>J'enseigne</span>
+            <span>Enseignant</span>
           </button>
         </div>
       </div>
     </section>
 
-    <!-- Round 3, item 2 : page "J'apprends" (anciennement l'onglet Élève). -->
+    <!-- Round 3, item 2 : page "Élève" (anciennement "J'apprends"). Round 13 :
+         la fonction "rejoindre une classe" est déportée dans une page
+         dédiée (view-classes-join), accessible ici par un bouton rond. -->
     <section id="view-classes-student" class="view" aria-labelledby="tab-classes">
       <button type="button" class="btn btn--ghost" id="classes-student-back-btn">← Retour à Classes</button>
-      <h2 class="section-title">J'apprends</h2>
+      <h2 class="section-title">Élève</h2>
       <div class="classes-section" id="classes-section-eleve">
-        <p class="field-hint settings-block-hint">
-          Rejoins une classe avec le code donné par ton professeur — les
-          boîtes qu'il partage avec cette classe apparaissent ensuite
-          automatiquement dans tes boîtes (Organisation), toujours à jour.
-        </p>
-        <div class="classes-join-row">
-          <input type="text" id="classes-join-code-input" placeholder="Code d'invitation" />
-          <button type="button" class="btn btn--small" id="classes-join-btn">Rejoindre</button>
+        <div class="classes-role-circles" id="classes-student-actions">
+          <button type="button" class="classes-role-circle" id="classes-goto-join-btn">
+            <span class="classes-role-circle-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="30" height="30"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </span>
+            <span>Rejoindre une classe</span>
+          </button>
         </div>
-        <p class="field-hint" id="classes-join-note" hidden></p>
         <!-- Round 6, item 4 : les classes apparaissent en ronds (même
              esprit que les boutons de l'accueil), chacun menant à sa page
              dédiée (view-class-detail) plutôt qu'à une ligne dépliée ici. -->
@@ -792,17 +920,52 @@
       </div>
     </section>
 
-    <!-- Round 3, item 2 : page "J'enseigne" (anciennement l'onglet Professeur). -->
+    <!-- Round 13 : page dédiée "Rejoindre une classe", extraite de la page
+         Élève. -->
+    <section id="view-classes-join" class="view" aria-labelledby="tab-classes">
+      <button type="button" class="btn btn--ghost" id="classes-join-back-btn">← Retour à Élève</button>
+      <h2 class="section-title">Rejoindre une classe</h2>
+      <p class="field-hint settings-block-hint">
+        Rejoins une classe avec le code donné par ton professeur — les
+        boîtes qu'il partage avec cette classe apparaissent ensuite
+        automatiquement dans tes boîtes (Organisation), toujours à jour.
+      </p>
+      <div class="classes-join-row">
+        <input type="text" id="classes-join-code-input" placeholder="Code d'invitation" />
+        <button type="button" class="btn btn--small" id="classes-join-btn">Rejoindre</button>
+      </div>
+      <p class="field-hint" id="classes-join-note" hidden></p>
+    </section>
+
+    <!-- Round 3, item 2 : page "Enseignant" (anciennement "J'enseigne").
+         Round 13 : la fonction "créer une classe" est déportée dans une
+         page dédiée (view-classes-create), accessible ici par un bouton
+         rond. -->
     <section id="view-classes-teacher" class="view" aria-labelledby="tab-classes">
       <button type="button" class="btn btn--ghost" id="classes-teacher-back-btn">← Retour à Classes</button>
-      <h2 class="section-title">J'enseigne</h2>
+      <h2 class="section-title">Enseignant</h2>
       <div class="classes-section" id="classes-section-prof">
-        <div class="classes-create-row">
-          <input type="text" id="classes-create-name-input" placeholder="Nom de la classe" />
-          <button type="button" class="btn btn--small" id="classes-create-btn">Créer une classe</button>
+        <div class="classes-role-circles" id="classes-teacher-actions">
+          <button type="button" class="classes-role-circle" id="classes-goto-create-btn">
+            <span class="classes-role-circle-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="30" height="30"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </span>
+            <span>Créer une classe</span>
+          </button>
         </div>
         <div class="classes-class-circles" id="classes-teacher-list"></div>
         <p class="field-hint" id="classes-teacher-empty" hidden>Tu n'as encore créé aucune classe.</p>
+      </div>
+    </section>
+
+    <!-- Round 13 : page dédiée "Créer une classe", extraite de la page
+         Enseignant. -->
+    <section id="view-classes-create" class="view" aria-labelledby="tab-classes">
+      <button type="button" class="btn btn--ghost" id="classes-create-back-btn">← Retour à Enseignant</button>
+      <h2 class="section-title">Créer une classe</h2>
+      <div class="classes-create-row">
+        <input type="text" id="classes-create-name-input" placeholder="Nom de la classe" />
+        <button type="button" class="btn btn--small" id="classes-create-btn">Créer une classe</button>
       </div>
     </section>
 
@@ -816,10 +979,19 @@
       <p class="field-hint classes-invite-hint" id="class-detail-invite-row" hidden>Code d'invitation : <strong></strong></p>
       <h3 class="settings-block-title">Boîtes partagées</h3>
       <div id="class-detail-boxes"></div>
-      <button type="button" class="btn btn--small" id="class-detail-share-btn" hidden>Partager une boîte</button>
+      <div class="classes-detail-actions">
+        <!-- Round 11, item 1 : ce bouton propose maintenant aussi bien les
+             boîtes perso que les collections de la Bibliothèque (voir
+             renderSingleBoitePicker) — le bouton dédié du round 10 a été
+             retiré. -->
+        <button type="button" class="btn btn--small" id="class-detail-share-btn" hidden>Partager une boîte</button>
+      </div>
       <h3 class="settings-block-title">Évènements à venir</h3>
       <ul class="subject-list" id="class-detail-events"></ul>
       <p class="field-hint" id="class-detail-events-empty" hidden>Aucun évènement à venir pour cette classe.</p>
+      <!-- Round 10, item 5 : créer un évènement directement depuis la page
+           de la classe (au lieu de passer par Calendrier). -->
+      <button type="button" class="btn btn--small" id="class-detail-add-event-btn" hidden>Ajouter un évènement</button>
     </section>
 
     <!-- Round 6, item 5 : messagerie — une discussion par classe, façon
@@ -858,6 +1030,9 @@
       <div id="library-needs-sync" hidden>
         <p class="field-hint settings-block-hint">Active la synchronisation (page Synchronisation) pour accéder à la bibliothèque.</p>
       </div>
+      <!-- Round 10, item 3 : recherche par mots-clés (nom de la collection
+           ou email de son auteur). -->
+      <input type="search" id="library-search-input" class="library-search-input" placeholder="Rechercher une collection…" />
       <ul class="subject-list" id="library-list"></ul>
       <p class="field-hint" id="library-empty" hidden>Aucune collection partagée pour l'instant.</p>
     </section>
@@ -1199,6 +1374,23 @@
         <div id="dev-home-logo-list"></div>
       </div>
 
+      <!-- Round 14 : logo "darwin" affiché en plus du robot sur l'accueil
+           — position/taille/ombre entièrement réglables ici (à la
+           différence du logo robot ci-dessus, dont l'ombre reste un
+           réglage utilisateur dans Réglages). -->
+      <div class="card-form">
+        <h3 class="settings-block-title">Logo darwin (page d'accueil)</h3>
+        <div id="dev-darwin-logo-list"></div>
+      </div>
+
+      <!-- Round 14 : texte sous le logo darwin — contenu, position et
+           taille réglables ici. Laissé vide par défaut (masqué tant
+           qu'aucun texte n'est saisi). -->
+      <div class="card-form">
+        <h3 class="settings-block-title">Texte sous le logo darwin (page d'accueil)</h3>
+        <div id="dev-darwin-text-list"></div>
+      </div>
+
       <!-- Item 1b/1c : disposition de la page Réviser. -->
       <div class="card-form">
         <h3 class="settings-block-title">Disposition de la page Réviser</h3>
@@ -1321,21 +1513,10 @@
         <div id="dev-help-messages-list" class="dev-help-messages-list"></div>
       </div>
 
-      <!-- Round 4, partie 3 : publie TOUS les réglages ci-dessus (couleurs,
-           icônes, messages d'aide...) pour qu'ils s'appliquent à tout le
-           monde (élèves, profs, nouveaux appareils) dès leur prochain
-           démarrage, sans attendre une nouvelle version de l'appli. -->
-      <div class="card-form">
-        <h3 class="settings-block-title">Publication</h3>
-        <p class="field-hint settings-block-hint">
-          Par défaut, tout ce que tu changes ci-dessus ne s'applique que sur
-          CET appareil. Ce bouton publie l'ensemble des réglages actuels
-          pour qu'ils deviennent ceux de tout le monde (nécessite d'être
-          connecté avec ton compte, page Compte).
-        </p>
-        <button type="button" class="btn" id="dev-publish-public-btn">Publier ces réglages pour tous les utilisateurs</button>
-        <p class="field-hint" id="dev-publish-public-result" style="margin-top:8px;"></p>
-      </div>
+      <!-- Round 16 : le bouton "Publier ces réglages pour tous les
+           utilisateurs" a été retiré — chaque modification ci-dessus est
+           désormais automatiquement enregistrée pour tout le monde (une
+           seule source de vérité côté serveur), sans étape manuelle. -->
 
       <!-- Round 4, partie 2 : le mode développeur reste dans l'appli mais
            n'est visible que sur les appareils débloqués (7 appuis sur le

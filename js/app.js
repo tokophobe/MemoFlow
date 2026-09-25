@@ -5,7 +5,7 @@
   // à garder alignée avec CACHE_NAME dans sw.js à chaque livraison, pour
   // que l'utilisateur puisse vérifier facilement s'il a bien la dernière
   // version installée.
-  const APP_VERSION = "v148";
+  const APP_VERSION = "v164";
 
   const ICON_LIBRARY = {
     cards: '<rect x="4" y="3" width="16" height="18" rx="2"/><line x1="4" y1="12" x2="20" y2="12"/>',
@@ -432,9 +432,13 @@
     return `<svg class="${cls || "tab-icon-svg"}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
   }
   // Choix par défaut = les icônes déjà en place (essai précédent).
+  // Round 13 : "cards" et "sync" ne sont plus des cercles d'accueil (Fiches
+  // se rejoint désormais via Mon bureau, Synchronisation via Mon compte) —
+  // retirés d'ici pour ne plus proposer une icône éditable pour un cercle
+  // qui n'existe plus sur l'accueil.
   const DEFAULT_NAV_ICONS = {
-    review: "cards", manage: "folder", cards: "file", stats: "barChart", settings: "settings",
-    addCard: "plus", calendar: "calendar", sync: "refresh", dev: "code",
+    review: "cards", manage: "folder", stats: "barChart", settings: "settings",
+    addCard: "plus", calendar: "calendar", dev: "code",
   };
   // Couleurs des 4 notes (boutons d'évaluation + graphiques) et des 4 modes
   // d'apprentissage (badges) — item 2 : rendues éditables depuis la page
@@ -608,14 +612,16 @@
   // COEF_TE/COEF_DD/PLAFOND/PLANCHER/ABAT. À l'évaluation :
   //   TE = temps écoulé (minutes) depuis la dernière interrogation
   //   NDI = maxi(DD*COEF_DD ; TE*COEF_TE), borné à
-  //         [PLANCHER ; mini(PLAFOND ; DD*COEF_DD)]
+  //         [PLANCHER ; mini(PLAFOND ; DD*COEF_TE)]
   //   PERS = NDI*ABAT
-  // Remarque (signalée à l'utilisateur, décision explicitement reportée) :
-  // avec cette formule de plafond telle que donnée, mini(PLAFOND ; DD*COEF_DD)
-  // est mathématiquement toujours <= DD*COEF_DD, qui est lui-même toujours
-  // <= maxi(...) — donc TE*COEF_TE n'a, en l'état, aucune influence sur le
-  // résultat final. Implémenté ici littéralement tel que spécifié ; à
-  // corriger une fois la question tranchée avec l'utilisateur.
+  // Remarque (round 9, correctif demandé par l'utilisateur) : la formule
+  // d'origine plafonnait avec DD*COEF_DD, qui est toujours <= DD*COEF_DD
+  // lui-même <= maxi(...) — TE*COEF_TE n'avait donc jamais d'influence sur
+  // le résultat. Corrigé en plafonnant avec DD*COEF_TE à la place : quand
+  // TE*COEF_TE dépasse DD*COEF_DD mais reste sous ce nouveau plafond (donc,
+  // en gros, tant que TE <= DD), TE pilote directement le résultat ; au-delà
+  // (TE > DD), le résultat sature à DD*COEF_TE (borné par PLAFOND), pour
+  // éviter qu'une révision très en retard fasse s'envoler l'intervalle.
   const REVISION_ALGO_RATING_ORDER = ["again", "hard", "good", "easy"];
   const REVISION_ALGO_RATING_LABELS = {
     again: "Encore (indice 0)",
@@ -662,37 +668,33 @@
   // tout vers la gauche sur un écran plus large comme un PC, puisque
   // l'appli s'adapte elle en largeur — le pourcentage, lui, suit toujours
   // la largeur réelle quel que soit l'appareil).
+  // Round 13 : "cards", "sync", "messages" et "library" ne sont plus des
+  // cercles d'accueil (retirés du DOM — voir index.html) ; conservés ici
+  // uniquement s'ils restent référencés ailleurs, sinon retirés. Libellés
+  // mis à jour pour "manage" (Mon bureau) et "classes" (École).
   const HOME_LAYOUT_TITLES = {
-    review: "Réviser", manage: "Mes collections", cards: "Fiches", addCard: "Ajouter une fiche",
+    review: "Réviser", manage: "Mon bureau", addCard: "Ajouter une fiche",
     stats: "Statistiques", settings: "Réglages", calendar: "Calendrier",
-    sync: "Synchronisation", dev: "Développeur", classes: "Classes",
-    account: "Compte", messages: "Messagerie", library: "Bibliothèque",
+    dev: "Développeur", classes: "École", account: "Compte",
   };
   // Largeur/hauteur de référence utilisées uniquement pour convertir une
   // seule fois d'anciens réglages enregistrés en pixels (avant ce
   // correctif) vers des pourcentages équivalents.
   const HOME_LAYOUT_LEGACY_REF_WIDTH = 354;
   const HOME_LAYOUT_LEGACY_REF_HEIGHT = 640;
+  // Round 13 : 9 cercles d'accueil seulement (cards/sync/messages/library
+  // retirés — voir index.html) ; positions reprises au plus proche de
+  // l'ancien agencement.
   const DEFAULT_HOME_LAYOUT = {
-    review: { x: 26.1, y: 13.7, d: 155 },
     addCard: { x: 73.4, y: 14.9, d: 110 },
-    cards: { x: 21.9, y: 39.5, d: 105 },
-    stats: { x: 77.7, y: 37.5, d: 100 },
+    review: { x: 26.1, y: 13.7, d: 155 },
     manage: { x: 79.8, y: 59.0, d: 95 },
+    classes: { x: 50.0, y: 26.5, d: 95 },
     calendar: { x: 39.5, y: 54.7, d: 100 },
+    stats: { x: 77.7, y: 37.5, d: 100 },
     settings: { x: 16.2, y: 73.8, d: 85 },
-    sync: { x: 54.4, y: 76.2, d: 95 },
-    dev: { x: 89.0, y: 79.0, d: 80 },
-    classes: { x: 50.0, y: 90.0, d: 85 },
     account: { x: 15.0, y: 90.0, d: 70 },
-    // Round 6, item 5 : position par défaut du rond Messagerie — zone
-    // encore libre entre "Réviser" et "Ajouter une fiche" en haut, et
-    // "Fiches"/"Stats" en dessous ; ajustable comme les autres via le
-    // mode développeur si jamais ça chevauche un réglage personnalisé.
-    messages: { x: 50.0, y: 26.5, d: 90 },
-    // Nouvelle Bibliothèque (partage public de collections) : zone libre à
-    // gauche, entre "Fiches" et "Réglages".
-    library: { x: 16.0, y: 54.0, d: 90 },
+    dev: { x: 89.0, y: 79.0, d: 80 },
   };
   // Items 1/2 (logo) : position (X/Y en %, centre du logo) et taille (px)
   // du logo sur la page d'accueil.
@@ -700,6 +702,21 @@
   // Items 1/2/6 (dernier lot) : logo affiché en haut du corps de chaque
   // autre page (taille + ombre, indépendantes de celles de l'accueil).
   const DEFAULT_BODY_LOGO = { size: 40, shadow: false };
+  // Round 14 : logo "darwin" affiché en plus du robot sur l'accueil —
+  // position/taille/ombre TOUTES réglables en mode développeur (à la
+  // différence du logo robot ci-dessus, dont l'ombre est un réglage
+  // utilisateur séparé dans Réglages).
+  // Placé par défaut sous les cercles (zone dédiée par le padding-bottom
+  // supplémentaire de #view-home, voir css/style.css), pour ne chevaucher
+  // aucun cercle avec la disposition par défaut.
+  // Round 15, item 2 : couleur du logo darwin (partagée avec sa petite
+  // version dans le bandeau du haut) — bleu par défaut (--blue), le noir
+  // d'origine ayant été jugé trop dur ; réglable en mode développeur.
+  const DEFAULT_DARWIN_LOGO = { x: 50, y: 88, size: 70, shadow: false, color: "#4a90d9" };
+  // Round 14 : texte optionnel sous le logo darwin — contenu/position/
+  // taille réglables en mode développeur ; vide par défaut (masqué tant
+  // que rien n'est saisi).
+  const DEFAULT_DARWIN_TEXT = { x: 50, y: 95, size: 11, content: "" };
   // Items 4 et 5 : le robot (logo en haut du corps de page) peut porter un
   // ou plusieurs messages d'aide selon la page — un tableau permet une
   // petite série façon tuto (voir bouton "Suite", round 4), une simple
@@ -823,6 +840,87 @@
       renderBodyLogoSpeechState(true);
     });
   }
+  /** Round 11 (suite de l'item 6, round 10) : Stéphane a signalé qu'un
+   *  second robot, distinct de celui déjà affiché en haut de la page
+   *  (#body-logo hors accueil, #home-logo sur l'accueil), apparaissait
+   *  dans la modale — un logo dupliqué codé en dur dans son balisage. Ici,
+   *  on repère plutôt le robot RÉELLEMENT visible à l'écran à cet instant
+   *  et on épingle la bulle juste en dessous de lui (ou au-dessus, s'il
+   *  n'y a pas la place en bas de l'écran), en le faisant ressortir
+   *  au-dessus de l'assombrissement (même z-index que la bulle) — c'est
+   *  bien LUI qui "parle", l'effet d'assombrissement du reste de la page
+   *  restant identique à avant. Repli (très rare, ex. tout premier rendu
+   *  avant que la page ait affiché un logo) : bulle centrée sans flèche,
+   *  comme avant round 11 mais toujours sans logo dupliqué. */
+  let robotModalHighlightedLogo = null;
+  function clearRobotModalHighlight() {
+    if (robotModalHighlightedLogo) {
+      robotModalHighlightedLogo.classList.remove("robot-modal-anchor-highlight");
+      robotModalHighlightedLogo = null;
+    }
+  }
+  function findVisibleRobotLogo() {
+    const homeView = el("view-home");
+    if (homeView && homeView.classList.contains("is-active")) {
+      const homeLogo = el("home-logo");
+      if (homeLogo && homeLogo.offsetParent !== null) return homeLogo;
+    }
+    const bodyLogoRow = el("body-logo-row");
+    if (bodyLogoRow && !bodyLogoRow.hidden) {
+      const bodyLogo = el("body-logo");
+      if (bodyLogo && bodyLogo.offsetParent !== null) return bodyLogo;
+    }
+    return null;
+  }
+  function positionRobotModal() {
+    const modal = el("robot-modal");
+    const bubble = el("robot-modal-bubble");
+    if (!modal || !bubble) return;
+    clearRobotModalHighlight();
+    const logo = findVisibleRobotLogo();
+    bubble.classList.remove("robot-modal-bubble--arrow-top", "robot-modal-bubble--arrow-bottom");
+    if (!logo) {
+      modal.classList.remove("robot-modal--anchored");
+      modal.style.position = "";
+      modal.style.left = "";
+      modal.style.top = "";
+      modal.style.width = "";
+      return;
+    }
+    const rect = logo.getBoundingClientRect();
+    const margin = 12;
+    const maxWidth = Math.min(420, window.innerWidth - margin * 2);
+    let left = rect.left - 8;
+    left = Math.max(margin, Math.min(left, window.innerWidth - maxWidth - margin));
+    const spaceBelow = window.innerHeight - rect.bottom;
+    let top;
+    modal.style.transform = "";
+    if (spaceBelow >= 140 || rect.top < 140) {
+      top = rect.bottom + 14;
+      bubble.classList.add("robot-modal-bubble--arrow-top");
+    } else {
+      // Pas assez de place en dessous (le robot est bas dans la page) :
+      // la bulle remonte au-dessus de lui à la place.
+      top = Math.max(margin, rect.top - 14);
+      modal.style.transform = "translateY(-100%)";
+      bubble.classList.add("robot-modal-bubble--arrow-bottom");
+    }
+    modal.classList.add("robot-modal--anchored");
+    modal.style.position = "fixed";
+    modal.style.left = left + "px";
+    modal.style.top = top + "px";
+    modal.style.width = maxWidth + "px";
+    const arrowX = Math.max(16, Math.min(rect.left + rect.width / 2 - left, maxWidth - 16));
+    bubble.style.setProperty("--robot-arrow-x", arrowX + "px");
+    logo.classList.add("robot-modal-anchor-highlight");
+    robotModalHighlightedLogo = logo;
+  }
+  // Repositionne si la fenêtre change de taille (rotation d'écran, resize
+  // PC) pendant qu'un message du robot est affiché.
+  window.addEventListener("resize", () => {
+    const overlay = el("robot-modal-overlay");
+    if (overlay && !overlay.hidden) positionRobotModal();
+  });
   /* Round 3, item 3 : le robot "parle" pour tous les messages de l'appli
    *  (information, avertissement, confirmation) — remplace les alert()/
    *  confirm() natifs du navigateur, jugés trop bruts et pas cohérents
@@ -837,6 +935,7 @@
     const overlay = el("robot-modal-overlay");
     const textEl = el("robot-modal-text");
     const actions = el("robot-modal-actions");
+    const inputEl = el("robot-modal-input");
     if (!overlay || !textEl || !actions) {
       // Repli très défensif si jamais le balisage manque (ne devrait pas
       // arriver) : on ne bloque pas l'appli, on résout juste positivement.
@@ -845,11 +944,23 @@
     return new Promise((resolve) => {
       textEl.textContent = text;
       actions.innerHTML = "";
+      // Round 10, item 6 : variante "prompt" — un champ de saisie apparaît
+      // au-dessus des boutons, et le bouton principal résout avec sa
+      // valeur (trim) plutôt qu'avec `value` tel quel.
+      const hasInput = !!opts.input;
+      if (inputEl) {
+        inputEl.hidden = !hasInput;
+        if (hasInput) {
+          inputEl.value = opts.input.defaultValue || "";
+          inputEl.placeholder = opts.input.placeholder || "";
+        }
+      }
       let settled = false;
       function close(value) {
         if (settled) return;
         settled = true;
         overlay.hidden = true;
+        clearRobotModalHighlight();
         document.removeEventListener("keydown", onKeydown, true);
         resolve(value);
       }
@@ -857,6 +968,10 @@
         if (e.key === "Escape") {
           e.preventDefault();
           close(opts.cancelValue !== undefined ? opts.cancelValue : false);
+        } else if (hasInput && e.key === "Enter") {
+          e.preventDefault();
+          const primaryBtn = actions.querySelector(".robot-modal-btn--primary");
+          if (primaryBtn) primaryBtn.click();
         }
       }
       buttons.forEach((b) => {
@@ -867,15 +982,37 @@
           (b.primary ? " robot-modal-btn--primary" : "") +
           (b.danger ? " robot-modal-btn--danger" : "");
         btn.textContent = b.label;
-        btn.addEventListener("click", () => close(b.value));
+        btn.addEventListener("click", () => {
+          if (hasInput && b.value === true) close((inputEl.value || "").trim() || null);
+          else close(b.value);
+        });
         actions.appendChild(btn);
       });
       overlay.hidden = false;
+      positionRobotModal();
       document.addEventListener("keydown", onKeydown, true);
       requestAnimationFrame(() => {
+        if (hasInput && inputEl) {
+          inputEl.focus();
+          inputEl.select();
+          return;
+        }
         const first = actions.querySelector(".robot-modal-btn--primary") || actions.querySelector("button");
         if (first) first.focus();
       });
+    });
+  }
+  /** Remplace prompt("...") : un champ de saisie + Annuler/Valider, résout
+   *  avec le texte saisi (trim) ou `null` si annulé/vide — même signature
+   *  d'usage qu'un prompt() natif (`await robotPrompt(question, défaut)`). */
+  function robotPrompt(text, defaultValue) {
+    return showRobotMessage(text, {
+      input: { defaultValue: defaultValue || "" },
+      cancelValue: null,
+      buttons: [
+        { label: "Annuler", value: null },
+        { label: "Valider", value: true, primary: true },
+      ],
     });
   }
   /** Remplace alert("...") : un seul bouton OK, résout quand il est fermé. */
@@ -998,54 +1135,40 @@
     );
   }
 
-  // Round 4, partie 3 : réglages développeur PUBLIÉS par Stéphane pour
-  // tout le monde (table Supabase partagée en lecture, voir sync.js et
-  // supabase/dev_settings_public_schema.sql) — récupérés une fois au
-  // démarrage par loadPublicDevSettingsForEveryone(). null tant que rien
-  // n'a encore été récupéré (hors ligne, Sync non configurée, ou pas
-  // encore essayé) : dans ce cas, comportement inchangé (valeurs par
-  // défaut du code).
-  let publicDevSettingsOverride = null;
-  function isPlainDevSettingsObject(v) {
-    return Boolean(v) && typeof v === "object" && !Array.isArray(v);
-  }
-  /** Fusionne récursivement deux "couches" de réglages développeur :
-   *  toute clé présente dans `override` l'emporte sur `base`, mais si les
-   *  deux valeurs sont des objets simples (ex. nightColors.bgColors), on
-   *  fusionne leurs propres clés au lieu de remplacer tout le groupe —
-   *  un tableau (ex. une liste de messages d'aide) est, lui, toujours
-   *  remplacé en bloc, jamais fusionné élément par élément. */
-  function mergeDevSettingsLayer(base, override) {
-    const out = { ...(isPlainDevSettingsObject(base) ? base : {}) };
-    if (!isPlainDevSettingsObject(override)) return out;
-    Object.keys(override).forEach((key) => {
-      const b = out[key];
-      const o = override[key];
-      out[key] = isPlainDevSettingsObject(b) && isPlainDevSettingsObject(o) ? mergeDevSettingsLayer(b, o) : o;
-    });
-    return out;
-  }
-  /** Récupère (une fois, au démarrage) les réglages développeur publiés
-   *  pour tout le monde et les applique — appelée depuis connectSync(),
-   *  donc seulement quand la Sync est configurée (même condition que les
-   *  comptes Classes, qui partagent le même projet Supabase). */
-  async function loadPublicDevSettingsForEveryone() {
-    try {
-      const pub = await Sync.fetchPublicDevSettings();
-      if (pub) {
-        publicDevSettingsOverride = pub;
-        // Invalide le cache ci-dessous pour forcer une refusion au
-        // prochain loadDevSettings(), puis réapplique tout de suite (utile
-        // pour tous les utilisateurs qui n'ont eux-mêmes AUCUN réglage
-        // développeur local — la quasi-totalité des élèves/profs).
+  // Round 16 : SIMPLIFICATION demandée par Stéphane suite au bug de
+  // synchro du round 15 (deux canaux séparés — réglages "personnels" par
+  // (code de synchro + Compte) ET réglages "publiés pour tous" — avec une
+  // logique de fusion "le plus récent gagne" fragile, qui a fini par
+  // laisser un ancien réglage local écraser silencieusement la bonne
+  // version publiée). Il n'existe plus maintenant qu'UNE seule source de
+  // vérité : la table Supabase `dev_settings_public` (une seule ligne,
+  // id="global"), que seul le Compte de Stéphane peut modifier (RLS).
+  // - `localStorage` ne sert plus qu'à AFFICHER quelque chose hors ligne
+  //   (miroir du dernier contenu connu du serveur) — il n'est plus jamais
+  //   considéré comme "plus à jour" que le serveur : dès qu'une connexion
+  //   est possible, le serveur écrase toujours le local, sans comparaison
+  //   de date. Plus de notion de "réglage personnel" ni de cloisonnement
+  //   par Compte : tout le monde (élèves, profs, Stéphane lui-même sur
+  //   n'importe quel appareil) voit exactement la même chose.
+  // - Modifier un réglage en mode développeur (saveDevSettings) écrit
+  //   directement vers ce même canal public : plus besoin d'un bouton
+  //   "Publier" séparé, chaque changement est déjà la version de tout le
+  //   monde.
+  function syncDevSettingsFromServer() {
+    return Sync.fetchPublicDevSettings()
+      .then((pub) => {
+        if (!pub) return;
+        localStorage.setItem(DEV_SETTINGS_KEY, JSON.stringify(pub));
         _devSettingsCacheRaw = undefined;
         _devSettingsCache = undefined;
         applyAllDevSettings();
-      }
-    } catch (e) {
-      /* hors ligne, ou pas encore de ligne publiée : on continue avec les
-         valeurs par défaut du code, comme avant cette fonctionnalité. */
-    }
+        applyAppPrefsFromRemote(pub.appPrefs);
+      })
+      .catch(() => {
+        /* hors ligne, ou pas encore de ligne publiée : on continue avec ce
+           qui est déjà en localStorage (ou les valeurs par défaut du code
+           si l'appli n'a encore jamais pu se connecter du tout). */
+      });
   }
 
   // Bug corrigé (item 9) : cette fonction est appelée TRÈS souvent (une
@@ -1065,15 +1188,9 @@
     } catch (e) {
       parsed = {};
     }
-    // Round 4, partie 3 : les réglages publiés pour tout le monde
-    // s'insèrent ICI, comme une "sous-couche" entre les valeurs par
-    // défaut du code et les réglages strictement locaux à cet appareil —
-    // un réglage local reste prioritaire (utile à Stéphane, qui peut
-    // préparer un changement avant de le publier), mais tout le monde
-    // d'autre en hérite tant qu'il n'a pas ses propres réglages locaux.
-    if (publicDevSettingsOverride) {
-      parsed = mergeDevSettingsLayer(publicDevSettingsOverride, parsed);
-    }
+    // Round 16 : plus de fusion avec une "couche publique" séparée —
+    // `localStorage` est directement le miroir de la seule source de
+    // vérité (`dev_settings_public`, voir syncDevSettingsFromServer).
     const built = {
       ratingLabels: { ...DEFAULT_RATING_LABELS, ...(parsed.ratingLabels || {}) },
       navLabels: { ...DEFAULT_NAV_LABELS, ...(parsed.navLabels || {}) },
@@ -1110,6 +1227,8 @@
       homeLayout: migrateHomeLayoutToPercent(parsed),
       homeLogo: { ...DEFAULT_HOME_LOGO, ...(parsed.homeLogo || {}) },
       bodyLogo: { ...DEFAULT_BODY_LOGO, ...(parsed.bodyLogo || {}) },
+      darwinLogo: { ...DEFAULT_DARWIN_LOGO, ...(parsed.darwinLogo || {}) },
+      darwinText: { ...DEFAULT_DARWIN_TEXT, ...(parsed.darwinText || {}) },
       homeLayoutUnit: "percent",
       homeLayoutAnchor: "center",
       reviewLayout: { ...DEFAULT_REVIEW_LAYOUT, ...(parsed.reviewLayout || {}) },
@@ -1152,12 +1271,8 @@
         normal: { ...BUILTIN_MODE_DEFAULTS.normal, ...((parsed.factoryDefaults || {}).normal || {}) },
         renforce: { ...BUILTIN_MODE_DEFAULTS.renforce, ...((parsed.factoryDefaults || {}).renforce || {}) },
       },
-      // Bug corrigé (round 4, partie 3) : cette date n'était jusqu'ici
-      // JAMAIS recopiée dans l'objet fusionné, alors que
-      // reconcileDevSettings (synchro personnelle) s'en sert pour savoir
-      // si la version locale est plus récente que celle du serveur — la
-      // comparaison était donc toujours "locale = temps 0", donc toujours
-      // perdante face au serveur.
+      // Horodatage de la dernière modification (posé par saveDevSettings) —
+      // affiché nulle part mais conservé pour référence/débogage.
       updatedAt: parsed.updatedAt,
     };
     _devSettingsCacheRaw = raw;
@@ -1185,18 +1300,17 @@
   // Poussée retardée (item 1 — synchro des réglages développeur) :
   // beaucoup d'appels à saveDevSettings coup sur coup en bougeant un
   // curseur de couleur enverraient sinon une requête réseau par pixel de
-  // déplacement — un seul envoi group  é, un court instant après la
-  // dernière modification.
+  // déplacement — un seul envoi groupé, un court instant après la
+  // dernière modification. Round 16 : envoi direct vers l'UNIQUE canal
+  // partagé (`dev_settings_public`) — plus de notion de Compte à
+  // résoudre au préalable, ni de bouton "Publier" séparé : ce qui est
+  // sauvegardé ici EST déjà la version que tout le monde va recevoir.
   let devSettingsPushTimer = null;
   function scheduleDevSettingsPush() {
     if (typeof Sync === "undefined" || !Sync.isConfigured || !Sync.isConfigured()) return;
     clearTimeout(devSettingsPushTimer);
     devSettingsPushTimer = setTimeout(async () => {
-      // Cloisonné par Compte connecté depuis le round 6 (voir
-      // currentAccountEmailForSync) — corrige une fuite entre deux
-      // Comptes utilisant le même code de synchro perso.
-      const accountEmail = await currentAccountEmailForSync();
-      Sync.pushDevSettings({ ...loadDevSettings(), appPrefs: gatherAppPrefs() }, accountEmail);
+      await Sync.pushPublicDevSettings({ ...loadDevSettings(), appPrefs: gatherAppPrefs() });
     }, 900);
   }
   /** Réglages de la page "Réglages" (item — jusqu'ici jamais synchronisés
@@ -1489,7 +1603,7 @@
     renderIconBankPicker(
       "dev-nav-icons-list",
       Object.keys(DEFAULT_NAV_ICONS),
-      { review: "Réviser", manage: "Gérer", cards: "Fiches", stats: "Stats", settings: "Réglages", addCard: "Ajouter une fiche", calendar: "Calendrier", sync: "Synchronisation", dev: "Développeur" },
+      { review: "Réviser", manage: "Gérer", stats: "Stats", settings: "Réglages", addCard: "Ajouter une fiche", calendar: "Calendrier", dev: "Développeur" },
       "navIcons",
       () => {
         applyNavLabels();
@@ -1687,6 +1801,32 @@
     root.setProperty("--home-logo-shadow", logo.shadow ? LOGO_SHADOW_FILTER : "none");
     root.setProperty("--body-logo-size", `${bodyLogo.size}px`);
     root.setProperty("--body-logo-shadow", bodyLogo.shadow ? LOGO_SHADOW_FILTER : "none");
+
+    // Round 14 : logo "darwin" + texte sous lui, même système de
+    // coordonnées que le logo robot ci-dessus (X/Y en % de la même zone,
+    // converti en px pour X pour la même raison — voir les commentaires
+    // au-dessus).
+    const darwinLogo = loadDevSettings().darwinLogo;
+    const darwinText = loadDevSettings().darwinText;
+    const darwinLogoLeftPx = scatterLeftOffset + (darwinLogo.x / 100) * scatterWidthForLogo;
+    root.setProperty("--darwin-logo-x", `${Math.round(darwinLogoLeftPx)}px`);
+    root.setProperty("--darwin-logo-y", `${darwinLogo.y}%`);
+    root.setProperty("--darwin-logo-size", `${darwinLogo.size}px`);
+    root.setProperty("--darwin-logo-shadow", darwinLogo.shadow ? LOGO_SHADOW_FILTER : "none");
+    // Round 15, item 2 : couleur du logo darwin (topbar + accueil, même
+    // variable pour les deux — voir .topbar-darwin-logo/.darwin-home-logo
+    // en CSS).
+    root.setProperty("--darwin-logo-color", darwinLogo.color || "#4a90d9");
+    const darwinTextLeftPx = scatterLeftOffset + (darwinText.x / 100) * scatterWidthForLogo;
+    root.setProperty("--darwin-text-x", `${Math.round(darwinTextLeftPx)}px`);
+    root.setProperty("--darwin-text-y", `${darwinText.y}%`);
+    root.setProperty("--darwin-text-size", `${darwinText.size}px`);
+    const darwinTextEl = el("darwin-home-text");
+    if (darwinTextEl) {
+      const content = (darwinText.content || "").trim();
+      darwinTextEl.textContent = content;
+      darwinTextEl.hidden = content.length === 0;
+    }
   }
 
   /** Retourne le temps de retournement de fiche réglé (item 1c), en
@@ -1743,17 +1883,32 @@
     // gabarit fixe 390×844 sur tout écran au moins aussi grand.
     const deskWidth = document.querySelector(".desk")?.getBoundingClientRect().width || window.innerWidth;
     const vw = Math.min(deskWidth, REVIEW_LAYOUT_REF_WIDTH) / 100;
-    // Marge de sécurité fixe sous la barre du haut + la barre de boîte
-    // (elle-même posée à 54px + l'encoche) — 110px couvre confortablement
-    // les deux sur la quasi-totalité des appareils.
-    const MIN_CARD_TOP_PX = 110;
-    const cardTopPx = Math.max(r.cardTopPct * vh, MIN_CARD_TOP_PX);
+    // Marge de sécurité sous la barre du haut + la barre de boîte (round
+    // 15 : le bandeau du haut est désormais fixe et sa hauteur réelle
+    // varie — titre de page, bulle d'aide ouverte, etc. — --sticky-
+    // header-h, mesurée en JS via ResizeObserver, remplace donc la valeur
+    // fixe utilisée avant ; +60px couvre la barre de boîte elle-même
+    // (posée juste sous ce bandeau) plus une marge confortable.
+    const stickyHeaderH =
+      parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--sticky-header-h")) || 96;
+    const MIN_CARD_TOP_PX = stickyHeaderH + 60;
+    const cardTopPctPx = r.cardTopPct * vh;
+    const cardTopPx = Math.max(cardTopPctPx, MIN_CARD_TOP_PX);
+    // Round 15 (suite) : quand le plancher ci-dessus pousse la fiche plus
+    // bas que sa position en % d'origine, la barre de notation/le résumé
+    // de score/la jauge (positionnés chacun par leur propre % de l'écran,
+    // indépendamment de la fiche) doivent redescendre d'AUTANT — sinon ils
+    // restent à leur ancienne hauteur et se retrouvent sous la fiche,
+    // désormais plus basse (bug constaté : bouton de notation caché sous
+    // la fiche). Même décalage appliqué aux quatre pour garder leur
+    // espacement relatif d'origine.
+    const extraOffsetPx = cardTopPx - cardTopPctPx;
     root.setProperty("--review-card-height", `${Math.round(r.cardHeightPct * vh)}px`);
     root.setProperty("--review-card-width", `${Math.round(r.cardWidthPct * vw)}px`);
     root.setProperty("--review-card-top", `${Math.round(cardTopPx)}px`);
-    root.setProperty("--review-rating-row-top", `${Math.round(r.ratingRowTopPct * vh)}px`);
-    root.setProperty("--review-score-info-top", `${Math.round(r.scoreInfoTopPct * vh)}px`);
-    root.setProperty("--review-gauge-top", `${Math.round(r.gaugeTopPct * vh)}px`);
+    root.setProperty("--review-rating-row-top", `${Math.round(r.ratingRowTopPct * vh + extraOffsetPx)}px`);
+    root.setProperty("--review-score-info-top", `${Math.round(r.scoreInfoTopPct * vh + extraOffsetPx)}px`);
+    root.setProperty("--review-gauge-top", `${Math.round(r.gaugeTopPct * vh + extraOffsetPx)}px`);
     // Bug corrigé (item 2) : la durée CSS utilisait la valeur BRUTE du
     // réglage, alors que le calcul JS (voir getFlipDurationMs) applique un
     // minimum de 150ms — avec un réglage très court, la fiche changeait
@@ -1816,6 +1971,91 @@
       input.addEventListener("input", () => {
         const s = loadDevSettings();
         s.bodyLogo[input.dataset.field] = Number(input.value) || 0;
+        saveDevSettings(s);
+        applyHomeLayout();
+      });
+    });
+  }
+
+  // Round 14 : logo "darwin" — position/taille/ombre TOUTES réglables
+  // ici (contrairement au logo robot, dont seule l'ombre vit dans
+  // Réglages ; voir DEFAULT_DARWIN_LOGO plus haut).
+  function renderDarwinLogoEditor() {
+    const wrap = el("dev-darwin-logo-list");
+    if (!wrap) return;
+    const logo = loadDevSettings().darwinLogo;
+    wrap.innerHTML = `<div class="dev-home-layout-row">
+      <span class="dev-home-layout-title">Logo darwin</span>
+      <label>X % <input type="number" step="0.1" class="dev-darwin-logo-input" data-field="x" value="${logo.x}" /></label>
+      <label>Y % <input type="number" step="0.1" class="dev-darwin-logo-input" data-field="y" value="${logo.y}" /></label>
+      <label>Taille px <input type="number" class="dev-darwin-logo-input" data-field="size" value="${logo.size}" /></label>
+    </div>
+    <label class="settings-toggle-row">
+      <input type="checkbox" id="dev-darwin-logo-shadow" ${logo.shadow ? "checked" : ""} />
+      <span>Ombre sous le logo darwin</span>
+    </label>
+    <!-- Round 15, item 2 : couleur du logo darwin (topbar + accueil),
+         noir d'origine jugé trop dur — bleu par défaut, réglable ici. -->
+    <label class="field">
+      <span>Couleur du logo darwin</span>
+      <input type="color" id="dev-darwin-logo-color" value="${logo.color || "#4a90d9"}" />
+    </label>`;
+    wrap.querySelectorAll(".dev-darwin-logo-input").forEach((input) => {
+      input.addEventListener("input", () => {
+        const s = loadDevSettings();
+        s.darwinLogo[input.dataset.field] = Number(input.value) || 0;
+        saveDevSettings(s);
+        applyHomeLayout();
+      });
+    });
+    const shadowEl = el("dev-darwin-logo-shadow");
+    if (shadowEl) {
+      shadowEl.addEventListener("change", () => {
+        const s = loadDevSettings();
+        s.darwinLogo.shadow = shadowEl.checked;
+        saveDevSettings(s);
+        applyHomeLayout();
+      });
+    }
+    const colorEl = el("dev-darwin-logo-color");
+    if (colorEl) {
+      colorEl.addEventListener("input", () => {
+        const s = loadDevSettings();
+        s.darwinLogo.color = colorEl.value;
+        saveDevSettings(s);
+        applyHomeLayout();
+      });
+    }
+  }
+
+  // Round 14 : texte sous le logo darwin — contenu/position/taille.
+  function renderDarwinTextEditor() {
+    const wrap = el("dev-darwin-text-list");
+    if (!wrap) return;
+    const text = loadDevSettings().darwinText;
+    wrap.innerHTML = `<label class="field">
+      <span>Texte (vide = masqué)</span>
+      <input type="text" id="dev-darwin-text-content" value="${escapeHtml(text.content || "")}" placeholder="Ex. Fiches by darwin" />
+    </label>
+    <div class="dev-home-layout-row">
+      <span class="dev-home-layout-title">Position</span>
+      <label>X % <input type="number" step="0.1" class="dev-darwin-text-input" data-field="x" value="${text.x}" /></label>
+      <label>Y % <input type="number" step="0.1" class="dev-darwin-text-input" data-field="y" value="${text.y}" /></label>
+      <label>Taille px <input type="number" class="dev-darwin-text-input" data-field="size" value="${text.size}" /></label>
+    </div>`;
+    const contentEl = el("dev-darwin-text-content");
+    if (contentEl) {
+      contentEl.addEventListener("input", () => {
+        const s = loadDevSettings();
+        s.darwinText.content = contentEl.value;
+        saveDevSettings(s);
+        applyHomeLayout();
+      });
+    }
+    wrap.querySelectorAll(".dev-darwin-text-input").forEach((input) => {
+      input.addEventListener("input", () => {
+        const s = loadDevSettings();
+        s.darwinText[input.dataset.field] = Number(input.value) || 0;
         saveDevSettings(s);
         applyHomeLayout();
       });
@@ -2763,7 +3003,10 @@
 
     const ddTerm = dd * coefDd;
     const raw = Math.max(ddTerm, te * coefTe);
-    const ceiling = Math.min(plafond, ddTerm);
+    // Plafond basé sur DD*COEF_TE (et non DD*COEF_DD) — correctif demandé
+    // par l'utilisateur pour que TE*COEF_TE cesse d'être mathématiquement
+    // inerte (voir le commentaire au-dessus de REVISION_ALGO_RATING_ORDER).
+    const ceiling = Math.min(plafond, dd * coefTe);
     let ndi = Math.min(raw, ceiling);
     if (ndi < plancher) ndi = plancher;
     const pers = ndi * abat;
@@ -3420,15 +3663,31 @@
   }
 
   function renderTreeLevel(parentId, depth, container) {
-    const childFolders = folders
-      .filter((f) => f.parentId === parentId)
-      .sort((a, b) => a.name.localeCompare(b.name, "fr"));
-    // Item 1 : une boîte "auto-liée" (même id qu'un dossier) ne doit
-    // jamais être rendue ici comme boîte indépendante — c'est le dossier
-    // correspondant, plus bas, qui la représente.
-    const childSubjects = subjects
-      .filter((s) => s.folderId === parentId && !folders.some((f) => f.id === s.id))
-      .sort((a, b) => a.name.localeCompare(b.name, "fr"));
+    // Round 10, item 1 : à la racine, les classes (dossier racine d'une
+    // classe suivie) doivent toujours apparaître APRÈS les dossiers et
+    // collections propres de l'utilisateur — auparavant, tout était trié
+    // ensemble par ordre alphabétique, donc une classe pouvait se
+    // retrouver mélangée au milieu. On ne sépare qu'au niveau racine : les
+    // sous-dossiers d'une classe sont de toute façon reconstitués SOUS son
+    // dossier racine (voir ensureClassMirrorFolderPath), l'ordre n'y a donc
+    // pas de sens à changer.
+    const isRootLevel = parentId === ROOT_FOLDER_ID;
+    let childFolders = folders.filter((f) => f.parentId === parentId);
+    let childSubjects = subjects.filter((s) => s.folderId === parentId && !folders.some((f) => f.id === s.id));
+    if (isRootLevel) {
+      const ownFolders = childFolders.filter((f) => !f.sharedClassId && !f.sharedClassRoot).sort((a, b) => a.name.localeCompare(b.name, "fr"));
+      const classFolders = childFolders.filter((f) => f.sharedClassId || f.sharedClassRoot).sort((a, b) => a.name.localeCompare(b.name, "fr"));
+      childFolders = [...ownFolders, ...classFolders];
+      const ownSubjects = childSubjects.filter((s) => !s.sharedBoxId).sort((a, b) => a.name.localeCompare(b.name, "fr"));
+      const classSubjects = childSubjects.filter((s) => s.sharedBoxId).sort((a, b) => a.name.localeCompare(b.name, "fr"));
+      childSubjects = [...ownSubjects, ...classSubjects];
+    } else {
+      childFolders = childFolders.sort((a, b) => a.name.localeCompare(b.name, "fr"));
+      // Item 1 : une boîte "auto-liée" (même id qu'un dossier) ne doit
+      // jamais être rendue ici comme boîte indépendante — c'est le dossier
+      // correspondant, plus bas, qui la représente.
+      childSubjects = childSubjects.sort((a, b) => a.name.localeCompare(b.name, "fr"));
+    }
 
     /** Ligne "boîte" (item 1) — utilisée aussi bien pour une boîte
      *  classique (entité indépendante) que pour un dossier devenu boîte
@@ -3448,14 +3707,14 @@
       nameBtn.type = "button";
       nameBtn.className = "subject-row-name";
       nameBtn.innerHTML = `${boiteIconMarkup} <span>${escapeHtml(displayName)}</span>`;
-      nameBtn.title = "Réviser cette boîte";
-      // Item 7 (lot précédent) : un clic sur une boîte mène directement à
-      // la page Réviser correspondante (au lieu de la page Fiches). Item 3
-      // (nouveau lot) : le bouton Accueil de Réviser doit alors ramener ici
-      // (Organisation) plutôt qu'au programme de révision.
+      nameBtn.title = "Voir les fiches de cette boîte";
+      // Round 13, item 3-2 : un clic sur une boîte mène désormais à la page
+      // Fiches (au lieu de Réviser) — le bouton Accueil depuis Fiches
+      // ramène alors ici (Mon bureau) plutôt qu'au véritable accueil
+      // (cardsEntryFromManage, déjà géré par goHome()).
       nameBtn.addEventListener("click", () => {
-        reviewEntryFromManage = true;
-        goToReviewFor(`subject:${subjectId}`);
+        cardsEntryFromManage = true;
+        goToCardsFor(`subject:${subjectId}`);
       });
 
       const n = cards.filter((c) => !c.deleted && c.subject === subjectId).length;
@@ -3474,7 +3733,14 @@
         },
         onDelete: () => deleteSubject(subjectId),
         onAlgo: () => openSubjectAlgoView(subjectId),
-        onShare: () => shareSubjectToLibrary(subjectId),
+        // Round 10, item 2 : ni une boîte de classe ni une collection prise
+        // dans la Bibliothèque ne peuvent être repartagées — l'action
+        // "Partager" disparaît carrément du popover pour ces boîtes-là,
+        // plutôt que d'être cliquable pour finir bloquée par un message.
+        onShare:
+          subjectForIcon && (subjectForIcon.sharedBoxId || (subjectForIcon.fromLibrary && subjectForIcon.libraryOriginId))
+            ? null
+            : () => shareSubjectToLibrary(subjectId),
         deleteTitle: "Supprimer cette boîte",
       });
       li.appendChild(body);
@@ -3510,19 +3776,19 @@
       const nameBtn = document.createElement("button");
       nameBtn.type = "button";
       nameBtn.className = "subject-row-name";
-      nameBtn.title = "Réviser ce dossier";
+      nameBtn.title = "Voir les fiches de ce dossier";
       // Round 3, item 1 : le dossier racine d'une classe (créé
       // automatiquement chez l'élève) porte l'icône "classe" plutôt que
       // l'icône dossier classique, pour qu'on le distingue au premier coup
       // d'œil dans l'arborescence.
       const folderIconMarkup = f.sharedClassRoot ? CLASSES_ROW_ICON : iconSvgMarkup("folder", "icon-inline-svg");
       nameBtn.innerHTML = `${folderIconMarkup} <span>${escapeHtml(f.name)}</span>`;
-      // Item 7 (lot précédent) : un clic sur un dossier mène directement à
-      // la page Réviser correspondante (au lieu de la page Fiches). Item 3
-      // (nouveau lot) : Accueil depuis Réviser ramène alors ici.
+      // Round 13, item 3-2 : un clic sur un dossier mène désormais à la
+      // page Fiches (au lieu de Réviser) — Accueil depuis Fiches ramène
+      // alors ici.
       nameBtn.addEventListener("click", () => {
-        reviewEntryFromManage = true;
-        goToReviewFor(`folder:${f.id}`);
+        cardsEntryFromManage = true;
+        goToCardsFor(`folder:${f.id}`);
       });
 
       const childCount = folders.filter((x) => x.parentId === f.id).length + subjects.filter((x) => x.folderId === f.id).length;
@@ -3581,7 +3847,7 @@
      Gestion des dossiers (créer, renommer, supprimer, déplacer) — item 1
   --------------------------------------------------------- */
   async function createFolderFlow() {
-    const name = prompt("Nom du nouveau dossier :");
+    const name = await robotPrompt("Nom du nouveau dossier :");
     if (!name || !name.trim()) return;
     const folder = newFolder(name, ROOT_FOLDER_ID);
     await persistFolder(folder);
@@ -3596,7 +3862,7 @@
   async function renameFolder(folderId) {
     const f = folders.find((x) => x.id === folderId);
     if (!f) return;
-    const name = prompt("Nouveau nom du dossier :", f.name);
+    const name = await robotPrompt("Nouveau nom du dossier :", f.name);
     if (!name || !name.trim() || name.trim() === f.name) return;
     f.name = name.trim();
     f.updatedAt = new Date().toISOString();
@@ -3987,7 +4253,7 @@
 
   const algoModeSliderEl = el("algo-mode-slider");
   if (algoModeSliderEl) {
-    algoModeSliderEl.addEventListener("input", () => {
+    algoModeSliderEl.addEventListener("input", async () => {
       const idx = Number(algoModeSliderEl.value);
       updateAlgoModeTicksHighlight(idx);
       const customPicker = el("algo-custom-picker");
@@ -3999,7 +4265,7 @@
       if (customPicker) customPicker.hidden = false;
       const customs = Object.values(loadLearningModes()).filter((m) => !m.builtin);
       if (customs.length === 0) {
-        const name = prompt("Nom du nouveau mode personnalisé :", "Mon mode");
+        const name = await robotPrompt("Nom du nouveau mode personnalisé :", "Mon mode");
         if (name && name.trim()) {
           const id = createCustomMode(name, algoEditingModeId);
           renderCustomPickerList();
@@ -4019,8 +4285,8 @@
 
   const algoCustomNewBtn = el("algo-custom-new-btn");
   if (algoCustomNewBtn) {
-    algoCustomNewBtn.addEventListener("click", () => {
-      const name = prompt("Nom du nouveau mode personnalisé :");
+    algoCustomNewBtn.addEventListener("click", async () => {
+      const name = await robotPrompt("Nom du nouveau mode personnalisé :");
       if (!name || !name.trim()) return;
       const id = createCustomMode(name, algoEditingModeId);
       renderCustomPickerList();
@@ -4029,11 +4295,11 @@
   }
   const algoCustomRenameBtn = el("algo-custom-rename-btn");
   if (algoCustomRenameBtn) {
-    algoCustomRenameBtn.addEventListener("click", () => {
+    algoCustomRenameBtn.addEventListener("click", async () => {
       const modes = loadLearningModes();
       const m = modes[algoEditingModeId];
       if (!m || m.builtin) return;
-      const name = prompt("Nouveau nom du mode :", m.name);
+      const name = await robotPrompt("Nouveau nom du mode :", m.name);
       if (!name || !name.trim()) return;
       renameCustomMode(algoEditingModeId, name);
       renderCustomPickerList();
@@ -4272,7 +4538,7 @@
 
 
   async function createSubjectFlow() {
-    const name = prompt("Nom de la nouvelle boîte :");
+    const name = await robotPrompt("Nom de la nouvelle boîte :");
     if (!name || !name.trim()) return null;
     const subject = newSubject(name, ROOT_FOLDER_ID);
     await persistSubject(subject);
@@ -4315,11 +4581,34 @@
     return false;
   }
 
+  /** Round 10, item 2 : une collection PRISE dans la Bibliothèque devient
+   *  elle aussi un miroir en lecture seule (même principe que
+   *  isSharedReadonlySubject pour une boîte de classe, voir plus haut) —
+   *  son contenu suit les modifications de l'auteur automatiquement (voir
+   *  reconcileLibraryCollection/syncLibraryMirrorsForUser plus bas), donc
+   *  on ne peut ni la renommer ni la repartager. Contrairement à une boîte
+   *  de classe, en revanche : (a) elle reste déplaçable entre dossiers
+   *  (demandé explicitement), et (b) "Supprimer" reste possible — ça la
+   *  retire seulement de Mes collections, sans toucher à la collection
+   *  publique dans la Bibliothèque (voir deleteSubject plus bas). */
+  function isLibraryMirrorSubject(subjectId) {
+    const s = subjects.find((x) => x.id === subjectId);
+    return !!(s && s.fromLibrary && s.libraryOriginId);
+  }
+  async function blockIfLibraryMirror(subjectId, action) {
+    if (isLibraryMirrorSubject(subjectId)) {
+      await robotAlert(`Cette collection vient de la Bibliothèque : elle se met à jour toute seule, tu ne peux pas la ${action} ici.`);
+      return true;
+    }
+    return false;
+  }
+
   async function renameSubject(id) {
     if (await blockIfSharedReadonly(id)) return;
+    if (await blockIfLibraryMirror(id, "renommer")) return;
     const s = subjects.find((x) => x.id === id);
     if (!s) return;
-    const name = prompt("Nouveau nom de la boîte :", s.name);
+    const name = await robotPrompt("Nouveau nom de la boîte :", s.name);
     if (!name || !name.trim() || name.trim() === s.name) return;
     s.name = name.trim();
     s.updatedAt = new Date().toISOString();
@@ -4339,12 +4628,14 @@
     }
     const s = subjects.find((x) => x.id === id);
     if (!s) return;
+    const isLibMirror = isLibraryMirrorSubject(id);
     const n = cards.filter((c) => !c.deleted && c.subject === id).length;
-    const confirmMsg =
-      n > 0
+    const confirmMsg = isLibMirror
+      ? `Retirer « ${s.name} » de Mes collections ? Elle restera disponible dans la Bibliothèque, tu pourras la reprendre plus tard.`
+      : n > 0
         ? `Supprimer la boîte « ${s.name} » et ses ${n} fiche(s) ? Cette action est irréversible.`
         : `Supprimer la boîte « ${s.name} » ?`;
-    if (!(await robotConfirm(confirmMsg, { danger: true }))) return;
+    if (!(await robotConfirm(confirmMsg, { danger: !isLibMirror, okLabel: isLibMirror ? "Retirer" : undefined }))) return;
 
     // Suppression douce des fiches de cette boîte (cohérent avec la sync).
     const toDelete = cards.filter((c) => !c.deleted && c.subject === id);
@@ -4703,10 +4994,42 @@
    *  fiche" (folderAlwaysSelectable: false, boîtes/dossiers vides
    *  seulement) et par la création d'un événement de calendrier
    *  (folderAlwaysSelectable: true, un dossier entier est un lien valide). */
-  function renderSingleBoitePicker(container, onPick, folderAlwaysSelectable, excludeSubjectIds) {
+  function renderSingleBoitePicker(container, onPick, folderAlwaysSelectable, excludeSubjectIds, libraryOptions) {
     function rerender() {
       container.innerHTML = "";
       container.classList.add("picker-tree");
+      // Round 11, item 1 : quand des collections de la Bibliothèque sont
+      // proposées (partage vers une classe), elles apparaissent en tête,
+      // sous leur propre intitulé, AVANT l'arbre des boîtes perso — avec la
+      // même icône en réseau que partout ailleurs dans l'appli pour une
+      // collection de la Bibliothèque (voir appendBoiteRow/renderLibraryList),
+      // pas l'icône de boîte habituelle.
+      if (libraryOptions && libraryOptions.length > 0) {
+        const sectionTitle = document.createElement("li");
+        sectionTitle.className = "picker-section-title";
+        sectionTitle.textContent = "Depuis la Bibliothèque";
+        container.appendChild(sectionTitle);
+        libraryOptions.forEach((col) => {
+          const n = Array.isArray(col.cards) ? col.cards.length : 0;
+          const { li } = buildPickerRow({
+            depth: 0,
+            isFolder: false,
+            iconMarkup: iconSvgMarkup("share", "icon-inline-svg"),
+            nameText: col.name,
+            countLabel: `${n} fiche${n > 1 ? "s" : ""} — ${col.owner_email || "quelqu'un"}`,
+            selectControl: "none",
+            dataKind: "library",
+            value: col.id,
+            rowSelectable: true,
+            onRowSelect: () => onPick("library", col.id),
+          });
+          container.appendChild(li);
+        });
+        const boxesTitle = document.createElement("li");
+        boxesTitle.className = "picker-section-title";
+        boxesTitle.textContent = "Mes boîtes";
+        container.appendChild(boxesTitle);
+      }
       renderFolderTreeForPicker(container, ROOT_FOLDER_ID, 0, { mode: "single", onPick, folderAlwaysSelectable, excludeSubjectIds, container, rerenderRoot: rerender });
     }
     rerender();
@@ -4811,7 +5134,7 @@
       if (ctx.excludedFolderIds) {
         renderMoveDestinationPicker(list, ctx.excludedFolderIds, (destId) => ctx.onPick("folder", destId));
       } else {
-        renderSingleBoitePicker(list, (kind, id) => ctx.onPick(kind, id), !!ctx.folderAlwaysSelectable, ctx.excludeSubjectIds);
+        renderSingleBoitePicker(list, (kind, id) => ctx.onPick(kind, id), !!ctx.folderAlwaysSelectable, ctx.excludeSubjectIds, ctx.libraryOptions);
       }
       if (confirmBtn) confirmBtn.hidden = true;
       if (noneBtn) {
@@ -4880,8 +5203,23 @@
         // révision) amène directement à la page Réviser une fois la
         // sélection validée ; sinon on revient simplement à la page d'où
         // on venait (ex. Réviser elle-même).
+        // Bug corrigé (round 17, item 4) : `boitePickerActivateView`
+        // bascule juste les classes CSS "is-active" — contrairement au
+        // clic sur l'onglet Réviser (voir plus bas, ".tab" click), elle
+        // ne (re)démarre PAS la session de révision. Comme switchSubject
+        // ci-dessus vient de vider la file (reviewQueue = [], voir
+        // switchSubject) SANS la reconstruire (la page Réviser n'était
+        // pas encore active à cet instant-là, condition ratée), la page
+        // s'affichait donc avec une file vide ("rien à réviser" sur
+        // iPhone) ou une fiche non réinitialisée correctement (fiche qui
+        // ne pivote pas, observé sur PC). Cliquer le VRAI onglet Réviser
+        // (comme partout ailleurs, voir goToReviewFor) plutôt que
+        // basculer les classes à la main garantit exactement le même
+        // chemin que n'importe quelle autre arrivée sur cette page.
         if (shouldNavigateToReview) {
-          boitePickerActivateView("view-review");
+          const reviewTab = document.querySelector('.tab[data-view="review"]');
+          if (reviewTab) reviewTab.click();
+          else boitePickerActivateView("view-review");
         } else {
           closeBoitePickerView();
         }
@@ -8202,6 +8540,8 @@
     renderShadowsEditor();
     renderHomeLayoutEditor();
     renderHomeLogoEditor();
+    renderDarwinLogoEditor();
+    renderDarwinTextEditor();
     renderReviewLayoutEditor();
     renderRevisionAlgoEditor();
     renderPersGaugeColorsEditor();
@@ -8258,37 +8598,11 @@
    *  détection automatique de nouvelle version reste bloquée (observé sur
    *  GitHub Pages, qui ne permet pas de fixer nous-mêmes les en-têtes de
    *  cache HTTP — voir aussi updateViaCache: "none" plus bas). */
-  const devPublishPublicBtn = el("dev-publish-public-btn");
-  const devPublishPublicResultEl = el("dev-publish-public-result");
-  if (devPublishPublicBtn) {
-    devPublishPublicBtn.addEventListener("click", async () => {
-      devPublishPublicBtn.disabled = true;
-      const originalLabel = devPublishPublicBtn.textContent;
-      devPublishPublicBtn.textContent = "Publication…";
-      if (devPublishPublicResultEl) devPublishPublicResultEl.textContent = "";
-      const settings = loadDevSettings();
-      const result = await Sync.pushPublicDevSettings(settings);
-      devPublishPublicBtn.disabled = false;
-      devPublishPublicBtn.textContent = originalLabel;
-      if (result && result.error) {
-        // Round 4, partie 3 (correctif) : on affiche désormais le texte
-        // d'erreur réel renvoyé par Supabase (au lieu d'un message générique
-        // qui masquait la vraie cause), pour pouvoir diagnostiquer ce genre
-        // de souci sans avoir à ouvrir la console.
-        if (devPublishPublicResultEl) {
-          devPublishPublicResultEl.textContent =
-            "Échec — " + result.error + " (vérifie aussi que tu es connecté avec ton compte, page Compte).";
-        }
-        robotAlert("La publication a échoué : " + result.error);
-      } else {
-        publicDevSettingsOverride = settings;
-        if (devPublishPublicResultEl) {
-          devPublishPublicResultEl.textContent = "Publié — tout le monde recevra ces réglages à son prochain démarrage.";
-        }
-        robotAlert("Réglages publiés ! Toutes les installations (élèves, profs, nouveaux appareils) les recevront désormais au démarrage.");
-      }
-    });
-  }
+  // Round 16 : le bouton "Publier pour tous les utilisateurs" a été retiré —
+  // chaque sauvegarde dans le mode développeur écrit désormais directement
+  // dans dev_settings_public (voir scheduleDevSettingsPush), donc toute
+  // modification est automatiquement "publiée" pour tout le monde sans
+  // étape manuelle supplémentaire.
 
   const devHideDevModeBtn = el("dev-hide-dev-mode-btn");
   if (devHideDevModeBtn) {
@@ -8391,9 +8705,16 @@
       if (view === "dev") renderDevView();
       if (view === "sync") renderSyncView();
       if (view === "account") renderAccountView();
+      if (view === "school-hub") refreshMessagesBadge();
       if (view === "classes") renderClassesView();
       if (view === "messages") renderMessagesView();
       if (view === "library") renderLibraryView();
+      // Round 10, item 2 : resynchronise les collections prises dans la
+      // Bibliothèque en ouvrant Mes collections — indépendant d'un Compte
+      // connecté (prendre une collection publique n'en demande pas), donc
+      // appelé ici plutôt que via syncSharedBoxesForStudent (qui lui exige
+      // un Compte, pour les boîtes de classe).
+      if (view === "manage") syncLibraryMirrorsForUser().then(() => renderSubjectManageList());
       if (view === "calendar") renderCalendarEvents();
       if (view === "revision-program") renderRevisionProgramList();
       if (view === "settings") {
@@ -8405,6 +8726,158 @@
       renderDuePill();
     });
   });
+
+  /** Round 15, item 1 : nom de la page affiché tout en haut — retiré à
+   *  visuellement au round 17, item 3 (jugé inutile, prenait de la
+   *  place), mais la liste reste utile pour garder l'onglet du navigateur
+   *  à jour (<title>), et le principe (déduit de la vue actuellement
+   *  active, via un MutationObserver sur .view.is-active plutôt que
+   *  patché à chaque point du code qui change de page) est réutilisé
+   *  ci-dessous (round 17) pour d'autres bascules liées à la page
+   *  courante : logo darwin du bandeau (masqué sur l'accueil, item 1) et
+   *  bloc d'actions de "Mon bureau" intégré au bandeau (item 3). Un seul
+   *  point d'entrée couvre TOUS les chemins de bascule de page (clic
+   *  d'onglet, goHome, sélecteur de boîte(s)...), sans avoir à les
+   *  patcher un par un. */
+  const PAGE_TITLES = {
+    home: "Accueil",
+    "revision-program": "Programme",
+    review: "Réviser",
+    manage: "Mon bureau",
+    "new-card": "Nouvelle fiche",
+    cards: "Fiches",
+    stats: "Statistiques",
+    calendar: "Calendrier",
+    sync: "Synchronisation",
+    account: "Mon compte",
+    "school-hub": "École",
+    classes: "Classes",
+    "classes-student": "Classes",
+    "classes-join": "Rejoindre une classe",
+    "classes-teacher": "Classes",
+    "classes-create": "Créer une classe",
+    "class-detail": "Classe",
+    messages: "Messagerie",
+    "message-thread": "Messagerie",
+    library: "Bibliothèque",
+    settings: "Réglages",
+    dev: "Développeur",
+    "mode-assign": "Affecter un mode",
+    "boite-picker": "Sélection",
+  };
+  const topbarDarwinLogoEl = el("topbar-darwin-logo");
+  const manageStickyActionsEl = el("manage-sticky-actions");
+  function onActiveViewChanged() {
+    const activeView = document.querySelector(".view.is-active");
+    const key = activeView ? activeView.id.replace(/^view-/, "") : "";
+    document.title = PAGE_TITLES[key] ? `${PAGE_TITLES[key]} — Fiches` : "Fiches";
+    // Round 17, item 1 : logo darwin du bandeau masqué UNIQUEMENT sur
+    // l'accueil (qui a déjà son propre grand logo darwin).
+    if (topbarDarwinLogoEl) topbarDarwinLogoEl.hidden = key === "home";
+    // Round 17, item 3 : bloc d'actions de "Mon bureau" visible
+    // UNIQUEMENT sur cette page.
+    if (manageStickyActionsEl) manageStickyActionsEl.hidden = key !== "manage";
+  }
+  document.querySelectorAll(".view").forEach((v) => {
+    new MutationObserver(onActiveViewChanged).observe(v, { attributes: true, attributeFilter: ["class"] });
+  });
+  onActiveViewChanged();
+
+  /** Round 15, item 5 : hauteur RÉELLE du bandeau fixe (topbar + titre de
+   *  page + robot), mesurée en JS et posée en variable CSS
+   *  (--sticky-header-h) pour pousser <main> d'autant — la hauteur varie
+   *  selon la page (titre plus ou moins long, robot présent ou non sur
+   *  l'accueil...) donc ne peut pas être une constante fixe en CSS.
+   *  ResizeObserver se redéclenche tout seul à chaque changement de
+   *  hauteur du bandeau, sans avoir besoin d'être rappelé manuellement à
+   *  chaque endroit qui pourrait la faire varier. */
+  (function () {
+    const header = el("app-sticky-header");
+    if (!header || typeof ResizeObserver === "undefined") return;
+    const rootStyle = document.documentElement.style;
+    function syncStickyHeaderHeight() {
+      rootStyle.setProperty("--sticky-header-h", `${Math.ceil(header.getBoundingClientRect().height)}px`);
+      // La fiche (page Réviser) a sa marge haute minimale calculée à
+      // partir de cette même hauteur (voir applyReviewLayout) — on la
+      // resynchronise ici pour rester cohérent si le bandeau change de
+      // taille (rotation d'écran, titre qui passe sur 2 lignes...).
+      if (typeof applyReviewLayout === "function") applyReviewLayout();
+    }
+    new ResizeObserver(syncStickyHeaderHeight).observe(header);
+    syncStickyHeaderHeight();
+  })();
+
+  /** Round 15, item 6 : aide CONTEXTUELLE — en plus de la bulle d'aide
+   *  générique par page (body-logo-help-btn, déjà existante), ce bouton
+   *  bascule un mode "pointer" : le PROCHAIN clic sur n'importe quel
+   *  élément de la page est intercepté (au lieu de déclencher son action
+   *  normale) et le robot affiche une explication pour CET élément-là.
+   *  L'explication est celle déjà portée par l'élément (attribut
+   *  data-help dédié en priorité, sinon aria-label/title/texte déjà
+   *  utilisés partout dans l'appli pour l'accessibilité) — pas besoin de
+   *  tout redocumenter à la main pour que ce soit déjà utile partout. */
+  function getContextualHelpText(target) {
+    const withData = target.closest("[data-help]");
+    if (withData) return withData.getAttribute("data-help");
+    const interactive = target.closest(
+      "button, a, input, select, textarea, [role='button'], .home-circle, .tab"
+    );
+    if (!interactive) return null;
+    const aria = interactive.getAttribute("aria-label");
+    if (aria && aria.trim()) return aria.trim();
+    const title = interactive.getAttribute("title");
+    if (title && title.trim()) return title.trim();
+    const span = interactive.querySelector("span");
+    if (span && span.textContent && span.textContent.trim()) return span.textContent.trim();
+    const text = interactive.textContent && interactive.textContent.trim();
+    if (text) return text.slice(0, 140);
+    return null;
+  }
+  let contextualHelpActive = false;
+  function stopContextualHelp() {
+    contextualHelpActive = false;
+    document.body.classList.remove("is-contextual-help-picking");
+    const btn = el("contextual-help-toggle-btn");
+    if (btn) btn.classList.remove("is-active");
+    const hint = el("contextual-help-hint");
+    if (hint) hint.hidden = true;
+    document.removeEventListener("click", onContextualHelpClick, true);
+    document.removeEventListener("keydown", onContextualHelpKeydown, true);
+  }
+  function onContextualHelpClick(e) {
+    // Le bouton qui active/désactive ce mode, et la bannière de guidage,
+    // ne doivent pas se déclencher eux-mêmes comme cible d'aide.
+    if (e.target.closest("#contextual-help-toggle-btn") || e.target.closest("#contextual-help-hint")) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+    const text = getContextualHelpText(e.target);
+    stopContextualHelp();
+    robotAlert(
+      text ||
+        "Je n'ai pas encore d'explication toute prête pour cet élément précis — mais n'hésite pas à me demander directement !"
+    );
+  }
+  function onContextualHelpKeydown(e) {
+    if (e.key === "Escape") stopContextualHelp();
+  }
+  function startContextualHelp() {
+    contextualHelpActive = true;
+    document.body.classList.add("is-contextual-help-picking");
+    const btn = el("contextual-help-toggle-btn");
+    if (btn) btn.classList.add("is-active");
+    const hint = el("contextual-help-hint");
+    if (hint) hint.hidden = false;
+    document.addEventListener("click", onContextualHelpClick, true);
+    document.addEventListener("keydown", onContextualHelpKeydown, true);
+  }
+  const contextualHelpToggleBtn = el("contextual-help-toggle-btn");
+  if (contextualHelpToggleBtn) {
+    contextualHelpToggleBtn.addEventListener("click", () => {
+      if (contextualHelpActive) stopContextualHelp();
+      else startContextualHelp();
+    });
+  }
 
   /** Retourne à l'accueil (item 1e) — bouton toujours présent en haut de
    *  chaque page, sauf sur l'accueil lui-même. */
@@ -8423,6 +8896,17 @@
     if (cardsEntryFromManage && el("view-cards") && el("view-cards").classList.contains("is-active")) {
       cardsEntryFromManage = false;
       const tab = document.querySelector('.tab[data-view="manage"]');
+      if (tab) tab.click();
+      return;
+    }
+    // Round 13, item 4 : Classes et Messagerie ne se rejoignent plus que
+    // via le nouveau hub École — Accueil y ramène plutôt qu'au véritable
+    // accueil, comme pour Organisation/Fiches ci-dessus.
+    if (
+      (el("view-classes") && el("view-classes").classList.contains("is-active")) ||
+      (el("view-messages") && el("view-messages").classList.contains("is-active"))
+    ) {
+      const tab = document.querySelector('.tab[data-view="school-hub"]');
       if (tab) tab.click();
       return;
     }
@@ -8582,7 +9066,12 @@
   // Item 2 : le panneau d'ajout reste caché tant qu'on n'a pas cliqué sur
   // "+ Ajouter un événement" — et sert aussi à MODIFIER un événement
   // existant (même formulaire, prérempli).
-  async function openCalendarEventForm(eventToEdit) {
+  /** Round 10, item 5 : `presetClassId` optionnel, utilisé quand le
+   *  formulaire est ouvert depuis le bouton "Ajouter un évènement" de la
+   *  page d'une classe (voir classDetailAddEventBtn plus bas) — pré-
+   *  sélectionne cette classe dans "Partager avec une classe" sans que
+   *  l'utilisateur n'ait à la rechoisir. */
+  async function openCalendarEventForm(eventToEdit, presetClassId) {
     const form = el("calendar-event-form");
     if (!form) return;
     form.hidden = false;
@@ -8606,12 +9095,12 @@
       if (title) title.textContent = "Ajouter un événement";
       if (submitBtn) submitBtn.textContent = "Ajouter à mon calendrier";
     }
-    await populateCalendarEventClassSelect(eventToEdit);
+    await populateCalendarEventClassSelect(eventToEdit, presetClassId);
   }
   /** Round 3, item 4 (squelette) : remplit le sélecteur "Partager avec une
    *  classe" avec les classes dont l'utilisateur est prof — masqué s'il
    *  n'en a aucune (rien à partager) ou si Sync/Compte ne sont pas prêts. */
-  async function populateCalendarEventClassSelect(eventToEdit) {
+  async function populateCalendarEventClassSelect(eventToEdit, presetClassId) {
     const field = el("calendar-event-class-field");
     const select = el("calendar-event-class-select");
     if (!field || !select) return;
@@ -8629,7 +9118,7 @@
     select.innerHTML =
       `<option value="">Ne pas partager</option>` +
       myClasses.map((k) => `<option value="${k.id}">${escapeHtml(k.name)}</option>`).join("");
-    select.value = eventToEdit && eventToEdit.classShare ? eventToEdit.classShare.classId : "";
+    select.value = eventToEdit && eventToEdit.classShare ? eventToEdit.classShare.classId : presetClassId || "";
   }
   /** Garde-fou supplémentaire (round 6, "attention qu'un élève ne puisse
    *  rien modifier de ce qui est partagé par un prof") : la corbeille
@@ -8695,6 +9184,11 @@
           const { data, error } = await Sync.classes.shareEvent(selectedClassId, titleVal, dateVal);
           if (!error && data) {
             ev.classShare = { classId: selectedClassId, className: klass ? klass.name : "", remoteId: data.id };
+            // Round 10, item 10 : message automatique dans la messagerie de
+            // la classe quand un prof y ajoute un évènement.
+            try {
+              await Sync.messages.send(selectedClassId, `📅 Nouvel évènement : « ${titleVal} » le ${formatCalendarDate(dateVal)}.`);
+            } catch (e) { /* best-effort, ne doit jamais bloquer la création de l'évènement */ }
           }
         }
       }
@@ -9078,6 +9572,21 @@
     if (tab) tab.click();
   }
 
+  // Round 13, item 3-2 : mène à la page Fiches, filtrée sur le
+  // dossier/la boîte cliqué·e depuis Mon bureau — mirroring de
+  // goToReviewFor ci-dessus, mais vers "cards" plutôt que "review".
+  // cardsScopeFilter accepte déjà un id de boîte littéral ou une chaîne
+  // "folder:<id>" (cardsScopeCards, plus bas) : rien à changer côté
+  // filtrage, juste le déclenchement.
+  function goToCardsFor(linkId) {
+    if (!linkId) return;
+    const [type, id] = linkId.split(":");
+    cardsScopeFilter = type === "folder" ? `folder:${id}` : id;
+    renderManageList();
+    const tab = document.querySelector('.tab[data-view="cards"]');
+    if (tab) tab.click();
+  }
+
   function renderRevisionProgramList() {
     const list = el("revision-program-list");
     const empty = el("revision-program-empty");
@@ -9252,36 +9761,6 @@
   let accountCurrentUser = null;
   let classesAuthMode = "signin"; // "signin" | "signup"
 
-  /** Correctif (round 6, demande de Stéphane) : les réglages développeur
-   *  personnels (couleurs, icônes... y compris le mode nuit, qui en fait
-   *  partie intégrante — voir setNightModeActive) n'étaient synchronisés
-   *  QUE par code de synchro perso (`dev_settings.sync_code`),
-   *  totalement indépendant du Compte Supabase Auth connecté. Deux
-   *  Comptes différents (ex. un compte prof et un compte élève de test)
-   *  utilisant le MÊME code de synchro perso partageaient donc
-   *  automatiquement ces réglages, y compris en temps réel (abonnement
-   *  Realtime) — même avant tout clic sur "Publier", qui lui ne concerne
-   *  qu'un canal totalement différent (dev_settings_public, round 4).
-   *  Ce canal personnel est maintenant cloisonné par (code de synchro +
-   *  Compte connecté) : `Sync.auth.getUser()` est interrogé directement
-   *  ici, plutôt que de lire la variable `accountCurrentUser`, qui n'est
-   *  pas forcément déjà résolue au tout premier démarrage (connectSync()
-   *  s'exécute avant initAccountState(), voir plus bas) — pour être sûr
-   *  d'avoir la valeur à jour à chaque appel. Chaîne vide si aucun
-   *  Compte n'est connecté, pour ne rien changer à quelqu'un qui
-   *  n'utilise que la synchro perso sans jamais toucher aux
-   *  Comptes/Classes (comportement identique à avant round 6 dans ce cas).
-   */
-  async function currentAccountEmailForSync() {
-    if (!Sync.isConfigured()) return "";
-    try {
-      const u = await Sync.auth.getUser();
-      return u && u.email ? u.email.toLowerCase() : "";
-    } catch (e) {
-      return "";
-    }
-  }
-
   /** Reflète l'état de connexion sur le bouton d'accueil (item 1/2) : son
    *  libellé change tout seul, avant même d'avoir ouvert la page Compte. */
   function updateAccountHomeButton() {
@@ -9321,26 +9800,11 @@
       if (el("view-classes-teacher") && el("view-classes-teacher").classList.contains("is-active")) renderTeacherClasses();
       if (el("view-messages") && el("view-messages").classList.contains("is-active")) renderMessagesView();
       if (user) syncSharedBoxesForStudent();
-      // Correctif (round 6) : les réglages dev perso (dont le mode nuit)
-      // sont maintenant cloisonnés par Compte connecté (voir
-      // currentAccountEmailForSync) — un changement de Compte EN COURS DE
-      // SESSION (connexion, déconnexion, changement de compte) doit donc
-      // recharger et se réabonner avec le bon cloisonnement, sinon
-      // l'appareil resterait accroché aux réglages de l'ancien Compte (ou
-      // d'aucun Compte) jusqu'au prochain redémarrage complet de l'appli.
-      if (Sync.isConfigured()) {
-        (async () => {
-          try {
-            await reconcileDevSettings();
-            applyAllDevSettings();
-            await subscribeDevSettingsForCurrentAccount();
-          } catch (e) {
-            // Best-effort : un accroc réseau ici ne doit jamais faire
-            // planter le reste de la gestion du changement de Compte.
-            console.warn("Réglages dev : échec du rechargement après changement de Compte", e);
-          }
-        })();
-      }
+      // Round 16 : les réglages développeur ne sont plus cloisonnés par
+      // Compte (un seul canal partagé pour tout le monde, voir
+      // syncDevSettingsFromServer) — un changement de Compte connecté
+      // n'a donc plus besoin de recharger ni de se réabonner à quoi que
+      // ce soit ici.
     });
   }
 
@@ -9365,6 +9829,16 @@
     }
     authBlock.hidden = true;
     connectedBlock.hidden = false;
+    // Round 10, item 7 : préremplit nom/prénom depuis les métadonnées du
+    // compte (déjà connues si renseignées à l'inscription, ou lors d'un
+    // enregistrement précédent depuis cette page).
+    const meta = accountCurrentUser.user_metadata || {};
+    const firstEl = el("account-profile-firstname");
+    const lastEl = el("account-profile-lastname");
+    if (firstEl) firstEl.value = meta.first_name || "";
+    if (lastEl) lastEl.value = meta.last_name || "";
+    const profileNote = el("account-profile-note");
+    if (profileNote) profileNote.hidden = true;
   }
 
   function setClassesAuthMode(mode) {
@@ -9377,6 +9851,12 @@
     if (submitBtn) submitBtn.textContent = mode === "signin" ? "Se connecter" : "Créer le compte";
     const note = el("account-auth-note");
     if (note) note.hidden = true;
+    // Round 10, item 7 : nom/prénom demandés uniquement à la création du
+    // compte, masqués en mode "Se connecter".
+    const firstField = el("account-auth-firstname-field");
+    const lastField = el("account-auth-lastname-field");
+    if (firstField) firstField.hidden = mode !== "signup";
+    if (lastField) lastField.hidden = mode !== "signup";
   }
   const accountAuthTabSignin = el("account-auth-tab-signin");
   if (accountAuthTabSignin) accountAuthTabSignin.addEventListener("click", () => setClassesAuthMode("signin"));
@@ -9402,7 +9882,12 @@
       const result =
         classesAuthMode === "signin"
           ? await Sync.auth.signIn(email, password)
-          : await Sync.auth.signUp(email, password);
+          : await Sync.auth.signUp(
+              email,
+              password,
+              (el("account-auth-firstname").value || "").trim(),
+              (el("account-auth-lastname").value || "").trim()
+            );
       accountAuthSubmitBtn.disabled = false;
       if (result.error) {
         if (note) {
@@ -9435,6 +9920,26 @@
     });
   }
 
+  /** Round 10, item 7 : nom/prénom modifiables après coup depuis la page
+   *  Mon Compte (comptes créés avant ce round, ou correction d'une
+   *  saisie), via Sync.auth.updateProfile (métadonnées Supabase Auth). */
+  const accountProfileSaveBtn = el("account-profile-save-btn");
+  if (accountProfileSaveBtn) {
+    accountProfileSaveBtn.addEventListener("click", async () => {
+      const note = el("account-profile-note");
+      const firstName = (el("account-profile-firstname").value || "").trim();
+      const lastName = (el("account-profile-lastname").value || "").trim();
+      accountProfileSaveBtn.disabled = true;
+      const result = await Sync.auth.updateProfile(firstName, lastName);
+      accountProfileSaveBtn.disabled = false;
+      if (note) {
+        note.hidden = false;
+        note.textContent = result.error ? `Échec de l'enregistrement : ${result.error}` : "Enregistré.";
+      }
+      if (!result.error) accountCurrentUser = await Sync.auth.getUser();
+    });
+  }
+
   const accountGotoSyncBtn = el("account-goto-sync-btn");
   if (accountGotoSyncBtn) {
     accountGotoSyncBtn.addEventListener("click", () => {
@@ -9446,6 +9951,43 @@
   const accountGotoClassesBtn = el("account-goto-classes-btn");
   if (accountGotoClassesBtn) {
     accountGotoClassesBtn.addEventListener("click", () => {
+      const tab = document.querySelector('.tab[data-view="classes"]');
+      if (tab) tab.click();
+    });
+  }
+
+  // Round 13, item 8 : bouton "Synchronisation" toujours visible sur Mon
+  // compte (avant : uniquement proposé quand la synchro n'était pas encore
+  // configurée).
+  const accountGotoSyncBtn2 = el("account-goto-sync-btn2");
+  if (accountGotoSyncBtn2) {
+    accountGotoSyncBtn2.addEventListener("click", () => {
+      const tab = document.querySelector('.tab[data-view="sync"]');
+      if (tab) tab.click();
+    });
+  }
+
+  // Round 13, item 3-1 : bouton "Bibliothèque" sur Mon bureau.
+  const manageGotoLibraryBtn = el("manage-goto-library-btn");
+  if (manageGotoLibraryBtn) {
+    manageGotoLibraryBtn.addEventListener("click", () => {
+      const tab = document.querySelector('.tab[data-view="library"]');
+      if (tab) tab.click();
+    });
+  }
+
+  // Round 13, item 4 : hub École — deux boutons ronds vers Messagerie et
+  // Mes classes.
+  const schoolHubMessagesBtn = el("school-hub-messages-btn");
+  if (schoolHubMessagesBtn) {
+    schoolHubMessagesBtn.addEventListener("click", () => {
+      const tab = document.querySelector('.tab[data-view="messages"]');
+      if (tab) tab.click();
+    });
+  }
+  const schoolHubClassesBtn = el("school-hub-classes-btn");
+  if (schoolHubClassesBtn) {
+    schoolHubClassesBtn.addEventListener("click", () => {
       const tab = document.querySelector('.tab[data-view="classes"]');
       if (tab) tab.click();
     });
@@ -9582,11 +10124,87 @@
       }
       pruneStaleSharedEvents(remoteEventIds, fetchedEventClassIds);
       await pruneStaleClassMirrorFolders(usedMirrorFolderIds);
+      // Round 10, item 2 : les collections prises dans la Bibliothèque sont
+      // maintenant, elles aussi, des miroirs en lecture seule — synchronisées
+      // aux mêmes moments que les boîtes de classe (connexion, reprise,
+      // intervalle), puisque cette fonction est déjà appelée à tous ces
+      // moments-là.
+      await syncLibraryMirrorsForUser();
       renderAll();
       renderSubjectManageList();
       renderCalendarEvents();
     } catch (e) {
       console.warn("Classes: échec de la synchro des boîtes partagées", e);
+    }
+  }
+
+  /** Round 10, item 2 : reconciliation périodique d'un miroir de
+   *  bibliothèque — même principe que reconcileSharedBox (classes) plus
+   *  haut, mais sans notion de dossier/chemin à reconstituer : la
+   *  collection reste où l'utilisateur l'a rangée dans Mes collections,
+   *  elle reste déplaçable entre dossiers (demandé explicitement, à la
+   *  différence des boîtes de classe). */
+  async function reconcileLibraryCollection(subject, col) {
+    // Collection introuvable (p. ex. supprimée côté auteur) : on laisse la
+    // copie locale telle quelle, sans la supprimer toute seule — aucune
+    // suppression automatique n'a été demandée pour ce cas.
+    if (!col) return;
+    let changed = false;
+    if (col.name && subject.name !== col.name) {
+      subject.name = col.name;
+      changed = true;
+    }
+    if (changed) {
+      subject.updatedAt = new Date().toISOString();
+      await persistSubject(subject);
+    }
+    const remoteCards = Array.isArray(col.cards) ? col.cards : [];
+    const remoteIds = new Set(remoteCards.map((c) => c.id).filter(Boolean));
+    const localCardsHere = cards.filter((c) => c.subject === subject.id);
+
+    for (const rc of remoteCards) {
+      if (!rc.id) continue;
+      const idx = cards.findIndex((c) => c.id === rc.id && c.subject === subject.id);
+      if (idx >= 0) {
+        const existing = cards[idx];
+        const contentChanged = existing.question !== (rc.question || "") || existing.answer !== (rc.answer || "");
+        if (existing.deleted || contentChanged) {
+          const updated = { ...existing, question: rc.question || "", answer: rc.answer || "", deleted: false, updatedAt: new Date().toISOString() };
+          await persist(updated);
+          cards[idx] = updated;
+        }
+      } else {
+        const card = { ...newCard(rc.question || "", rc.answer || "", subject.id), id: rc.id };
+        await persist(card);
+        cards.push(card);
+      }
+    }
+    for (const c of localCardsHere) {
+      if (!c.deleted && !remoteIds.has(c.id)) {
+        const updated = touch({ ...c, deleted: true });
+        await persist(updated);
+        const idx = cards.findIndex((x) => x.id === c.id);
+        if (idx >= 0) cards[idx] = updated;
+      }
+    }
+  }
+
+  /** Parcourt toutes les collections locales prises dans la Bibliothèque et
+   *  les recale sur leur source (nom + fiches) — une collection supprimée
+   *  localement (voir deleteSubject) n'est plus dans `subjects`, donc plus
+   *  jamais reconsidérée ici : la suppression locale reste bien
+   *  définitive côté appareil, sans jamais "revenir toute seule". */
+  async function syncLibraryMirrorsForUser() {
+    if (!Sync.isConfigured()) return;
+    const mirrors = subjects.filter((s) => s.fromLibrary && s.libraryOriginId);
+    if (mirrors.length === 0) return;
+    for (const subject of mirrors) {
+      try {
+        const col = await Sync.library.get(subject.libraryOriginId);
+        await reconcileLibraryCollection(subject, col);
+      } catch (e) {
+        console.warn("Bibliothèque : échec de la synchro d'une collection prise", e);
+      }
     }
   }
 
@@ -9813,6 +10431,21 @@
     }
   }
 
+  // Round 13 : "rejoindre une classe" vit maintenant dans une page dédiée
+  // (view-classes-join), ouverte/fermée depuis la page Élève.
+  function openClassesJoinView() {
+    document.querySelectorAll(".view").forEach((v) => v.classList.remove("is-active"));
+    el("view-classes-join").classList.add("is-active");
+  }
+  function closeClassesJoinView() {
+    document.querySelectorAll(".view").forEach((v) => v.classList.remove("is-active"));
+    el("view-classes-student").classList.add("is-active");
+  }
+  const classesGotoJoinBtn = el("classes-goto-join-btn");
+  if (classesGotoJoinBtn) classesGotoJoinBtn.addEventListener("click", openClassesJoinView);
+  const classesJoinBackBtn = el("classes-join-back-btn");
+  if (classesJoinBackBtn) classesJoinBackBtn.addEventListener("click", closeClassesJoinView);
+
   const classesJoinBtn = el("classes-join-btn");
   if (classesJoinBtn) {
     classesJoinBtn.addEventListener("click", async () => {
@@ -9834,8 +10467,24 @@
       input.value = "";
       await syncSharedBoxesForStudent();
       await renderStudentClasses();
+      closeClassesJoinView();
     });
   }
+
+  // Round 13 : "créer une classe" vit maintenant dans une page dédiée
+  // (view-classes-create), ouverte/fermée depuis la page Enseignant.
+  function openClassesCreateView() {
+    document.querySelectorAll(".view").forEach((v) => v.classList.remove("is-active"));
+    el("view-classes-create").classList.add("is-active");
+  }
+  function closeClassesCreateView() {
+    document.querySelectorAll(".view").forEach((v) => v.classList.remove("is-active"));
+    el("view-classes-teacher").classList.add("is-active");
+  }
+  const classesGotoCreateBtn = el("classes-goto-create-btn");
+  if (classesGotoCreateBtn) classesGotoCreateBtn.addEventListener("click", openClassesCreateView);
+  const classesCreateBackBtn = el("classes-create-back-btn");
+  if (classesCreateBackBtn) classesCreateBackBtn.addEventListener("click", closeClassesCreateView);
 
   const classesCreateBtn = el("classes-create-btn");
   if (classesCreateBtn) {
@@ -9852,6 +10501,7 @@
       }
       input.value = "";
       await renderTeacherClasses();
+      closeClassesCreateView();
     });
   }
 
@@ -9966,6 +10616,8 @@
       if (strong) strong.textContent = klass.invite_code || "";
     }
     if (shareBtn) shareBtn.hidden = !isTeacher;
+    const addEventBtn = el("class-detail-add-event-btn");
+    if (addEventBtn) addEventBtn.hidden = !isTeacher;
 
     const boxesEl = el("class-detail-boxes");
     if (boxesEl) {
@@ -9995,32 +10647,76 @@
 
   const classDetailShareBtn = el("class-detail-share-btn");
   if (classDetailShareBtn) {
-    classDetailShareBtn.addEventListener("click", () => {
+    classDetailShareBtn.addEventListener("click", async () => {
       if (!classDetailContext) return;
       const klass = classDetailContext.klass;
+      // Round 11, item 1 : le bouton dédié "Partager depuis la
+      // Bibliothèque" (round 10) est retiré — ce même sélecteur "Partager
+      // une boîte" propose maintenant, en plus des boîtes perso, les
+      // collections de la Bibliothèque comme options (ctx.libraryOptions).
+      const libraryOptions = await Sync.library.list();
       openBoitePickerView({
         mode: "single",
         title: `Partager une boîte à « ${klass.name} »`,
         folderAlwaysSelectable: false,
         excludeSubjectIds: new Set(subjects.filter((s) => s.sharedBoxId).map((s) => s.id)),
-        onPick: async (kind, subjectId) => {
-          const subject = subjects.find((s) => s.id === subjectId);
-          if (!subject) return;
-          const boxCards = cards.filter((c) => !c.deleted && c.subject === subjectId);
-          const folderPathNames = folderPath(subject.folderId).map((f) => f.name);
-          const { data, error } = await Sync.classes.shareBox(klass.id, subject.name, boxCards, folderPathNames);
+        libraryOptions,
+        onPick: async (kind, id) => {
+          let name, boxCards, folderPathNames, afterShare;
+          if (kind === "library") {
+            const col = libraryOptions.find((c) => c.id === id);
+            if (!col) return;
+            name = col.name;
+            boxCards = Array.isArray(col.cards) ? col.cards : [];
+            folderPathNames = [];
+            afterShare = async () => {
+              try {
+                await Sync.messages.send(klass.id, `📚 « ${name} » a été partagée dans la classe (depuis la Bibliothèque).`);
+              } catch (e) { /* best-effort */ }
+            };
+          } else {
+            const subject = subjects.find((s) => s.id === id);
+            if (!subject) return;
+            name = subject.name;
+            boxCards = cards.filter((c) => !c.deleted && c.subject === id);
+            folderPathNames = folderPath(subject.folderId).map((f) => f.name);
+            afterShare = async (data) => {
+              subject.sharedShares = subject.sharedShares || [];
+              subject.sharedShares.push({ classId: klass.id, className: klass.name, boxId: data.id });
+              subject.updatedAt = new Date().toISOString();
+              await persistSubject(subject);
+              // Round 10, item 10 : message automatique dans la messagerie
+              // de la classe quand un prof y partage une boîte.
+              try {
+                await Sync.messages.send(klass.id, `📚 « ${name} » a été partagée dans la classe.`);
+              } catch (e) { /* best-effort */ }
+            };
+          }
+          const { data, error } = await Sync.classes.shareBox(klass.id, name, boxCards, folderPathNames);
           closeBoitePickerView();
           if (error) {
             await robotAlert("Erreur lors du partage : " + error);
             return;
           }
-          subject.sharedShares = subject.sharedShares || [];
-          subject.sharedShares.push({ classId: klass.id, className: klass.name, boxId: data.id });
-          subject.updatedAt = new Date().toISOString();
-          await persistSubject(subject);
+          await afterShare(data);
           renderClassDetailView();
         },
       });
+    });
+  }
+
+  /** Round 10, item 5 : créer un évènement directement depuis la page de la
+   *  classe — réutilise le formulaire existant de Calendrier (bascule vers
+   *  cette page, puis ouvre le formulaire avec cette classe déjà présélectionnée
+   *  dans "Partager avec une classe"), plutôt que de dupliquer un formulaire. */
+  const classDetailAddEventBtn = el("class-detail-add-event-btn");
+  if (classDetailAddEventBtn) {
+    classDetailAddEventBtn.addEventListener("click", () => {
+      if (!classDetailContext) return;
+      const klass = classDetailContext.klass;
+      const calendarTab = document.querySelector('.tab[data-view="calendar"]');
+      if (calendarTab) calendarTab.click();
+      openCalendarEventForm(null, klass.id);
     });
   }
 
@@ -10050,11 +10746,16 @@
   /** Met à jour la pastille de notifications du bouton d'accueil
    *  "Messagerie" — appelée à chaque changement d'état de connexion (voir
    *  updateAccountHomeButton) et après lecture/envoi d'un message. */
+  // Round 13, item 4 : la pastille de notifications de messagerie migre du
+  // cercle d'accueil "Messagerie" (retiré) vers le cercle "École" et
+  // apparaît aussi sur le bouton rond "Messagerie" du nouveau hub École.
   async function refreshMessagesBadge() {
-    const badge = el("home-messages-badge");
-    if (!badge) return;
+    const homeBadge = el("home-school-badge");
+    const hubBadge = el("school-hub-messages-badge");
+    if (!homeBadge && !hubBadge) return;
     if (!Sync.isConfigured() || !accountCurrentUser) {
-      badge.hidden = true;
+      if (homeBadge) homeBadge.hidden = true;
+      if (hubBadge) hubBadge.hidden = true;
       return;
     }
     try {
@@ -10064,8 +10765,15 @@
       for (const k of classes) {
         total += await Sync.messages.countUnread(k.id, lastReadMap[k.id]);
       }
-      badge.hidden = total <= 0;
-      badge.textContent = total > 99 ? "99+" : String(total);
+      const text = total > 99 ? "99+" : String(total);
+      if (homeBadge) {
+        homeBadge.hidden = total <= 0;
+        homeBadge.textContent = text;
+      }
+      if (hubBadge) {
+        hubBadge.hidden = total <= 0;
+        hubBadge.textContent = text;
+      }
     } catch (e) {
       console.warn("Messagerie : échec du calcul des notifications", e);
     }
@@ -10088,11 +10796,27 @@
     if (empty) empty.hidden = classes.length > 0;
     const lastReadMap = loadMessagesLastRead();
     for (const klass of classes) {
-      const unread = await Sync.messages.countUnread(klass.id, lastReadMap[klass.id]);
+      // Round 10, item 11 : date/heure du dernier message reçu ou envoyé,
+      // affichée sous le nom de la classe. Un accroc réseau sur la lecture
+      // du dernier message ne doit jamais empêcher la ligne de s'afficher
+      // (juste sans cette date en plus).
+      // Les deux lectures sont indépendantes : un accroc sur l'une ne doit
+      // pas priver l'autre de son résultat (sinon la pastille de non-lus
+      // retomberait à 0 juste parce que la date du dernier message a
+      // échoué à charger, ou l'inverse).
+      const [unreadResult, lastMsgResult] = await Promise.allSettled([
+        Sync.messages.countUnread(klass.id, lastReadMap[klass.id]),
+        Sync.messages.getLastMessage(klass.id),
+      ]);
+      const unread = unreadResult.status === "fulfilled" ? unreadResult.value : 0;
+      const lastMsg = lastMsgResult.status === "fulfilled" ? lastMsgResult.value : null;
       const li = document.createElement("li");
       li.className = "subject-row messages-class-row";
       li.innerHTML = `
-        <span class="subject-row-name">${CLASSES_ROW_ICON} <span>${escapeHtml(klass.name)}</span></span>
+        <span class="messages-class-row-meta">
+          <span class="subject-row-name">${CLASSES_ROW_ICON} <span>${escapeHtml(klass.name)}</span></span>
+          ${lastMsg && lastMsg.created_at ? `<span class="messages-class-row-last">${formatMessageTime(lastMsg.created_at)}</span>` : ""}
+        </span>
         ${unread > 0 ? `<span class="home-circle-badge messages-class-row-badge">${unread > 99 ? "99+" : unread}</span>` : ""}
       `;
       li.addEventListener("click", () => openMessageThread(klass));
@@ -10102,55 +10826,93 @@
   }
 
   /** Bibliothèque : collections de fiches partagées publiquement (table
-   *  Supabase `library_collections`, lecture publique). Contrairement à
-   *  une boîte partagée avec une classe (miroir en lecture seule, mis à
-   *  jour en direct), "Prendre" ici fait une COPIE INDÉPENDANTE, à un
-   *  instant T, comme un modèle qu'on reprend et qu'on peut ensuite
-   *  modifier librement — cohérent avec l'usage "bibliothèque". */
+   *  Supabase `library_collections`, lecture publique). Round 10, item 2 :
+   *  "Prendre" fait maintenant un miroir en LECTURE SEULE, mis à jour en
+   *  direct — même principe que les boîtes de classe (voir
+   *  reconcileLibraryCollection/syncLibraryMirrorsForUser) — plutôt qu'une
+   *  copie figée comme avant. */
+  let libraryCollectionsCache = [];
+  let librarySearchQuery = "";
+
   async function renderLibraryView() {
     const needsSync = el("library-needs-sync");
     const list = el("library-list");
     const empty = el("library-empty");
+    const searchInput = el("library-search-input");
     if (!list) return;
     if (!Sync.isConfigured()) {
       if (needsSync) needsSync.hidden = false;
       list.innerHTML = "";
       if (empty) empty.hidden = true;
+      if (searchInput) searchInput.hidden = true;
       return;
     }
     if (needsSync) needsSync.hidden = true;
+    if (searchInput) searchInput.hidden = false;
     list.innerHTML = `<li class="field-hint">Chargement…</li>`;
-    const collections = await Sync.library.list();
+    libraryCollectionsCache = await Sync.library.list();
+    renderLibraryList();
+  }
+
+  /** Round 10, item 3 : filtrage local par mots-clés (nom de la collection
+   *  ou email de l'auteur), sans re-requêter à chaque frappe — séparée de
+   *  renderLibraryView pour être appelée seule depuis l'écouteur de saisie
+   *  et après une prise (pour rafraîchir "Déjà pris" sans re-télécharger). */
+  function renderLibraryList() {
+    const list = el("library-list");
+    const empty = el("library-empty");
+    if (!list) return;
+    const q = librarySearchQuery.trim().toLowerCase();
+    const collections = q
+      ? libraryCollectionsCache.filter(
+          (col) => (col.name || "").toLowerCase().includes(q) || (col.owner_email || "").toLowerCase().includes(q)
+        )
+      : libraryCollectionsCache;
     list.innerHTML = "";
-    if (empty) empty.hidden = collections.length > 0;
+    if (empty) empty.hidden = libraryCollectionsCache.length > 0;
+    if (libraryCollectionsCache.length > 0 && collections.length === 0) {
+      list.innerHTML = `<li class="field-hint">Aucun résultat pour « ${escapeHtml(librarySearchQuery.trim())} ».</li>`;
+      return;
+    }
     for (const col of collections) {
       const n = Array.isArray(col.cards) ? col.cards.length : 0;
+      // Round 10, item 6 : "Déjà pris" (désactivé, fond différent) si une
+      // collection de Mes collections est déjà un miroir de celle-ci.
+      const alreadyTaken = subjects.some((s) => s.fromLibrary && s.libraryOriginId === col.id);
       const li = document.createElement("li");
       li.className = "subject-row library-row";
       li.innerHTML = `
         <span class="subject-row-name">${iconSvgMarkup("share", "icon-inline-svg")} <span>${escapeHtml(col.name)}</span></span>
         <span class="card-row-meta">${n} fiche${n > 1 ? "s" : ""} — par ${escapeHtml(col.owner_email || "quelqu'un")}</span>
-        <button type="button" class="btn btn--small library-take-btn">Prendre</button>
+        <button type="button" class="btn btn--small library-take-btn${alreadyTaken ? " library-take-btn--taken" : ""}" ${alreadyTaken ? "disabled" : ""}>${alreadyTaken ? "Déjà pris" : "Prendre"}</button>
       `;
       const takeBtn = li.querySelector(".library-take-btn");
-      if (takeBtn) {
+      if (takeBtn && !alreadyTaken) {
         takeBtn.addEventListener("click", async (e) => {
           e.stopPropagation();
           takeBtn.disabled = true;
           await takeLibraryCollection(col);
-          takeBtn.disabled = false;
+          renderLibraryList();
         });
       }
       list.appendChild(li);
     }
   }
 
-  /** Copie une collection de la bibliothèque dans Mes collections : une
-   *  nouvelle boîte (`fromLibrary: true`, icône en réseau — voir
-   *  `appendBoiteRow`), avec une copie indépendante de chaque fiche
-   *  (nouveaux id locaux, via `newCard` — pas de lien maintenu avec la
-   *  collection d'origine, contrairement aux boîtes partagées par
-   *  classe). */
+  const librarySearchInputEl = el("library-search-input");
+  if (librarySearchInputEl) {
+    librarySearchInputEl.addEventListener("input", () => {
+      librarySearchQuery = librarySearchInputEl.value || "";
+      renderLibraryList();
+    });
+  }
+
+  /** Prend une collection de la bibliothèque : une nouvelle boîte dans Mes
+   *  collections (`fromLibrary: true`, icône en réseau — voir
+   *  `appendBoiteRow`), miroir en lecture seule à partir de maintenant
+   *  (round 10, item 2) — les fiches gardent le même id que dans la
+   *  collection publiée (comme pour une boîte de classe), ce qui permet à
+   *  `reconcileLibraryCollection` de la garder à jour ensuite. */
   async function takeLibraryCollection(col) {
     const cardsToCopy = Array.isArray(col.cards) ? col.cards : [];
     if (cardsToCopy.length === 0) {
@@ -10164,7 +10926,8 @@
     subjects.push(subject);
     subjects.sort((a, b) => a.name.localeCompare(b.name, "fr"));
     for (const rc of cardsToCopy) {
-      const card = newCard(rc.question || "", rc.answer || "", subject.id);
+      if (!rc.id) continue;
+      const card = { ...newCard(rc.question || "", rc.answer || "", subject.id), id: rc.id };
       await persist(card);
       cards.push(card);
     }
@@ -10172,17 +10935,22 @@
     renderSubjectSelect();
     renderSubjectManageList();
     renderStats();
-    await robotAlert(`« ${subject.name} » a été ajoutée à Mes collections (${cardsToCopy.length} fiche${cardsToCopy.length > 1 ? "s" : ""}).`);
+    await robotAlert(
+      `« ${subject.name} » a été ajoutée à Mes collections (${cardsToCopy.length} fiche${cardsToCopy.length > 1 ? "s" : ""}). Elle se met à jour automatiquement si son auteur la modifie ; tu peux la déplacer dans un dossier, mais pas la modifier ni la repartager.`
+    );
   }
 
   /** Partage une boîte existante dans la bibliothèque publique : nécessite
    *  d'être connecté avec un Compte (sert d'identité/attribution, comme
-   *  pour le partage avec une classe). Simple copie à l'instant du partage
-   *  — republier après modification n'est pas proposé pour l'instant (pas
-   *  demandé), contrairement aux boîtes partagées avec une classe. */
+   *  pour le partage avec une classe). Round 10, item 2 : une boîte déjà
+   *  en lecture seule (miroir de classe ou de bibliothèque) ne peut plus
+   *  être proposée au partage — voir aussi appendBoiteRow, qui n'affiche
+   *  plus du tout l'action "Partager" pour ces boîtes-là. */
   async function shareSubjectToLibrary(subjectId) {
     const s = subjects.find((x) => x.id === subjectId);
     if (!s) return;
+    if (await blockIfSharedReadonly(subjectId)) return;
+    if (await blockIfLibraryMirror(subjectId, "partager à nouveau")) return;
     if (!Sync.isConfigured()) {
       await robotAlert("Active d'abord la synchronisation (page Synchronisation) pour pouvoir partager dans la bibliothèque.");
       return;
@@ -10196,7 +10964,7 @@
       await robotAlert("Cette boîte est vide : ajoute des fiches avant de la partager.");
       return;
     }
-    const name = prompt("Nom de la collection à partager :", s.name);
+    const name = await robotPrompt("Nom de la collection à partager :", s.name);
     if (!name || !name.trim()) return;
     const { error } = await Sync.library.share(name.trim(), boxCards);
     if (error) {
@@ -10613,51 +11381,7 @@
     if (el("view-review") && el("view-review").classList.contains("is-active")) applyReviewLayout();
   });
 
-  /** Fusionne les réglages développeur reçus (item 1) : le plus récent
-   *  (comparé via updatedAt) l'emporte intégralement — contrairement aux
-   *  fiches, il n'y a pas de fusion champ par champ ici, un réglage de
-   *  couleurs est cohérent seulement pris comme un tout. */
-  async function reconcileDevSettings() {
-    // Round 4, partie 3 : un appareil qui n'a JAMAIS personnalisé le mode
-    // développeur (immense majorité des élèves/profs, mais aussi
-    // Stéphane sur un tout nouvel appareil pas encore touché) n'a rien
-    // de "personnel" à synchroniser ici — le laisser participer quand
-    // même figerait, dès sa toute première connexion, un instantané
-    // complet (valeurs par défaut + réglages publics du moment) dans son
-    // stockage local, qui empêcherait ensuite toute future publication
-    // de s'y appliquer (voir loadDevSettings : le local l'emporte
-    // toujours sur le public). On ne pousse donc RIEN côté serveur tant
-    // qu'il n'y a pas de VRAIE personnalisation locale.
-    // Cloisonné par Compte connecté depuis le round 6 (voir
-    // currentAccountEmailForSync) — corrige une fuite entre deux Comptes
-    // utilisant le même code de synchro perso.
-    const accountEmail = await currentAccountEmailForSync();
-    const hasLocalCustomization = localStorage.getItem(DEV_SETTINGS_KEY) !== null;
-    const remote = await Sync.pullDevSettings(accountEmail);
-    const local = loadDevSettings();
-    if (!remote) {
-      if (hasLocalCustomization) {
-        // Rien côté serveur : on y pousse notre réglage local tel quel.
-        Sync.pushDevSettings({ ...local, appPrefs: gatherAppPrefs() }, accountEmail);
-      }
-      return;
-    }
-    const remoteTime = new Date(remote.updatedAt || 0).getTime();
-    const localTime = hasLocalCustomization ? new Date(local.updatedAt || 0).getTime() : 0;
-    if (remoteTime > localTime) {
-      // Un autre de TES appareils (même code de synchro ET même Compte
-      // connecté) a poussé une vraie personnalisation plus récente : on
-      // l'adopte.
-      localStorage.setItem(DEV_SETTINGS_KEY, JSON.stringify(remote.payload));
-      applyAllDevSettings();
-      applyAppPrefsFromRemote(remote.payload.appPrefs);
-    } else if (hasLocalCustomization && localTime > remoteTime) {
-      Sync.pushDevSettings({ ...local, appPrefs: gatherAppPrefs() }, accountEmail);
-    }
-  }
-
   async function reconcileWithRemote() {
-    await reconcileDevSettings();
     await reconcileLearningModes();
     await reconcileSubjectsAndFolders();
     renderSubjectSelect();
@@ -10717,10 +11441,9 @@
     if (unsubscribeLearningModesRealtime) unsubscribeLearningModesRealtime();
     if (unsubscribeDevSettingsRealtime) unsubscribeDevSettingsRealtime();
 
-    // Round 4, partie 3 : réglages développeur publiés pour tout le
-    // monde — récupérés AVANT le reste, pour que la synchro perso
-    // (reconcileWithRemote, juste après) parte déjà d'une base à jour.
-    await loadPublicDevSettingsForEveryone();
+    // Round 16 : réglages développeur (canal unique, partagé par tout le
+    // monde) — récupérés AVANT le reste.
+    await syncDevSettingsFromServer();
 
     await reconcileWithRemote();
     await Sync.flushPending((id) => cards.find((c) => c.id === id));
@@ -10753,55 +11476,49 @@
       renderSubjectManageList();
       renderSubjectAlgoBadge();
     });
-    await subscribeDevSettingsForCurrentAccount();
+    subscribeDevSettingsPublicRealtime();
 
     updateSyncStatus();
   }
 
-  /** Callback de l'abonnement Realtime aux réglages développeur perso —
-   *  factorisé (round 6) pour être réutilisé aussi bien au démarrage
-   *  (connectSync) qu'à un changement de Compte en cours de session (voir
-   *  subscribeDevSettingsForCurrentAccount / Sync.auth.onChange). */
+  /** Callback de l'abonnement Realtime au canal UNIQUE des réglages
+   *  développeur (round 16) — un autre appareil de Stéphane (le seul à
+   *  pouvoir écrire, RLS) vient de changer un réglage : on l'adopte tel
+   *  quel, sans comparaison de date (il n'y a plus qu'une seule source de
+   *  vérité, donc plus de conflit possible à trancher). */
   function handleRemoteDevSettings(remote) {
-    // Dernier écrit gagne (item 1) : un autre appareil vient de changer
-    // un réglage (couleur, icône...), on adopte tel quel si plus récent.
-    const local = loadDevSettings();
-    if (new Date(remote.updatedAt || 0) > new Date(local.updatedAt || 0)) {
-      localStorage.setItem(DEV_SETTINGS_KEY, JSON.stringify(remote.payload));
-      applyAllDevSettings();
-      applyAppPrefsFromRemote(remote.payload.appPrefs);
-      // Bug corrigé (items 1/2) : si l'utilisateur est EN TRAIN de taper
-      // dans un champ du mode développeur, reconstruire toute la liste
-      // (renderDevView) à cet instant précis lui fait perdre le focus en
-      // plein milieu de la frappe — ou, pour le mode nuit, fait
-      // clignoter l'état si l'écho de sa propre modification revient
-      // alors qu'il vient justement de la changer. On saute ce rendu
-      // tant qu'un champ de ce panneau a le focus ; il se remettra à
-      // jour de toute façon au prochain rendu normal (changement de
-      // page, nouvelle modification, etc.).
-      const devViewActive = el("view-dev") && el("view-dev").classList.contains("is-active");
-      const editingInDevView = document.activeElement && el("view-dev") && el("view-dev").contains(document.activeElement) && document.activeElement.tagName === "INPUT";
-      if (devViewActive && !editingInDevView) renderDevView();
-    }
+    localStorage.setItem(DEV_SETTINGS_KEY, JSON.stringify(remote.payload));
+    _devSettingsCacheRaw = undefined;
+    _devSettingsCache = undefined;
+    applyAllDevSettings();
+    applyAppPrefsFromRemote(remote.payload.appPrefs);
+    // Bug corrigé (items 1/2, toujours valable) : si l'utilisateur est EN
+    // TRAIN de taper dans un champ du mode développeur, reconstruire toute
+    // la liste (renderDevView) à cet instant précis lui fait perdre le
+    // focus en plein milieu de la frappe — ou, pour le mode nuit, fait
+    // clignoter l'état si l'écho de sa propre modification revient juste
+    // après l'avoir changé. On saute ce rendu tant qu'un champ de ce
+    // panneau a le focus ; il se remettra à jour de toute façon au
+    // prochain rendu normal (changement de page, nouvelle modification...).
+    const devViewActive = el("view-dev") && el("view-dev").classList.contains("is-active");
+    const editingInDevView = document.activeElement && el("view-dev") && el("view-dev").contains(document.activeElement) && document.activeElement.tagName === "INPUT";
+    if (devViewActive && !editingInDevView) renderDevView();
   }
-  /** (Ré)abonne le canal Realtime des réglages développeur perso avec le
-   *  Compte ACTUELLEMENT connecté (round 6) — désabonne d'abord l'ancien
-   *  abonnement s'il y en avait un, pour ne jamais en garder deux en
-   *  parallèle (ex. juste après un changement de Compte). */
-  async function subscribeDevSettingsForCurrentAccount() {
+  /** (Ré)abonne le canal Realtime unique des réglages développeur —
+   *  désabonne d'abord l'ancien abonnement s'il y en avait un, pour ne
+   *  jamais en garder deux en parallèle. */
+  function subscribeDevSettingsPublicRealtime() {
     if (unsubscribeDevSettingsRealtime) {
       unsubscribeDevSettingsRealtime();
       unsubscribeDevSettingsRealtime = null;
     }
     if (!Sync.isConfigured()) return;
     try {
-      const accountEmail = await currentAccountEmailForSync();
-      unsubscribeDevSettingsRealtime = Sync.subscribeDevSettingsRealtime(handleRemoteDevSettings, accountEmail);
+      unsubscribeDevSettingsRealtime = Sync.subscribePublicDevSettingsRealtime(handleRemoteDevSettings);
     } catch (e) {
       // Best-effort, comme le reste de la synchro temps réel : sans
       // abonnement Realtime, les réglages dev restent quand même à jour
-      // au prochain reconcileDevSettings() (démarrage, changement de
-      // Compte, ouverture de la page Développeur...).
+      // au prochain démarrage (syncDevSettingsFromServer).
       console.warn("Réglages dev : échec de l'abonnement temps réel", e);
     }
   }
